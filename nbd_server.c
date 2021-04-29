@@ -73,10 +73,6 @@ static int negotiate_handshake_newstyle(int tcp_client_socket, struct nbd_contex
     cflags = htonl(cflags);
     //TODO: manage cflags
 
-    //TODO : many export in a loop
-    if (ctx->export_init(ctx) != 0)
-        goto error;
-
     ctx->eflags = NBD_FLAG_HAS_FLAGS | NBD_FLAG_FIXED_NEWSTYLE; // | NBD_FLAG_READ_ONLY
 
     while (1) {
@@ -181,7 +177,7 @@ error:
 
 int transmission_phase(int tcp_client_socket, struct nbd_context *ctx)
 {
-    register int i, r, size, error, sendflag;
+    register int i, r, size, error, sendflag = 0;
     register uint32_t blkremains, byteread, bufbklsz;
     register uint64_t offset;
     struct nbd_simple_reply reply;
@@ -229,9 +225,9 @@ int transmission_phase(int tcp_client_socket, struct nbd_context *ctx)
                 reply.error = ntohl(error);
 
                 r = send(tcp_client_socket, &reply, sizeof(struct nbd_simple_reply),
-                         0);
+                		sendflag);
 
-                if (error != NBD_SUCCESS)
+                if (!sendflag)
                     break;
 
                 bufbklsz = 256; // NBD_MAX_STRING / ctx->blocksize;

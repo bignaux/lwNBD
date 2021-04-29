@@ -12,3 +12,4 @@ On Playstation 2, there is no standardised central partition table like GPT for 
 # Status
 
 Although this server is not yet complete in respect of the minimal requirements defined by the NBD protocol ( see https://github.com/NetworkBlockDevice/nbd/blob/master/doc/proto.md#baseline ), it is nevertheless usable with certain clients, in particular nbdfuse (provided by libnbd), the client I am using for this development. In a RERO spirit ( see https://en.wikipedia.org/wiki/Release_early,_release_often ) i publish this "AS-IS".
+

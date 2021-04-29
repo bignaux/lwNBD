@@ -1,4 +1,4 @@
-/****************************************************************//**
+/****************************************************************/ /**
  *
  * @file nbd_opts.h
  *
@@ -53,35 +53,35 @@
  * Enable NBD debug messages
  */
 #if !defined NBD_DEBUG || defined __DOXYGEN__
-#define NBD_DEBUG            LWIP_DBG_ON
+#define NBD_DEBUG LWIP_DBG_ON
 #endif
 
 /**
  * NBD server port
  */
 #if !defined NBD_SERVER_PORT || defined __DOXYGEN__
-#define NBD_SERVER_PORT             69
+#define NBD_SERVER_PORT 69
 #endif
 
 /**
  * NBD timeout
  */
 #if !defined NBD_TIMEOUT_MSECS || defined __DOXYGEN__
-#define NBD_TIMEOUT_MSECS    10000
+#define NBD_TIMEOUT_MSECS 10000
 #endif
 
 /**
  * Max. number of retries when a file is read from server
  */
 #if !defined NBD_MAX_RETRIES || defined __DOXYGEN__
-#define NBD_MAX_RETRIES      5
+#define NBD_MAX_RETRIES 5
 #endif
 
 /**
  * NBD timer cyclic interval
  */
 #if !defined NBD_TIMER_MSECS || defined __DOXYGEN__
-#define NBD_TIMER_MSECS      50
+#define NBD_TIMER_MSECS 50
 #endif
 
 /**
@@ -95,7 +95,7 @@
  * Max. length of NBD mode
  */
 #if !defined NBD_MAX_MODE_LEN || defined __DOXYGEN__
-#define NBD_MAX_MODE_LEN     7
+#define NBD_MAX_MODE_LEN 7
 #endif
 
 /**
