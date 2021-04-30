@@ -50,6 +50,11 @@
 //NBD_MAX_STRING is minimal size for the buffer
 static uint8_t buffer[256 * 512] __attribute__((aligned(64)));
 
+/** @ingroup nbd
+ * Fixed newstyle negotiation.
+ * @param tcp_client_socket
+ * @param ctx NBD callback struct
+ */
 static int negotiate_handshake_newstyle(int tcp_client_socket, struct nbd_context *ctx)
 {
     register int size;
@@ -58,13 +63,6 @@ static int negotiate_handshake_newstyle(int tcp_client_socket, struct nbd_contex
     struct nbd_export_name_option_reply handshake_finish;
     struct nbd_fixed_new_option_reply fixed_new_option_reply;
     struct nbd_new_handshake new_hs;
-
-    /*
-	 *
-	 * Fixed newstyle negotiation
-	 *
-	 *
-	 **/
 
     new_hs.nbdmagic = htonll(NBD_MAGIC);
     new_hs.version = htonll(NBD_NEW_VERSION);
@@ -182,6 +180,11 @@ error:
     return -1;
 }
 
+/** @ingroup nbd
+ * Transmission phase.
+ * @param tcp_client_socket
+ * @param ctx NBD callback struct
+ */
 int transmission_phase(int tcp_client_socket, struct nbd_context *ctx)
 {
     register int i, r, size, error, retry = NBD_MAX_RETRIES, sendflag = 0;
@@ -260,6 +263,7 @@ int transmission_phase(int tcp_client_socket, struct nbd_context *ctx)
                             break;
                         offset += byteread;
                         blkremains -= bufbklsz;
+                        retry = NBD_MAX_RETRIES;
                     }
                     else {
 //                    	LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE, ("nbd: error read\n"));
