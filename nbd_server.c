@@ -38,6 +38,13 @@
  *
  */
 
+/**
+ * @defgroup nbd NBD server
+ * @ingroup apps
+ *
+ * This is simple NBD server for the lwIP raw API.
+ */
+
 #include "nbd_server.h"
 
 //NBD_MAX_STRING is minimal size for the buffer
@@ -177,7 +184,7 @@ error:
 
 int transmission_phase(int tcp_client_socket, struct nbd_context *ctx)
 {
-    register int i, r, size, error, sendflag = 0;
+    register int i, r, size, error, retry = NBD_MAX_RETRIES, sendflag = 0;
     register uint32_t blkremains, byteread, bufbklsz;
     register uint64_t offset;
     struct nbd_simple_reply reply;
@@ -235,7 +242,7 @@ int transmission_phase(int tcp_client_socket, struct nbd_context *ctx)
                 offset = request.offset;
                 byteread = bufbklsz * ctx->blocksize;
 
-                while (sendflag) {
+                while (sendflag && retry) {
 
                     if (blkremains < bufbklsz) {
                         bufbklsz = blkremains;
@@ -253,6 +260,10 @@ int transmission_phase(int tcp_client_socket, struct nbd_context *ctx)
                             break;
                         offset += byteread;
                         blkremains -= bufbklsz;
+                    }
+                    else {
+//                    	LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE, ("nbd: error read\n"));
+                    	retry--;
                     }
                 }
                 break;
@@ -307,6 +318,10 @@ error:
     return -1;
 }
 
+/** @ingroup nbd
+ * Initialize NBD server.
+ * @param ctx NBD callback struct
+ */
 int nbd_init(struct nbd_context *ctx)
 {
     int tcp_socket, client_socket = -1;

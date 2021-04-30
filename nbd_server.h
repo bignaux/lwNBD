@@ -42,16 +42,14 @@
 #define LWIP_HDR_APPS_NBD_SERVER_H
 
 #include "nbd-protocol.h"
+#include "nbd_opts.h"
 
 //#include "lwip/apps/tftp_opts.h"
 //#include "lwip/err.h"
 //#include "lwip/pbuf.h"
 //#include "lwip/mem.h"
 
-#define NBD_SERVER_PORT 10809
-
 #ifdef PS2SDK
-
 #include <ps2ip.h>
 #include <stdio.h>
 #include <sysclib.h>

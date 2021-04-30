@@ -41,7 +41,11 @@
 #ifndef LWIP_HDR_APPS_NBD_OPTS_H
 #define LWIP_HDR_APPS_NBD_OPTS_H
 
+#ifndef PS2SDK
 #include "lwip/opt.h"
+#else
+#include "tcpip.h"
+#endif
 
 /**
  * @defgroup NBD_opts Options
@@ -60,7 +64,7 @@
  * NBD server port
  */
 #if !defined NBD_SERVER_PORT || defined __DOXYGEN__
-#define NBD_SERVER_PORT 69
+#define NBD_SERVER_PORT 10809
 #endif
 
 /**
