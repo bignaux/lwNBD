@@ -89,10 +89,10 @@
 #endif
 
 /**
- * Max. length of NBD filename
+ * Max. length of NBD buffer : NBD_MAX_STRING is minimal size for the buffer
  */
-#if !defined NBD_MAX_FILENAME_LEN || defined __DOXYGEN__
-#define NBD_MAX_FILENAME_LEN 20
+#if !defined NBD_BUFFER_LEN || defined __DOXYGEN__
+#define NBD_BUFFER_LEN 512*256
 #endif
 
 /**

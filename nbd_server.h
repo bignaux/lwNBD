@@ -44,7 +44,7 @@
 #include "nbd-protocol.h"
 #include "nbd_opts.h"
 
-//#include "lwip/apps/tftp_opts.h"
+//#include "lwip/apps/nbd_opts.h"
 //#include "lwip/err.h"
 //#include "lwip/pbuf.h"
 //#include "lwip/mem.h"
@@ -85,6 +85,10 @@ extern "C" {
 /** @ingroup nbd
  * NBD context containing callback functions for NBD transfers
  */
+
+//extern uint8_t buffer[];
+uint8_t buffer[NBD_BUFFER_LEN] __attribute__((aligned(64)));
+
 struct nbd_context
 {
 
@@ -93,6 +97,8 @@ struct nbd_context
     uint64_t export_size; /* size of export in byte */
     uint16_t eflags;      /* per-export flags */
     uint16_t blocksize;
+
+
 
     int (*export_init)(struct nbd_context *ctx);
 

@@ -47,15 +47,46 @@
 
 #include "nbd_server.h"
 
-//NBD_MAX_STRING is minimal size for the buffer
-static uint8_t buffer[256 * 512] __attribute__((aligned(64)));
+
+/*
+ * https://lwip.fandom.com/wiki/Receiving_data_with_LWIP
+ */
+int nbd_recv(int s, void *mem, size_t len, int flags) {
+	int bytesRead = 0;
+	int left = len;
+	int totalRead = 0;
+
+#ifdef DEBUG
+        printf("nbd_recv(-, 0x%X, %d)\n", (int)buffer, size);
+#endif
+
+	// Read until: there is an error, we've read "size" bytes or the remote
+	//             side has closed the connection.
+	do {
+
+		bytesRead = recv(s, mem + totalRead, left, flags);
+
+#ifdef DEBUG
+//              printf("bytesRead = %d\n", bytesRead);
+#endif
+
+		if (bytesRead <= 0)
+			break;
+
+		left -= bytesRead;
+		totalRead += bytesRead;
+
+	} while (left);
+
+	return totalRead;
+}
 
 /** @ingroup nbd
  * Fixed newstyle negotiation.
- * @param tcp_client_socket
+ * @param client_socket
  * @param ctx NBD callback struct
  */
-static int negotiate_handshake_newstyle(int tcp_client_socket, struct nbd_context *ctx)
+static int negotiate_handshake_newstyle(int client_socket, struct nbd_context *ctx)
 {
     register int size;
     uint32_t cflags, name_len, desc_len, len;
@@ -67,12 +98,12 @@ static int negotiate_handshake_newstyle(int tcp_client_socket, struct nbd_contex
     new_hs.nbdmagic = htonll(NBD_MAGIC);
     new_hs.version = htonll(NBD_NEW_VERSION);
     new_hs.gflags = 0;
-    size = send(tcp_client_socket, &new_hs, sizeof(struct nbd_new_handshake),
+    size = send(client_socket, &new_hs, sizeof(struct nbd_new_handshake),
                 0);
     if (size < sizeof(struct nbd_new_handshake))
         goto error;
 
-    size = recv(tcp_client_socket, &cflags, sizeof(cflags), 0);
+    size = recv(client_socket, &cflags, sizeof(cflags), 0);
     if (size < sizeof(cflags))
         goto error;
     cflags = htonl(cflags);
@@ -86,7 +117,7 @@ static int negotiate_handshake_newstyle(int tcp_client_socket, struct nbd_contex
 		 * options haggling
 		 *
 		 */
-        size = recv(tcp_client_socket, &new_opt, sizeof(struct nbd_new_option),
+        size = recv(client_socket, &new_opt, sizeof(struct nbd_new_option),
                     0);
         if (size < sizeof(struct nbd_new_option))
             goto error;
@@ -99,7 +130,7 @@ static int negotiate_handshake_newstyle(int tcp_client_socket, struct nbd_contex
         new_opt.optlen = htonl(new_opt.optlen);
 
         if (new_opt.optlen > 0) {
-            size = recv(tcp_client_socket, &buffer, new_opt.optlen, 0);
+            size = recv(client_socket, &buffer, new_opt.optlen, 0);
             buffer[new_opt.optlen] = '\0';
         }
 
@@ -111,7 +142,7 @@ static int negotiate_handshake_newstyle(int tcp_client_socket, struct nbd_contex
                        sizeof(struct nbd_export_name_option_reply));
                 handshake_finish.exportsize = htonll(ctx->export_size);
                 handshake_finish.eflags = htons(ctx->eflags);
-                size = send(tcp_client_socket, &handshake_finish,
+                size = send(client_socket, &handshake_finish,
                             sizeof(struct nbd_export_name_option_reply), 0);
 
                 goto abort;
@@ -122,7 +153,7 @@ static int negotiate_handshake_newstyle(int tcp_client_socket, struct nbd_contex
                 fixed_new_option_reply.option = htonl(new_opt.option);
                 fixed_new_option_reply.reply = htonl(NBD_REP_ACK);
                 fixed_new_option_reply.replylen = 0;
-                size = send(tcp_client_socket, &fixed_new_option_reply,
+                size = send(client_socket, &fixed_new_option_reply,
                             sizeof(struct nbd_fixed_new_option_reply), 0);
                 goto soft_disconnect;
                 break;
@@ -140,11 +171,11 @@ static int negotiate_handshake_newstyle(int tcp_client_socket, struct nbd_contex
                 fixed_new_option_reply.replylen = htonl(name_len + sizeof(len) +
                                                         desc_len);
 
-                size = send(tcp_client_socket, &fixed_new_option_reply,
+                size = send(client_socket, &fixed_new_option_reply,
                             sizeof(struct nbd_fixed_new_option_reply), MSG_MORE);
-                size = send(tcp_client_socket, &len, sizeof len, MSG_MORE);
-                size = send(tcp_client_socket, ctx->export_name, name_len, MSG_MORE);
-                size = send(tcp_client_socket, ctx->export_desc, desc_len, 0);
+                size = send(client_socket, &len, sizeof len, MSG_MORE);
+                size = send(client_socket, ctx->export_name, name_len, MSG_MORE);
+                size = send(client_socket, ctx->export_desc, desc_len, 0);
                 break;
                 //TODO
                 //                break;
@@ -167,7 +198,7 @@ static int negotiate_handshake_newstyle(int tcp_client_socket, struct nbd_contex
                 fixed_new_option_reply.option = htonl(new_opt.option);
                 fixed_new_option_reply.reply = htonl(NBD_REP_ERR_UNSUP);
                 fixed_new_option_reply.replylen = 0;
-                size = send(tcp_client_socket, &fixed_new_option_reply,
+                size = send(client_socket, &fixed_new_option_reply,
                             sizeof(struct nbd_fixed_new_option_reply), 0);
                 break;
         }
@@ -182,12 +213,12 @@ error:
 
 /** @ingroup nbd
  * Transmission phase.
- * @param tcp_client_socket
+ * @param client_socket
  * @param ctx NBD callback struct
  */
-int transmission_phase(int tcp_client_socket, struct nbd_context *ctx)
+static int transmission_phase(int client_socket, struct nbd_context *ctx)
 {
-    register int i, r, size, error, retry = NBD_MAX_RETRIES, sendflag = 0;
+    register int r, size, error, retry = NBD_MAX_RETRIES, sendflag = 0;
     register uint32_t blkremains, byteread, bufbklsz;
     register uint64_t offset;
     struct nbd_simple_reply reply;
@@ -206,7 +237,7 @@ int transmission_phase(int tcp_client_socket, struct nbd_context *ctx)
 		 */
 
         // TODO : blocking here if no proper NBD_CMD_DISC, bad threading design ?
-        size = recv(tcp_client_socket, &request, sizeof(struct nbd_request), 0);
+        size = recv(client_socket, &request, sizeof(struct nbd_request), 0);
         if (size < sizeof(struct nbd_request))
             goto error;
 
@@ -230,22 +261,17 @@ int transmission_phase(int tcp_client_socket, struct nbd_context *ctx)
                 else {
                     error = NBD_SUCCESS;
                     sendflag = MSG_MORE;
+                    bufbklsz = NBD_BUFFER_LEN / ctx->blocksize;
+                    blkremains = request.count / ctx->blocksize;
+                    offset = request.offset;
+                    byteread = bufbklsz * ctx->blocksize;
                 }
 
                 reply.error = ntohl(error);
+                r = send(client_socket, &reply, sizeof(struct nbd_simple_reply),
+                         sendflag);
 
-                r = send(tcp_client_socket, &reply, sizeof(struct nbd_simple_reply),
-                		sendflag);
-
-                if (!sendflag)
-                    break;
-
-                bufbklsz = 256; // NBD_MAX_STRING / ctx->blocksize;
-                blkremains = request.count / ctx->blocksize;
-                offset = request.offset;
-                byteread = bufbklsz * ctx->blocksize;
-
-                while (sendflag && retry) {
+                while (sendflag) {
 
                     if (blkremains < bufbklsz) {
                         bufbklsz = blkremains;
@@ -258,46 +284,70 @@ int transmission_phase(int tcp_client_socket, struct nbd_context *ctx)
                     r = ctx->read(buffer, offset, bufbklsz);
 
                     if (r == 0) {
-                        r = send(tcp_client_socket, buffer, byteread, sendflag);
+                        r = send(client_socket, buffer, byteread, sendflag);
                         if (r != byteread)
                             break;
                         offset += byteread;
                         blkremains -= bufbklsz;
                         retry = NBD_MAX_RETRIES;
-                    }
-                    else {
-//                    	LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE, ("nbd: error read\n"));
-                    	retry--;
+                    } else if (retry) {
+                        retry--;
+                        sendflag = 1;
+                    } else {
+                        goto error; // -EIO
+                                    //                    	LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE, ("nbd: error read\n"));
                     }
                 }
+
                 break;
 
             case NBD_CMD_WRITE:
-                //TODO: test
 
                 if (ctx->eflags & NBD_FLAG_READ_ONLY)
                     error = NBD_EPERM;
                 else if (request.offset + request.count > ctx->export_size)
                     error = NBD_ENOSPC;
-                else
+                else {
                     error = NBD_SUCCESS;
+                    sendflag = MSG_MORE;
+                    bufbklsz = NBD_BUFFER_LEN / ctx->blocksize;
+                    blkremains = request.count / ctx->blocksize;
+                    offset = request.offset;
+                    byteread = bufbklsz * ctx->blocksize;
+                }
+
+                while (sendflag) {
+
+                    if (blkremains < bufbklsz) {
+                        bufbklsz = blkremains;
+                        byteread = bufbklsz * ctx->blocksize;
+                    }
+
+                    if (blkremains <= bufbklsz)
+                        sendflag = 0;
+
+                    r = nbd_recv(client_socket, buffer, byteread, 0);
+
+                    if (r == byteread) {
+                        r = ctx->write(buffer, offset, bufbklsz);
+                        if (r != 0) {
+                            error = NBD_EIO;
+                            sendflag = 0;
+                            //                    	LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE, ("nbd: error read\n"));
+                        }
+                        offset += byteread;
+                        blkremains -= bufbklsz;
+                        retry = NBD_MAX_RETRIES;
+                    } else {
+                        error = NBD_EOVERFLOW; //TODO
+                        sendflag = 0;
+                        //                    	LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE, ("nbd: error read\n"));
+                    }
+                }
 
                 reply.error = ntohl(error);
-                r = send(tcp_client_socket, &reply, sizeof(struct nbd_simple_reply),
+                r = send(client_socket, &reply, sizeof(struct nbd_simple_reply),
                          0);
-
-                if (error != NBD_SUCCESS)
-                    break;
-
-                //Stupid recv one block write one block
-                for (i = 0; i < request.count / ctx->blocksize; i++) {
-
-                    r = recv(tcp_client_socket, buffer, ctx->blocksize, 0);
-                    if (r == -1)
-                        break;
-
-                    r = ctx->write(buffer, request.offset + i * ctx->blocksize, 1);
-                }
 
                 break;
 
