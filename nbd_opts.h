@@ -92,7 +92,7 @@
  * Max. length of NBD buffer : NBD_MAX_STRING is minimal size for the buffer
  */
 #if !defined NBD_BUFFER_LEN || defined __DOXYGEN__
-#define NBD_BUFFER_LEN 512*256
+#define NBD_BUFFER_LEN 512 * 256
 #endif
 
 /**

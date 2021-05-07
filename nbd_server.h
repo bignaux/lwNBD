@@ -87,7 +87,7 @@ extern "C" {
  */
 
 //extern uint8_t buffer[];
-uint8_t buffer[NBD_BUFFER_LEN] __attribute__((aligned(64)));
+uint8_t nbd_buffer[NBD_BUFFER_LEN] __attribute__((aligned(64)));
 
 struct nbd_context
 {
@@ -96,11 +96,10 @@ struct nbd_context
     char export_desc[64];
     uint64_t export_size; /* size of export in byte */
     uint16_t eflags;      /* per-export flags */
-    uint16_t blocksize;
+    uint8_t blocksize;    /* in power of 2 for bit shifting */
+    uint8_t *buffer;
 
-
-
-    int (*export_init)(struct nbd_context *ctx);
+    int (*export_init)(struct nbd_context *me);
 
     /**
    * Open file for read/write.
@@ -123,7 +122,7 @@ struct nbd_context
    * @returns &gt;= 0: Success; &lt; 0: Error
    */
     //  int (*read)(void* handle, void* buf, int bytes);
-    int (*read)(void *buffer, uint64_t offset, uint32_t length);
+    int (*read)(struct nbd_context *me, void *buffer, uint64_t offset, uint32_t length);
     /**
    * Write to file
    * @param handle File handle returned by open()
@@ -133,8 +132,8 @@ struct nbd_context
    * @returns &gt;= 0: Success; &lt; 0: Error
    */
     //  int (*write)(void* handle, struct pbuf* p);
-    int (*write)(void *buffer, uint64_t offset, uint32_t length);
-    int (*flush)(void);
+    int (*write)(struct nbd_context *me, void *buffer, uint64_t offset, uint32_t length);
+    int (*flush)(struct nbd_context *me);
 };
 
 int nbd_init(struct nbd_context *ctx);

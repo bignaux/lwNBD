@@ -42,43 +42,41 @@
  * @defgroup nbd NBD server
  * @ingroup apps
  *
- * This is simple NBD server for the lwIP raw API.
+ * This is simple NBD server for the lwIP Socket API.
  */
 
 #include "nbd_server.h"
 
-
 /*
  * https://lwip.fandom.com/wiki/Receiving_data_with_LWIP
  */
-int nbd_recv(int s, void *mem, size_t len, int flags) {
-	int bytesRead = 0;
-	int left = len;
-	int totalRead = 0;
+int nbd_recv(int s, void *mem, size_t len, int flags)
+{
+    int bytesRead = 0;
+    int left = len;
+    int totalRead = 0;
 
-#ifdef DEBUG
-        printf("nbd_recv(-, 0x%X, %d)\n", (int)buffer, size);
-#endif
+    //    LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE("nbd_recv(-, 0x%X, %d)\n", (int)buffer, size);
 
-	// Read until: there is an error, we've read "size" bytes or the remote
-	//             side has closed the connection.
-	do {
+    // Read until: there is an error, we've read "size" bytes or the remote
+    //             side has closed the connection.
+    do {
 
-		bytesRead = recv(s, mem + totalRead, left, flags);
+        bytesRead = recv(s, mem + totalRead, left, flags);
 
-#ifdef DEBUG
-//              printf("bytesRead = %d\n", bytesRead);
-#endif
 
-		if (bytesRead <= 0)
-			break;
+        //              LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE("bytesRead = %d\n", bytesRead);
 
-		left -= bytesRead;
-		totalRead += bytesRead;
 
-	} while (left);
+        if (bytesRead <= 0)
+            break;
 
-	return totalRead;
+        left -= bytesRead;
+        totalRead += bytesRead;
+
+    } while (left);
+
+    return totalRead;
 }
 
 /** @ingroup nbd
@@ -130,8 +128,8 @@ static int negotiate_handshake_newstyle(int client_socket, struct nbd_context *c
         new_opt.optlen = htonl(new_opt.optlen);
 
         if (new_opt.optlen > 0) {
-            size = recv(client_socket, &buffer, new_opt.optlen, 0);
-            buffer[new_opt.optlen] = '\0';
+            size = recv(client_socket, &nbd_buffer, new_opt.optlen, 0);
+            nbd_buffer[new_opt.optlen] = '\0';
         }
 
         switch (new_opt.option) {
@@ -224,9 +222,6 @@ static int transmission_phase(int client_socket, struct nbd_context *ctx)
     struct nbd_simple_reply reply;
     struct nbd_request request;
 
-    //    static uint8_t buffer[512];
-    //    buffer = malloc(ctx->blocksize);
-
     reply.magic = htonl(NBD_SIMPLE_REPLY_MAGIC);
 
     while (1) {
@@ -261,10 +256,10 @@ static int transmission_phase(int client_socket, struct nbd_context *ctx)
                 else {
                     error = NBD_SUCCESS;
                     sendflag = MSG_MORE;
-                    bufbklsz = NBD_BUFFER_LEN / ctx->blocksize;
-                    blkremains = request.count / ctx->blocksize;
-                    offset = request.offset;
-                    byteread = bufbklsz * ctx->blocksize;
+                    bufbklsz = NBD_BUFFER_LEN >> ctx->blocksize;
+                    blkremains = request.count >> ctx->blocksize;
+                    offset = request.offset >> ctx->blocksize;
+                    byteread = bufbklsz << ctx->blocksize;
                 }
 
                 reply.error = ntohl(error);
@@ -275,19 +270,19 @@ static int transmission_phase(int client_socket, struct nbd_context *ctx)
 
                     if (blkremains < bufbklsz) {
                         bufbklsz = blkremains;
-                        byteread = bufbklsz * ctx->blocksize;
+                        byteread = bufbklsz << ctx->blocksize;
                     }
 
                     if (blkremains <= bufbklsz)
                         sendflag = 0;
 
-                    r = ctx->read(buffer, offset, bufbklsz);
+                    r = ctx->read(ctx, ctx->buffer, offset, bufbklsz);
 
                     if (r == 0) {
-                        r = send(client_socket, buffer, byteread, sendflag);
+                        r = send(client_socket, ctx->buffer, byteread, sendflag);
                         if (r != byteread)
                             break;
-                        offset += byteread;
+                        offset += bufbklsz;
                         blkremains -= bufbklsz;
                         retry = NBD_MAX_RETRIES;
                     } else if (retry) {
@@ -310,32 +305,32 @@ static int transmission_phase(int client_socket, struct nbd_context *ctx)
                 else {
                     error = NBD_SUCCESS;
                     sendflag = MSG_MORE;
-                    bufbklsz = NBD_BUFFER_LEN / ctx->blocksize;
-                    blkremains = request.count / ctx->blocksize;
-                    offset = request.offset;
-                    byteread = bufbklsz * ctx->blocksize;
+                    bufbklsz = NBD_BUFFER_LEN >> ctx->blocksize;
+                    blkremains = request.count >> ctx->blocksize;
+                    offset = request.offset >> ctx->blocksize;
+                    byteread = bufbklsz << ctx->blocksize;
                 }
 
                 while (sendflag) {
 
                     if (blkremains < bufbklsz) {
                         bufbklsz = blkremains;
-                        byteread = bufbklsz * ctx->blocksize;
+                        byteread = bufbklsz << ctx->blocksize;
                     }
 
                     if (blkremains <= bufbklsz)
                         sendflag = 0;
 
-                    r = nbd_recv(client_socket, buffer, byteread, 0);
+                    r = nbd_recv(client_socket, ctx->buffer, byteread, 0);
 
                     if (r == byteread) {
-                        r = ctx->write(buffer, offset, bufbklsz);
+                        r = ctx->write(ctx, ctx->buffer, offset, bufbklsz);
                         if (r != 0) {
                             error = NBD_EIO;
                             sendflag = 0;
                             //                    	LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE, ("nbd: error read\n"));
                         }
-                        offset += byteread;
+                        offset += bufbklsz;
                         blkremains -= bufbklsz;
                         retry = NBD_MAX_RETRIES;
                     } else {
@@ -357,7 +352,7 @@ static int transmission_phase(int client_socket, struct nbd_context *ctx)
                 break;
 
             case NBD_CMD_FLUSH:
-                ctx->flush();
+                ctx->flush(ctx);
                 break;
 
             default:
