@@ -50,24 +50,16 @@
 /*
  * https://lwip.fandom.com/wiki/Receiving_data_with_LWIP
  */
-int nbd_recv(int s, void *mem, size_t len, int flags)
+static int nbd_recv(int s, void *mem, size_t len, int flags)
 {
-    int bytesRead = 0;
-    int left = len;
-    int totalRead = 0;
+    uint32_t bytesRead = 0;
+    uint32_t left = len;
+    uint32_t totalRead = 0;
 
-    //    LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE("nbd_recv(-, 0x%X, %d)\n", (int)buffer, size);
-
-    // Read until: there is an error, we've read "size" bytes or the remote
-    //             side has closed the connection.
+    //    LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE("nbd_recv(-, 0x%X, %d)\n", (int)mem, size);
     do {
-
         bytesRead = recv(s, mem + totalRead, left, flags);
-
-
-        //              LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE("bytesRead = %d\n", bytesRead);
-
-
+        //        LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE("bytesRead = %d\n", bytesRead);
         if (bytesRead <= 0)
             break;
 
@@ -75,7 +67,6 @@ int nbd_recv(int s, void *mem, size_t len, int flags)
         totalRead += bytesRead;
 
     } while (left);
-
     return totalRead;
 }
 
@@ -84,7 +75,7 @@ int nbd_recv(int s, void *mem, size_t len, int flags)
  * @param client_socket
  * @param ctx NBD callback struct
  */
-static int negotiate_handshake_newstyle(int client_socket, struct nbd_context *ctx)
+struct nbd_context *negotiation_phase(int client_socket, struct nbd_context **ctxs)
 {
     register int size;
     uint32_t cflags, name_len, desc_len, len;
@@ -93,9 +84,14 @@ static int negotiate_handshake_newstyle(int client_socket, struct nbd_context *c
     struct nbd_fixed_new_option_reply fixed_new_option_reply;
     struct nbd_new_handshake new_hs;
 
+    //temporary workaround
+    struct nbd_context *ctx = ctxs[0];
+
+    /*** handshake ***/
+
     new_hs.nbdmagic = htonll(NBD_MAGIC);
     new_hs.version = htonll(NBD_NEW_VERSION);
-    new_hs.gflags = 0;
+    new_hs.gflags = NBD_FLAG_FIXED_NEWSTYLE;
     size = send(client_socket, &new_hs, sizeof(struct nbd_new_handshake),
                 0);
     if (size < sizeof(struct nbd_new_handshake))
@@ -105,16 +101,16 @@ static int negotiate_handshake_newstyle(int client_socket, struct nbd_context *c
     if (size < sizeof(cflags))
         goto error;
     cflags = htonl(cflags);
-    //TODO: manage cflags
+    /* TODO: manage cflags
+     * https://github.com/NetworkBlockDevice/nbd/blob/master/doc/proto.md#client-flags
+     */
 
-    ctx->eflags = NBD_FLAG_HAS_FLAGS | NBD_FLAG_FIXED_NEWSTYLE; // | NBD_FLAG_READ_ONLY
+    ctx->eflags = NBD_FLAG_HAS_FLAGS;
 
     while (1) {
 
-        /*
-		 * options haggling
-		 *
-		 */
+        /*** options haggling ***/
+
         size = recv(client_socket, &new_opt, sizeof(struct nbd_new_option),
                     0);
         if (size < sizeof(struct nbd_new_option))
@@ -203,10 +199,10 @@ static int negotiate_handshake_newstyle(int client_socket, struct nbd_context *c
     }
 
 abort:
-    return 0;
+    return ctx;
 soft_disconnect:
 error:
-    return -1;
+    return NULL;
 }
 
 /** @ingroup nbd
@@ -226,10 +222,7 @@ static int transmission_phase(int client_socket, struct nbd_context *ctx)
 
     while (1) {
 
-        /*
-		 * requests handling
-		 *
-		 */
+        /*** requests handling ***/
 
         // TODO : blocking here if no proper NBD_CMD_DISC, bad threading design ?
         size = recv(client_socket, &request, sizeof(struct nbd_request), 0);
@@ -256,10 +249,10 @@ static int transmission_phase(int client_socket, struct nbd_context *ctx)
                 else {
                     error = NBD_SUCCESS;
                     sendflag = MSG_MORE;
-                    bufbklsz = NBD_BUFFER_LEN >> ctx->blocksize;
-                    blkremains = request.count >> ctx->blocksize;
-                    offset = request.offset >> ctx->blocksize;
-                    byteread = bufbklsz << ctx->blocksize;
+                    bufbklsz = NBD_BUFFER_LEN >> ctx->blockshift;
+                    blkremains = request.count >> ctx->blockshift;
+                    offset = request.offset >> ctx->blockshift;
+                    byteread = bufbklsz << ctx->blockshift;
                 }
 
                 reply.error = ntohl(error);
@@ -270,7 +263,7 @@ static int transmission_phase(int client_socket, struct nbd_context *ctx)
 
                     if (blkremains < bufbklsz) {
                         bufbklsz = blkremains;
-                        byteread = bufbklsz << ctx->blocksize;
+                        byteread = bufbklsz << ctx->blockshift;
                     }
 
                     if (blkremains <= bufbklsz)
@@ -305,17 +298,17 @@ static int transmission_phase(int client_socket, struct nbd_context *ctx)
                 else {
                     error = NBD_SUCCESS;
                     sendflag = MSG_MORE;
-                    bufbklsz = NBD_BUFFER_LEN >> ctx->blocksize;
-                    blkremains = request.count >> ctx->blocksize;
-                    offset = request.offset >> ctx->blocksize;
-                    byteread = bufbklsz << ctx->blocksize;
+                    bufbklsz = NBD_BUFFER_LEN >> ctx->blockshift;
+                    blkremains = request.count >> ctx->blockshift;
+                    offset = request.offset >> ctx->blockshift;
+                    byteread = bufbklsz << ctx->blockshift;
                 }
 
                 while (sendflag) {
 
                     if (blkremains < bufbklsz) {
                         bufbklsz = blkremains;
-                        byteread = bufbklsz << ctx->blocksize;
+                        byteread = bufbklsz << ctx->blockshift;
                     }
 
                     if (blkremains <= bufbklsz)
@@ -355,6 +348,10 @@ static int transmission_phase(int client_socket, struct nbd_context *ctx)
                 ctx->flush(ctx);
                 break;
 
+            case NBD_CMD_TRIM:
+            case NBD_CMD_CACHE:
+            case NBD_CMD_WRITE_ZEROES:
+            case NBD_CMD_BLOCK_STATUS:
             default:
                 /* NBD_REP_ERR_INVALID */
                 goto error;
@@ -371,12 +368,13 @@ error:
  * Initialize NBD server.
  * @param ctx NBD callback struct
  */
-int nbd_init(struct nbd_context *ctx)
+int nbd_init(struct nbd_context **ctx)
 {
     int tcp_socket, client_socket = -1;
     struct sockaddr_in peer;
     socklen_t addrlen;
     register int r;
+    struct nbd_context *ctxt;
 
     peer.sin_family = AF_INET;
     peer.sin_port = htons(NBD_SERVER_PORT);
@@ -404,9 +402,9 @@ int nbd_init(struct nbd_context *ctx)
             if (client_socket < 0)
                 goto error;
 
-            r = negotiate_handshake_newstyle(client_socket, ctx);
-            if (r == 0)
-                transmission_phase(client_socket, ctx);
+            ctxt = negotiation_phase(client_socket, ctx);
+            if (ctxt != NULL)
+                transmission_phase(client_socket, ctxt);
 
             closesocket(client_socket);
         }

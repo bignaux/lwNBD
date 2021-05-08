@@ -1,6 +1,6 @@
 /****************************************************************/ /**
  *
- * @file nbd_server.h
+ * @block device nbd_server.h
  *
  * @author   Ronan Bignaux <ronan@aimao.org>
  *
@@ -82,12 +82,13 @@ static inline uint64_t bswap64(uint64_t x)
 extern "C" {
 #endif
 
-/** @ingroup nbd
- * NBD context containing callback functions for NBD transfers
- */
-
 //extern uint8_t buffer[];
 uint8_t nbd_buffer[NBD_BUFFER_LEN] __attribute__((aligned(64)));
+
+/** @ingroup nbd
+ * NBD context containing callback functions for NBD transfers
+ * https://github.com/QuantumLeaps/OOP-in-C/blob/master/AN_OOP_in_C.pdf
+ */
 
 struct nbd_context
 {
@@ -96,47 +97,46 @@ struct nbd_context
     char export_desc[64];
     uint64_t export_size; /* size of export in byte */
     uint16_t eflags;      /* per-export flags */
-    uint8_t blocksize;    /* in power of 2 for bit shifting */
+    uint8_t blockshift;   /* in power of 2 for bit shifting - log2(blocksize) */
     uint8_t *buffer;
-
-    int (*export_init)(struct nbd_context *me);
-
     /**
-   * Open file for read/write.
-   * @param fname Filename
-   * @param mode Mode string from NBD RFC 1350 (netascii, octet, mail)
-   * @param write Flag indicating read (0) or write (!= 0) access
+   *  block device
+   * @param
    * @returns File handle supplied to other functions
    */
-    //  void* (*open)(const char* fname, const char* mode, u8_t write);
+    int (*export_init)(struct nbd_context *me);
     /**
-   * Close file handle
+   * Close block device handle
    * @param handle File handle returned by open()
    */
-    //  void (*close)(void* handle);
+    //  void (*close)(struct nbd_context *me);
     /**
-   * Read from file 
-   * @param handle File handle returned by open()
-   * @param buf Target buffer to copy read data to
-   * @param bytes Number of bytes to copy to buf
+   * Read from block device
+   * @param
+   * @param buffer Target buffer to copy read data to
+   * @param offset Offset in block to copy read data to
+   * @param length Number of blocks to copy to buffer
    * @returns &gt;= 0: Success; &lt; 0: Error
    */
-    //  int (*read)(void* handle, void* buf, int bytes);
     int (*read)(struct nbd_context *me, void *buffer, uint64_t offset, uint32_t length);
     /**
-   * Write to file
-   * @param handle File handle returned by open()
-   * @param pbuf PBUF adjusted such that payload pointer points
-   *             to the beginning of write data. In other words,
-   *             NBD headers are stripped off.
+   * Write to block device
+   * @param me ()
+   * @param buffer Target buffer to copy write data to
+   * @param offset Offset in block to copy write data to
+   * @param length Number of blocks to copy to buffer
    * @returns &gt;= 0: Success; &lt; 0: Error
    */
-    //  int (*write)(void* handle, struct pbuf* p);
     int (*write)(struct nbd_context *me, void *buffer, uint64_t offset, uint32_t length);
+    /**
+   * Flush to block device
+   * @param me ()
+   * @returns &gt;= 0: Success; &lt; 0: Error
+   */
     int (*flush)(struct nbd_context *me);
 };
 
-int nbd_init(struct nbd_context *ctx);
+int nbd_init(struct nbd_context **ctx);
 
 #ifdef __cplusplus
 }
