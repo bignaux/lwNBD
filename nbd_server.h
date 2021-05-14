@@ -1,6 +1,6 @@
 /****************************************************************/ /**
  *
- * @block device nbd_server.h
+ * @file nbd_server.h
  *
  * @author   Ronan Bignaux <ronan@aimao.org>
  *
@@ -58,6 +58,7 @@
 //#include <malloc.h>
 
 //TODO: Missing <byteswap.h> in PS2SDK
+// pickup from https://gist.github.com/jtbr/7a43e6281e6cca353b33ee501421860c
 static inline uint64_t bswap64(uint64_t x)
 {
     return (((x & 0xff00000000000000ull) >> 56) | ((x & 0x00ff000000000000ull) >> 40) | ((x & 0x0000ff0000000000ull) >> 24) | ((x & 0x000000ff00000000ull) >> 8) | ((x & 0x00000000ff000000ull) << 8) | ((x & 0x0000000000ff0000ull) << 24) | ((x & 0x000000000000ff00ull) << 40) | ((x & 0x00000000000000ffull) << 56));
@@ -102,7 +103,7 @@ struct nbd_context
     /**
    *  block device
    * @param
-   * @returns File handle supplied to other functions
+   * @returns
    */
     int (*export_init)(struct nbd_context *me);
     /**

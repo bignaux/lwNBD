@@ -91,7 +91,7 @@ struct nbd_context *negotiation_phase(int client_socket, struct nbd_context **ct
 
     new_hs.nbdmagic = htonll(NBD_MAGIC);
     new_hs.version = htonll(NBD_NEW_VERSION);
-    new_hs.gflags = NBD_FLAG_FIXED_NEWSTYLE;
+    new_hs.gflags = 0; //htons(NBD_FLAG_FIXED_NEWSTYLE);
     size = send(client_socket, &new_hs, sizeof(struct nbd_new_handshake),
                 0);
     if (size < sizeof(struct nbd_new_handshake))
@@ -132,13 +132,12 @@ struct nbd_context *negotiation_phase(int client_socket, struct nbd_context **ct
 
             case NBD_OPT_EXPORT_NAME:
 
-                memset(&handshake_finish, 0,
-                       sizeof(struct nbd_export_name_option_reply));
                 handshake_finish.exportsize = htonll(ctx->export_size);
                 handshake_finish.eflags = htons(ctx->eflags);
+                // TODO if NBD_FLAG_NO_ZEROES / NBD_FLAG_C_NO_ZEROES
+                memset(handshake_finish.zeroes, 0, sizeof(handshake_finish.zeroes));
                 size = send(client_socket, &handshake_finish,
                             sizeof(struct nbd_export_name_option_reply), 0);
-
                 goto abort;
 
             case NBD_OPT_ABORT:
@@ -213,8 +212,8 @@ error:
 static int transmission_phase(int client_socket, struct nbd_context *ctx)
 {
     register int r, size, error, retry = NBD_MAX_RETRIES, sendflag = 0;
-    register uint32_t blkremains, byteread, bufbklsz;
-    register uint64_t offset;
+    register uint32_t blkremains = 0, byteread = 0, bufbklsz = 0;
+    register uint64_t offset = 0;
     struct nbd_simple_reply reply;
     struct nbd_request request;
 
@@ -410,6 +409,7 @@ int nbd_init(struct nbd_context **ctx)
         }
 
     error:
+        printf("Error: failed to nbd_init");
         closesocket(tcp_socket);
     }
 }
