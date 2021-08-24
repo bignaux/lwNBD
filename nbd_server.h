@@ -42,6 +42,7 @@
 #define LWIP_HDR_APPS_NBD_SERVER_H
 
 #include "nbd-protocol.h"
+#include "nbd_protocol.h"
 #include "nbd_opts.h"
 
 //#include "lwip/apps/nbd_opts.h"
@@ -56,6 +57,14 @@
 #include <stdint.h>
 //#include <errno.h>
 //#include <malloc.h>
+
+#ifdef DEBUG
+#define dbgprintf(args...) printf(args)
+#else
+#define dbgprintf(args...) \
+    do {                   \
+    } while (0)
+#endif
 
 //TODO: Missing <byteswap.h> in PS2SDK
 // pickup from https://gist.github.com/jtbr/7a43e6281e6cca353b33ee501421860c
@@ -75,7 +84,7 @@ static inline uint64_t bswap64(uint64_t x)
 
 //TODO: Missing in PS2SK's <stdint.h> , needed for "nbd-protocol.h"
 // https://en.cppreference.com/w/c/types/integer
-#define UINT64_MAX 0xffffffffffffffff
+#define UINT64_MAX  0xffffffffffffffff
 #define UINT64_C(x) ((x) + (UINT64_MAX - UINT64_MAX))
 #endif
 
@@ -83,8 +92,7 @@ static inline uint64_t bswap64(uint64_t x)
 extern "C" {
 #endif
 
-//extern uint8_t buffer[];
-uint8_t nbd_buffer[NBD_BUFFER_LEN] __attribute__((aligned(64)));
+extern uint8_t nbd_buffer[];
 
 /** @ingroup nbd
  * NBD context containing callback functions for NBD transfers
@@ -94,12 +102,15 @@ uint8_t nbd_buffer[NBD_BUFFER_LEN] __attribute__((aligned(64)));
 struct nbd_context
 {
 
+    // move in
     char export_name[32];
-    char export_desc[64];
     uint64_t export_size; /* size of export in byte */
     uint16_t eflags;      /* per-export flags */
-    uint8_t blockshift;   /* in power of 2 for bit shifting - log2(blocksize) */
+
+    char export_desc[64];
+    uint8_t blockshift; /* in power of 2 for bit shifting - log2(blocksize) */
     uint8_t *buffer;
+
     /**
    *  block device
    * @param
@@ -137,6 +148,8 @@ struct nbd_context
     int (*flush)(struct nbd_context *me);
 };
 
+#define nbd_send(a, b, c, d) lwip_send(a, b, c, d)
+int nbd_recv(int s, void *mem, size_t len, int flags);
 int nbd_init(struct nbd_context **ctx);
 
 #ifdef __cplusplus
