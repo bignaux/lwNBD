@@ -1,10 +1,10 @@
 # lwNBD
 
-*   Description : A Lightweight NBD server based on lwIP stack
+*   Description : A Lightweight NBD server
 *   Official repository : <https://github.com/bignaux/lwNBD>
 *   Author : Ronan Bignaux
 *   Licence : BSD
-*   lwIP 2.0.0 Socket API
+*   Socket API: lwIP 2.0.0 and Linux supported.
 
 ## History
 
@@ -23,6 +23,5 @@ Known supported clients :
 
 ## TODO
 
-*   A GNU/Linux port
 *   fix NBD_FLAG_FIXED_NEWSTYLE negotiation
-*   NBD_OPT_INFO/NBD_OPT_GO, the server is not yet able to serve many export. Currently, the server takes the first on the list.
+*   NBD_OPT_INFO/NBD_OPT_GO, the server is not yet able to serve many export or change blocksize. Currently, the server takes the first context on the list.
