@@ -122,10 +122,10 @@ int nbd_init(nbd_context **ctx)
             close(client_socket);
             printf("lwNBD: a client disconnected.\n");
         }
-      }
-    error:
-        printf("lwNBD: failed to init server.");
-        close(tcp_socket);
+    }
+error:
+    printf("lwNBD: failed to init server.");
+    close(tcp_socket);
 
     return 0;
 }

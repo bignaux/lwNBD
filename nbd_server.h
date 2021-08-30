@@ -125,12 +125,13 @@ typedef struct nbd_context
     char export_name[32];
     uint64_t export_size; /* size of export in byte */
     uint16_t eflags;      /* per-export flags */
-    uint8_t blockshift; /* in power of 2 for bit shifting - log2(blocksize) */
+    uint8_t blockshift;   /* in power of 2 for bit shifting - log2(blocksize) */
     uint8_t *buffer;
 
 } nbd_context;
 
-struct nbd_context_Vtbl {
+struct nbd_context_Vtbl
+{
 
     /**
    * Close block device handle
@@ -145,7 +146,7 @@ struct nbd_context_Vtbl {
    * @param length Number of blocks to copy to buffer
    * @returns &gt;= 0: Success; &lt; 0: Error
    */
-    int (*read)(nbd_context const * const me, void *buffer, uint64_t offset, uint32_t length);
+    int (*read)(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length);
     /**
    * Write to block device
    * @param me ()
@@ -154,27 +155,30 @@ struct nbd_context_Vtbl {
    * @param length Number of blocks to copy to buffer
    * @returns &gt;= 0: Success; &lt; 0: Error
    */
-    int (*write)(nbd_context const * const me, void *buffer, uint64_t offset, uint32_t length);
+    int (*write)(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length);
     /**
    * Flush to block device
    * @param me ()
    * @returns &gt;= 0: Success; &lt; 0: Error
    */
-    int (*flush)(nbd_context const * const me);
+    int (*flush)(nbd_context const *const me);
 };
 
 int nbd_recv(int s, void *mem, size_t len, int flags);
 int nbd_init(nbd_context **ctx);
 
-static inline int nbd_read(nbd_context const * const me, void *buffer, uint64_t offset, uint32_t length) {
-    return (*me->vptr->read)(me,buffer, offset,length);
+static inline int nbd_read(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length)
+{
+    return (*me->vptr->read)(me, buffer, offset, length);
 }
 
-static inline int nbd_write(nbd_context const * const me, void *buffer, uint64_t offset, uint32_t length) {
-    return (*me->vptr->write)(me,buffer, offset,length);
+static inline int nbd_write(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length)
+{
+    return (*me->vptr->write)(me, buffer, offset, length);
 }
 
-static inline int nbd_flush(nbd_context const * const me) {
+static inline int nbd_flush(nbd_context const *const me)
+{
     return (*me->vptr->flush)(me);
 }
 

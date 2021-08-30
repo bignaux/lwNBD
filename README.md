@@ -10,7 +10,7 @@
 
 On Playstation 2, there is no standardized central partition table like GPT for hard disk partitioning, nor is there a standard file system but PFS and HDLoader. In fact, there are few tools capable of handling hard disks, especially under Linux, and the servers developed in the past to handle these disks via the network did not use a standard protocol, which required each software wishing to handle the disks to include a specific client part, which were broken when the toolchain was updated. The same goes for the memory cards and other block devices on this console, which is why I decided to implement NBD on this target first.
 
-lwNBD is developed on MIPS R3000 IOP in [my OPL nbd branch](https://github.com/bignaux/Open-PS2-Loader/tree/nbd/modules/network/lwnbdsvr), that provides a good uptodate use case. Currently, the support for HDD is merged in OPL.
+lwNBD is developed on MIPS R3000 IOP as an IRX module in [Open-PS2-Loader](https://github.com/ps2homebrew/Open-PS2-Loader). That provides a good uptodate use case.
 
 ## Status
 
@@ -20,6 +20,7 @@ Known supported clients :
 
 *   nbdfuse (provided by libnbd), works on windows with WSL2.
 *   nbd-client -no-optgo
+*   Ceph for Windows (wnbd-client.exe)
 
 ## TODO
 

@@ -104,7 +104,6 @@ nbd_context *negotiation_phase(int client_socket, nbd_context **ctxs)
 
             case NBD_OPT_EXPORT_NAME:
 
-printf("ctx->export_size = %ld \n",ctx->export_size );
                 handshake_finish.exportsize = htonll(ctx->export_size);
                 handshake_finish.eflags = htons(ctx->eflags);
                 // TODO if NBD_FLAG_NO_ZEROES / NBD_FLAG_C_NO_ZEROES
@@ -218,7 +217,7 @@ int transmission_phase(int client_socket, nbd_context *ctx)
 
         reply.handle = request.handle;
 
-        printf("lwNBD: entering NBD_CMD %d.\n", request.type);
+        // printf("lwNBD: entering NBD_CMD %d.\n", request.type);
 
         switch (request.type) {
 
