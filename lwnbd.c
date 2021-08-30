@@ -35,6 +35,7 @@ int file_ctor(file_driver *const me, const char *pathname)
     strcpy(me->super.export_name, pathname);
     me->super.blockshift = 9;
     me->super.buffer = nbd_buffer;
+    me->super.eflags = NBD_FLAG_HAS_FLAGS;
 
     fseek(me->fp, 0L, SEEK_END);
     me->super.export_size = ftell(me->fp);
@@ -73,41 +74,41 @@ int main(int argc, char **argv)
 {
     int ret;
     int successed_exported_ctx = 0;
-    struct file_driver fakedrive;
-    nbd_context *nbd_contexts[] = {
-        &fakedrive.super,
-        NULL,
-    };
+    struct file_driver fakedrive[10];
+    nbd_context *nbd_contexts[10];
+    // nbd_context **ptr_ctx = nbd_contexts;
 
-    if (argc != 2) {
-        printf("Usage ./lwNDB <file>\n");
+    if (argc <= 2) {
+        printf("Usage ./lwNDB <files>\n");
         exit(EXIT_FAILURE);
     }
 
-    ret = file_ctor(&fakedrive, argv[1]);
-    if (ret == 0)
-        successed_exported_ctx = 1;
-
-    /*
-    nbd_context **ptr_ctx = nbd_contexts;
-
-    //Platform specific block device detection then nbd_context initialization go here
-    while (*ptr_ctx) {
-        if ((*ptr_ctx)->export_init(*ptr_ctx) != 0) {
-            printf("lwnbdsvr: failed to init %s driver!\n", (*ptr_ctx)->export_name);
-        } else {
-            printf("lwnbdsvr: export %s\n", (*ptr_ctx)->export_desc);
+    for (int i = 1; i < argc; i++) {
+        ret = file_ctor(&fakedrive[successed_exported_ctx], argv[i]);
+        if (ret == 0) {
+            nbd_contexts[successed_exported_ctx] = &fakedrive[successed_exported_ctx].super;
             successed_exported_ctx++;
         }
-        ptr_ctx++;
     }
-    */
+    nbd_contexts[successed_exported_ctx] = NULL;
+
+    //Platform specific block device detection then nbd_context initialization go here
+    // while (*ptr_ctx) {
+    //     if ((*ptr_ctx)->export_init(*ptr_ctx) != 0) {
+    //         printf("lwnbdsvr: failed to init %s driver!\n", (*ptr_ctx)->export_name);
+    //     } else {
+    //         printf("lwnbdsvr: export %s\n", (*ptr_ctx)->export_desc);
+    //         successed_exported_ctx++;
+    //     }
+    //     ptr_ctx++;
+    // }
+    //
 
     if (!successed_exported_ctx) {
         printf("lwNBD: nothing to export.\n");
         exit(EXIT_FAILURE);
     }
-    printf("lwNBD: init nbd_contexts ok.\n");
+    printf("lwNBD: init %d exports.\n", successed_exported_ctx);
 
     nbd_init(nbd_contexts);
     exit(EXIT_SUCCESS);
