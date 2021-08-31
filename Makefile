@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall
+CFLAGS=-Wall -DDEBUG
 OBJ=lwnbd.o nbd_protocol.o nbd_server.o
 
 lwNBD: $(OBJ)
