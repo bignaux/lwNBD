@@ -32,7 +32,7 @@ int file_ctor(file_driver *const me, const char *pathname)
         &file_flush_,
     };
     nbd_context_ctor(&me->super); /* call the superclass' ctor */
-    me->super.vptr = &vtbl; /* override the vptr */
+    me->super.vptr = &vtbl;       /* override the vptr */
     // strcpy(me->pathname, pathname);
     if ((me->fp = fopen(pathname, "r+")) == NULL) {
         perror("lwNBD: Error occurred while opening file");

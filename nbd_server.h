@@ -78,8 +78,8 @@
 
 
 #define assert(expr) \
-    ((expr) || \
-        dbgprintf(F_NUM, __LINE__))
+    ((expr) ||       \
+     dbgprintf(F_NUM, __LINE__))
 
 //#include <errno.h>
 //#include <malloc.h>
@@ -113,8 +113,6 @@ static inline uint64_t bswap64(uint64_t x)
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-extern uint8_t nbd_buffer[];
 
 /** @ingroup nbd
  * NBD context containing callback functions for NBD transfers
@@ -173,12 +171,13 @@ struct nbd_context_Vtbl
 uint32_t nbd_recv(int s, void *mem, size_t len, int flags);
 int nbd_init(nbd_context **ctx);
 
+
 // in nbd_protocol.c
 //todo: const ctxs
 nbd_context *negotiation_phase(const int client_socket, nbd_context **ctxs);
 int transmission_phase(const int client_socket, const nbd_context *ctx);
 
-void nbd_context_ctor(nbd_context * const me);
+void nbd_context_ctor(nbd_context *const me);
 static inline int nbd_read(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length)
 {
     return (*me->vptr->read)(me, buffer, offset, length);
@@ -193,6 +192,11 @@ static inline int nbd_flush(nbd_context const *const me)
 {
     return (*me->vptr->flush)(me);
 }
+
+//Todo: make a real server object
+extern char gdefaultexport[];
+extern uint8_t nbd_buffer[];
+nbd_context *nbd_context_getDefaultExportByName(nbd_context **nbd_contexts, const char *exportname);
 
 #ifdef __cplusplus
 }

@@ -45,36 +45,56 @@
  * This is simple NBD server for the lwIP Socket API.
  */
 
+#include <string.h>
 #include "nbd_server.h"
+
+char gdefaultexport[32];
 
 static int nbd_context_read_(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length);
 static int nbd_context_write_(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length);
 static int nbd_context_flush_(nbd_context const *const me);
 
 /* constructor */
-void nbd_context_ctor(nbd_context * const me) {
-    static struct nbd_context_Vtbl const vtbl = { /* vtbl of the nbd_context class */
-        &nbd_context_read_,
-        &nbd_context_write_,
-        &nbd_context_flush_
-     };
-     me->vptr = &vtbl; /* "hook" the vptr to the vtbl */
+void nbd_context_ctor(nbd_context *const me)
+{
+    static struct nbd_context_Vtbl const vtbl = {/* vtbl of the nbd_context class */
+                                                 &nbd_context_read_,
+                                                 &nbd_context_write_,
+                                                 &nbd_context_flush_};
+    me->vptr = &vtbl; /* "hook" the vptr to the vtbl */
 }
 
 /* nbd_context class implementations of its virtual functions... */
-static int nbd_context_read_(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length) {
+static int nbd_context_read_(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length)
+{
     // assert(0); /* purely-virtual function should never be called */
     return 0U; /* to avoid compiler warnings */
 }
 
-static int nbd_context_write_(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length){
+static int nbd_context_write_(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length)
+{
     // assert(0); /* purely-virtual function should never be called */
     return 0U; /* to avoid compiler warnings */
 }
 
-static int nbd_context_flush_(nbd_context const *const me){
+static int nbd_context_flush_(nbd_context const *const me)
+{
     // assert(0); /* purely-virtual function should never be called */
     return 0U; /* to avoid compiler warnings */
+}
+
+/* search for the default export by name
+   return NULL if not found any.
+*/
+nbd_context *nbd_context_getDefaultExportByName(nbd_context **nbd_contexts, const char *exportname)
+{
+    nbd_context **ptr_ctx = nbd_contexts;
+    while (*ptr_ctx) {
+        if (strncmp((*ptr_ctx)->export_name, exportname, 32) == 0)
+            break;
+        ptr_ctx++;
+    }
+    return *ptr_ctx;
 }
 
 /*
