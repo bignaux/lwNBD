@@ -1,83 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "nbd_server.h"
-
 #include <string.h>
 #include <errno.h>
 
-typedef struct file_driver
+#include "nbd_server.h"
+#include "drivers/stdio_d.h"
+
+struct file_driver fakedrive[10];
+
+//TODO; int lwnbdSetDefaultExport(char * export_name)
+//TODO: int lookuptable(char * export_name)
+//TODO: mask,rw
+int lwnbdInitExport(nbd_context **nbd_contexts, int argc, char **argv)
 {
-    nbd_context super;
-    //TODO: char *pathname;
-    FILE *fp;
-} file_driver;
-
-int file_read_(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length)
-{
-    size_t ret;
-    file_driver const *const me_ = (file_driver const *)me;
-    fseek(me_->fp, offset, SEEK_SET);
-    ret = fread(buffer, me->blocksize, length, me_->fp);
-    return ((ret == length) ? 0 : 1);
-}
-
-int file_write_(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length)
-{
-    size_t ret;
-    file_driver const *const me_ = (file_driver const *)me;
-    fseek(me_->fp, offset, SEEK_SET);
-    ret = fwrite(buffer, me->blocksize, length, me_->fp);
-    return ((ret == length) ? 0 : 1);
-}
-
-static inline int file_flush_(nbd_context const *const me)
-{
-    return fflush(((file_driver const *)me)->fp);
-}
-
-int file_ctor(file_driver *const me, const char *pathname)
-{
-    static struct nbd_context_Vtbl const vtbl = {
-        &file_read_,
-        &file_write_,
-        &file_flush_,
-    };
-
-    me->super.vptr = &vtbl; /* override the vptr */
-    // strcpy(me->pathname, pathname);
-    if ((me->fp = fopen(pathname, "r+")) == NULL) {
-        perror("lwNBD: Error occurred while opening file");
-        return 1;
-    }
-
-    strcpy(me->super.export_desc, "single file exporter");
-    strcpy(me->super.export_name, pathname); //todo basename()
-    me->super.blocksize = 512;
-    me->super.buffer = nbd_buffer;
-    me->super.eflags = NBD_FLAG_HAS_FLAGS;
-
-    fseek(me->fp, 0L, SEEK_END);
-    me->super.export_size = ftell(me->fp);
-
-    // 	void setbuf(FILE *stream, char *buffer)
-    return 0;
-}
-
-//Todo file_close ?
-
-int main(int argc, char **argv)
-{
-    int ret;
-    int successed_exported_ctx = 0;
-    struct file_driver fakedrive[10];
-    nbd_context *nbd_contexts[10];
-    // nbd_context **ptr_ctx = nbd_contexts;
-
-    if (argc < 2) {
-        fprintf(stderr,"Usage ./lwNDB <files>\n");
-        exit(EXIT_FAILURE);
-    }
-
+    int ret, successed_exported_ctx = 0;
     for (int i = 1; i < argc; i++) {
         ret = file_ctor(&fakedrive[successed_exported_ctx], argv[i]);
         if (ret == 0) {
@@ -86,6 +22,20 @@ int main(int argc, char **argv)
         }
     }
     nbd_contexts[successed_exported_ctx] = NULL;
+    return successed_exported_ctx;
+}
+
+int main(int argc, char **argv)
+{
+    int successed_exported_ctx = 0;
+    nbd_context *nbd_contexts[10];
+
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <files>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    successed_exported_ctx = lwnbdInitExport(nbd_contexts, argc, argv);
 
     if (!successed_exported_ctx) {
         printf("lwNBD: nothing to export.\n");

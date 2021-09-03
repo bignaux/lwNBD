@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Wall -DDEBUG
-OBJ=lwnbd.o nbd_protocol.o nbd_server.o
+OBJ=lwnbd.o nbd_protocol.o nbd_server.o drivers/stdio_d.o
 
 lwNBD: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
@@ -29,7 +29,7 @@ sync:
 	#git -C $(DEST) checkout nbd
 	#rm $(DEST)/modules/network/lwnbdsvr/lwNBD/*
 	#rm -r $(DEST)/modules/network/lwnbdsvr/obj/
-	rsync -avu --files-from=opl.rsync . $(DEST)/modules/network/lwnbdsvr/lwNBD/
+	rsync -avu --files-from=opl.rsync . $(DEST)/modules/network/lwnbdsvr/
 
 softdev2:
 	sudo nbd-client -no-optgo $(IP) $(DEV)

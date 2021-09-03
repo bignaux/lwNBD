@@ -99,21 +99,21 @@ nbd_context *negotiation_phase(const int client_socket, nbd_context **ctxs)
             nbd_buffer[new_opt.optlen] = '\0';
         }
 
-        #ifdef DEBUG
+#ifdef DEBUG
         static const char *NBD_OPTIONS[] = {
-        NULL,
-        "NBD_OPT_EXPORT_NAME",
-        "NBD_OPT_ABORT",
-        "NBD_OPT_LIST",
-        "NBD_OPT_STARTTLS",
-        "NBD_OPT_INFO",
-        "NBD_OPT_GO",
-        "NBD_OPT_STRUCTURED_REPLY",
-        "NBD_OPT_LIST_META_CONTEXT",
-        "NBD_OPT_SET_META_CONTEXT",
+            NULL,
+            "NBD_OPT_EXPORT_NAME",
+            "NBD_OPT_ABORT",
+            "NBD_OPT_LIST",
+            "NBD_OPT_STARTTLS",
+            "NBD_OPT_INFO",
+            "NBD_OPT_GO",
+            "NBD_OPT_STRUCTURED_REPLY",
+            "NBD_OPT_LIST_META_CONTEXT",
+            "NBD_OPT_SET_META_CONTEXT",
         };
         printf("lwNBD: %s\n", NBD_OPTIONS[new_opt.option]);
-        #endif
+#endif
 
         switch (new_opt.option) {
 
@@ -237,19 +237,19 @@ int transmission_phase(const int client_socket, const nbd_context *ctx)
 
         reply.handle = request.handle;
 
-        #ifdef DEBUG
+#ifdef DEBUG
         static const char *NBD_CMD[] = {
-        "NBD_CMD_READ",
-        "NBD_CMD_WRITE",
-        "NBD_CMD_DISC",
-        "NBD_CMD_FLUSH",
-        "NBD_CMD_TRIM",
-        "NBD_CMD_CACHE",
-        "NBD_CMD_WRITE_ZEROES",
-        "NBD_CMD_BLOCK_STATUS",
+            "NBD_CMD_READ",
+            "NBD_CMD_WRITE",
+            "NBD_CMD_DISC",
+            "NBD_CMD_FLUSH",
+            "NBD_CMD_TRIM",
+            "NBD_CMD_CACHE",
+            "NBD_CMD_WRITE_ZEROES",
+            "NBD_CMD_BLOCK_STATUS",
         };
         printf("lwNBD: %s\n", NBD_CMD[request.type]);
-        #endif
+#endif
 
         switch (request.type) {
 

@@ -5,3 +5,5 @@ nbd-protocol.h
 nbd_server.c
 nbd_server.h
 README.md
+drivers/atad_d.c
+drivers/atad_d.h
