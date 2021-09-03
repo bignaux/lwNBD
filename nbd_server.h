@@ -65,6 +65,8 @@
 #include <netinet/in.h>
 #include <endian.h>
 #include <unistd.h>
+
+#include <assert.h> //todo: move in .c
 //TODO : manage endianess
 #define htonll(x) htobe64(x)
 #define ntohll(x) be64toh(x)
@@ -73,6 +75,11 @@
 #ifdef PS2SDK
 #include <ps2ip.h>
 #include <sysclib.h>
+
+
+#define assert(expr) \
+    ((expr) || \
+        dbgprintf(F_NUM, __LINE__))
 
 //#include <errno.h>
 //#include <malloc.h>
@@ -163,7 +170,7 @@ struct nbd_context_Vtbl
     int (*flush)(nbd_context const *const me);
 };
 
-int nbd_recv(int s, void *mem, size_t len, int flags);
+uint32_t nbd_recv(int s, void *mem, size_t len, int flags);
 int nbd_init(nbd_context **ctx);
 
 // in nbd_protocol.c
@@ -171,6 +178,7 @@ int nbd_init(nbd_context **ctx);
 nbd_context *negotiation_phase(const int client_socket, nbd_context **ctxs);
 int transmission_phase(const int client_socket, const nbd_context *ctx);
 
+void nbd_context_ctor(nbd_context * const me);
 static inline int nbd_read(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length)
 {
     return (*me->vptr->read)(me, buffer, offset, length);

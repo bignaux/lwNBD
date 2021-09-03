@@ -26,7 +26,7 @@ int atad_ctor(atad_driver *const me, int device)
         &atad_write_,
         &atad_flush_,
     };
-
+    nbd_context_ctor(&me->super); /* call the superclass' ctor */
     me->super.vptr = &vtbl; /* override the vptr */
     // int ata_device_sce_identify_drive(int device, void *data);
     strcpy(me->super.export_desc, "PlayStation 2 HDD via ATAD");
