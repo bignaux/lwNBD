@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Wall -DDEBUG
-OBJ=lwnbd.o nbd_protocol.o nbd_server.o drivers/stdio_d.o
+OBJ=lwnbd_linux.o nbd_protocol.o lwnbd.o drivers/stdio_d.o
 
 lwNBD: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)

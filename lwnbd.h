@@ -1,6 +1,6 @@
 /****************************************************************/ /**
  *
- * @file nbd_server.h
+ * @file lwnbd.h
  *
  * @author   Ronan Bignaux <ronan@aimao.org>
  *

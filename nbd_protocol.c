@@ -39,7 +39,7 @@
  */
 
 #include <string.h>
-#include "nbd_server.h"
+#include "lwnbd.h"
 uint8_t nbd_buffer[NBD_BUFFER_LEN] __attribute__((aligned(64)));
 
 /** @ingroup nbd

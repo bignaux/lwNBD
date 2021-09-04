@@ -1,7 +1,7 @@
 #ifndef STDIO_DRIVERS_NBD_H
 #define STDIO_DRIVERS_NBD_H
 
-#include "../nbd_server.h"
+#include "../lwnbd.h"
 
 #ifdef __cplusplus
 extern "C" {
