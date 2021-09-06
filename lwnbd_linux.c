@@ -43,13 +43,13 @@ int main(int argc, char **argv)
 
     dfexp = nbd_context_getDefaultExportByName(nbd_contexts, gdefaultexport);
     if (dfexp != NULL)
-        printf("default export found : %s\n", dfexp->export_name);
+        LOG("default export found : %s\n", dfexp->export_name);
 
     if (!successed_exported_ctx) {
-        printf("lwNBD: nothing to export.\n");
+        LOG("nothing to export.\n");
         exit(EXIT_FAILURE);
     }
-    printf("lwNBD: init %d exports.\n", successed_exported_ctx);
+    LOG("init %d exports.\n", successed_exported_ctx);
     nbd_init(nbd_contexts);
     exit(EXIT_SUCCESS);
 }

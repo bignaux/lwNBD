@@ -44,6 +44,9 @@
 #include "nbd-protocol.h"
 #include "nbd_opts.h"
 
+#define LOG(format, args...) \
+    printf(APP_NAME ": " format, ##args)
+
 #include <stdint.h>
 #include <stdio.h>
 
@@ -67,15 +70,15 @@
 #include <unistd.h>
 
 #include <assert.h> //todo: move in .c
+
 //TODO : manage endianess
 #define htonll(x) htobe64(x)
 #define ntohll(x) be64toh(x)
 #endif
 
-#ifdef PS2SDK
+#ifdef _IOP
 #include <ps2ip.h>
 #include <sysclib.h>
-
 
 #define assert(expr) \
     ((expr) ||       \
@@ -108,7 +111,7 @@ static inline uint64_t bswap64(uint64_t x)
 // https://en.cppreference.com/w/c/types/integer
 #define UINT64_MAX  0xffffffffffffffff
 #define UINT64_C(x) ((x) + (UINT64_MAX - UINT64_MAX))
-#endif
+#endif /* _IOP */
 
 #ifdef __cplusplus
 extern "C" {

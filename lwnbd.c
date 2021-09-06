@@ -107,10 +107,10 @@ uint32_t nbd_recv(int s, void *mem, size_t len, int flags)
     uint32_t totalRead = 0;
 
     //        LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE("nbd_recv(-, 0x%X, %d)\n", (int)mem, size);
-    // dbgprintf("left = %u\n", left);
+    // dbgLOG("left = %u\n", left);
     do {
         bytesRead = recv(s, mem + totalRead, left, flags);
-        // dbgprintf("bytesRead = %u\n", bytesRead);
+        // dbgLOG("bytesRead = %u\n", bytesRead);
         if (bytesRead <= 0)
             break;
 
@@ -159,22 +159,22 @@ int nbd_init(nbd_context **ctx)
             if (client_socket < 0)
                 goto error;
 
-            printf("lwNBD: a client connected.\n");
+            LOG("a client connected.\n");
             ctxt = negotiation_phase(client_socket, ctx);
             if (ctxt != NULL)
                 r = transmission_phase(client_socket, ctxt);
             else
-                printf("lwNBD: handshake failed.\n");
+                LOG("handshake failed.\n");
 
             if (r != NBD_SUCCESS)
-                printf("lwNBD: an error occured during transmission phase.\n");
+                LOG("an error occured during transmission phase.\n");
 
             close(client_socket);
-            printf("lwNBD: a client disconnected.\n");
+            LOG("a client disconnected.\n");
         }
     }
 error:
-    printf("lwNBD: failed to init server.");
+    LOG("failed to init server.");
     close(tcp_socket);
 
     return 0;

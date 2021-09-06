@@ -8,13 +8,14 @@
 
 Targeting first the use on Playstation 2 IOP, a 37.5 MHz MIPS processor
 and 2 MB of RAM, lwNBD is designed to run on bare metal or OS embedded system.
-It is developed according to several code standards, including :
+With modulararity and portability in mind, it is developed according to several code standards, including :
+
 *   [Object-Oriented Programming in C](https://github.com/QuantumLeaps/OOP-in-C/)
 *   nbdkit implementation naming, using a verbatim copy of their nbd-protocol.h
 
-There are 2 exemples provided :
+There are 2 examples provided :
 
-*   lwnbd_linux.c is a simple nbd server example, that use stdio_d.c driver to
+*   lwnbd_linux.c is a simple nbd server, that use stdio_d.c driver to
     serve a list of files as command line parameters.
 *   lwnbdsvr.c an IRX module for [Open-PS2-Loader](https://github.com/ps2homebrew/Open-PS2-Loader).
     It can export hdd drive.

@@ -1,10 +1,10 @@
+#define APP_NAME "lwnbdsvr"
 
 #include "irx_imports.h"
-#include "nbd_server.h"
+#include "lwnbd.h"
 #include "drivers/atad_d.h"
 
-#define MODNAME "lwnbdsvr"
-IRX_ID(MODNAME, 1, 1);
+IRX_ID(APP_NAME, 1, 1);
 static int nbd_tid;
 extern struct irx_export_table _exp_lwnbdsvr;
 
@@ -19,7 +19,7 @@ int _start(int argc, char **argv)
 
     if (argc > 1) {
         strcpy(gdefaultexport, argv[1]);
-        printf("lwNBD: default export : %s\n", gdefaultexport);
+        LOG("default export : %s\n", gdefaultexport);
     }
 
     for (int i = 0; i < 2; i++) {
@@ -32,11 +32,11 @@ int _start(int argc, char **argv)
     nbd_contexts[successed_exported_ctx] = NULL;
 
     if (!successed_exported_ctx) {
-        printf("lwNBD: nothing to export.\n");
+        LOG("nothing to export.\n");
         return -1;
     }
 
-    printf("lwNBD: init %d exports.\n", successed_exported_ctx);
+    LOG("init %d exports.\n", successed_exported_ctx);
 
     // register exports
     RegisterLibraryEntries(&_exp_lwnbdsvr);

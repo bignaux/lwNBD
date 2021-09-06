@@ -35,7 +35,7 @@ int file_ctor(file_driver *const me, const char *pathname)
     me->super.vptr = &vtbl;       /* override the vptr */
     // strcpy(me->pathname, pathname);
     if ((me->fp = fopen(pathname, "r+")) == NULL) {
-        perror("lwNBD: Error occurred while opening file");
+        perror(" Error occurred while opening file");
         return 1;
     }
 

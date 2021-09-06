@@ -1,3 +1,7 @@
+##################################
+#	Linux target
+##################################
+
 CC=gcc
 CFLAGS=-Wall -DDEBUG
 OBJ=lwnbd_linux.o nbd_protocol.o lwnbd.o drivers/stdio_d.o
@@ -9,10 +13,6 @@ lwNBD: $(OBJ)
 
 clean:
 		rm -f $(OBJ) *~ core lwNBD
-
-##################################
-#	Linux target
-##################################
 
 format:
 	find . -type f -a \( -iname \*.h -o -iname \*.c \) | xargs clang-format -i

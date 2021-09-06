@@ -114,7 +114,7 @@ nbd_context *negotiation_phase(const int client_socket, nbd_context **ctxs)
             "NBD_OPT_LIST_META_CONTEXT",
             "NBD_OPT_SET_META_CONTEXT",
         };
-        printf("lwNBD: %s\n", NBD_OPTIONS[new_opt.option]);
+        LOG("%s\n", NBD_OPTIONS[new_opt.option]);
 #endif
 
         switch (new_opt.option) {
@@ -220,15 +220,15 @@ int transmission_phase(const int client_socket, const nbd_context *ctx)
         // TODO : blocking here if no proper NBD_CMD_DISC, bad threading design ?
         size = nbd_recv(client_socket, &request, sizeof(struct nbd_request), 0);
         if (size < sizeof(struct nbd_request)) {
-            printf("lwNBD: sizeof NOK\n");
+            LOG("sizeof NOK\n");
             goto error;
         }
 
-        // printf("lwNBD : sizeof OK.\n");
+        // LOG("lwNBD : sizeof OK.\n");
 
         request.magic = ntohl(request.magic);
         if (request.magic != NBD_REQUEST_MAGIC) {
-            printf("lwNBD: wrong NBD_REQUEST_MAGIC\n");
+            LOG("wrong NBD_REQUEST_MAGIC\n");
             goto error;
         }
 
@@ -250,7 +250,7 @@ int transmission_phase(const int client_socket, const nbd_context *ctx)
             "NBD_CMD_WRITE_ZEROES",
             "NBD_CMD_BLOCK_STATUS",
         };
-        printf("lwNBD: %s\n", NBD_CMD[request.type]);
+        LOG("%s\n", NBD_CMD[request.type]);
 #endif
 
         switch (request.type) {
@@ -295,7 +295,7 @@ int transmission_phase(const int client_socket, const nbd_context *ctx)
                         retry--;
                         sendflag = 1;
                     } else {
-                        printf("NBD_CMD_READ : EIO\n");
+                        LOG("NBD_CMD_READ : EIO\n");
                         goto error; // -EIO
                                     //                    	LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE, ("nbd: error read\n"));
                     }
