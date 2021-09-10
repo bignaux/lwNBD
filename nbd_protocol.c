@@ -39,7 +39,9 @@
  */
 
 #include <string.h>
-#include "lwnbd.h"
+#include <stddef.h>
+#include <lwnbd.h>
+
 uint8_t nbd_buffer[NBD_BUFFER_LEN] __attribute__((aligned(64)));
 
 /** @ingroup nbd
@@ -51,11 +53,12 @@ nbd_context *negotiation_phase(const int client_socket, nbd_context **ctxs)
 {
     register int size;
     uint32_t cflags, name_len, desc_len, len;
+    uint32_t gflags; //TODO: move in server_ctx struct
     struct nbd_new_option new_opt;
     struct nbd_export_name_option_reply handshake_finish;
     struct nbd_fixed_new_option_reply fixed_new_option_reply;
     struct nbd_new_handshake new_hs;
-    nbd_context **ptr_ctx = ctxs;
+    nbd_context **ptr_ctx;
 
     //temporary workaround
     nbd_context const *ctx = nbd_context_getDefaultExportByName(ctxs, gdefaultexport);
@@ -66,7 +69,8 @@ nbd_context *negotiation_phase(const int client_socket, nbd_context **ctxs)
 
     new_hs.nbdmagic = htonll(NBD_MAGIC);
     new_hs.version = htonll(NBD_NEW_VERSION);
-    new_hs.gflags = htons(NBD_FLAG_FIXED_NEWSTYLE);
+    gflags = (NBD_FLAG_FIXED_NEWSTYLE | NBD_FLAG_NO_ZEROES);
+    new_hs.gflags = htons(gflags);
     size = send(client_socket, &new_hs, sizeof(struct nbd_new_handshake),
                 0);
     if (size < sizeof(struct nbd_new_handshake))
@@ -76,9 +80,11 @@ nbd_context *negotiation_phase(const int client_socket, nbd_context **ctxs)
     if (size < sizeof(cflags))
         goto error;
     cflags = htonl(cflags);
-    /* TODO: manage cflags
-     * https://github.com/NetworkBlockDevice/nbd/blob/master/doc/proto.md#client-flags
-     */
+
+    if (cflags != gflags) {
+        LOG("Unsupported client flags %d\n", cflags);
+        goto error;
+    }
 
     while (1) {
 
@@ -123,10 +129,9 @@ nbd_context *negotiation_phase(const int client_socket, nbd_context **ctxs)
 
                 handshake_finish.exportsize = htonll(ctx->export_size);
                 handshake_finish.eflags = htons(ctx->eflags);
-                // TODO if NBD_FLAG_NO_ZEROES / NBD_FLAG_C_NO_ZEROES
                 memset(handshake_finish.zeroes, 0, sizeof(handshake_finish.zeroes));
                 size = send(client_socket, &handshake_finish,
-                            sizeof(struct nbd_export_name_option_reply), 0);
+                            (cflags & NBD_FLAG_NO_ZEROES) ? offsetof(struct nbd_export_name_option_reply, zeroes) : sizeof handshake_finish, 0);
                 goto abort;
 
             case NBD_OPT_ABORT:
@@ -145,8 +150,10 @@ nbd_context *negotiation_phase(const int client_socket, nbd_context **ctxs)
                 fixed_new_option_reply.magic = htonll(NBD_REP_MAGIC);
                 fixed_new_option_reply.option = htonl(new_opt.option);
                 fixed_new_option_reply.reply = htonl(NBD_REP_SERVER);
+                ptr_ctx = ctxs;
                 while (*ptr_ctx) {
-                    name_len = strlen(ctx->export_name);
+                    name_len = strlen((*ptr_ctx)->export_name);
+                    LOG("%s\n", (*ptr_ctx)->export_name);
                     desc_len = (*ptr_ctx)->export_desc ? strlen((*ptr_ctx)->export_desc) : 0;
                     len = htonl(name_len);
                     fixed_new_option_reply.replylen = htonl(name_len + sizeof(len) +
@@ -220,7 +227,7 @@ int transmission_phase(const int client_socket, const nbd_context *ctx)
         // TODO : blocking here if no proper NBD_CMD_DISC, bad threading design ?
         size = nbd_recv(client_socket, &request, sizeof(struct nbd_request), 0);
         if (size < sizeof(struct nbd_request)) {
-            LOG("sizeof NOK\n");
+            LOG("sizeof nbd_request waited %ld receveid %d\n", sizeof(struct nbd_request), size);
             goto error;
         }
 

@@ -107,6 +107,12 @@ static inline uint64_t bswap64(uint64_t x)
 #define ntohll(x) bswap64(x)
 #endif
 
+// Missing in stddef.h
+#ifndef offsetof
+#define offsetof(st, m) \
+    ((size_t)((char *)&((st *)0)->m - (char *)0))
+#endif
+
 //TODO: Missing in PS2SK's <stdint.h> , needed for "nbd-protocol.h"
 // https://en.cppreference.com/w/c/types/integer
 #define UINT64_MAX  0xffffffffffffffff
@@ -122,11 +128,11 @@ extern "C" {
  * https://github.com/QuantumLeaps/OOP-in-C/blob/master/AN_OOP_in_C.pdf
  */
 
-struct nbd_context_Vtbl;
+struct lwnbd_operations;
 
 typedef struct nbd_context
 {
-    struct nbd_context_Vtbl const *vptr;
+    struct lwnbd_operations const *vptr;
 
     char export_desc[64];
     char export_name[32];
@@ -137,7 +143,7 @@ typedef struct nbd_context
 
 } nbd_context;
 
-struct nbd_context_Vtbl
+struct lwnbd_operations
 {
 
     /**

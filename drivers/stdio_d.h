@@ -1,7 +1,7 @@
 #ifndef STDIO_DRIVERS_NBD_H
 #define STDIO_DRIVERS_NBD_H
 
-#include "../lwnbd.h"
+#include <lwnbd.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,7 +10,7 @@ extern "C" {
 typedef struct file_driver
 {
     nbd_context super;
-    //TODO: char *pathname;
+    char *pathname;
     FILE *fp;
 } file_driver;
 

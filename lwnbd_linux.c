@@ -1,10 +1,13 @@
+#define APP_NAME "test"
+#include "nbd_opts.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
 
-#include "lwnbd.h"
+#include <lwnbd.h>
 #include "drivers/stdio_d.h"
 
 struct file_driver fakedrive[10];

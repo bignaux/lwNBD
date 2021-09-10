@@ -8,7 +8,8 @@
 
 Targeting first the use on Playstation 2 IOP, a 37.5 MHz MIPS processor
 and 2 MB of RAM, lwNBD is designed to run on bare metal or OS embedded system.
-With modulararity and portability in mind, it is developed according to several code standards, including :
+With modulararity and portability in mind, it is developed according to several
+code standards, including :
 
 *   [Object-Oriented Programming in C](https://github.com/QuantumLeaps/OOP-in-C/)
 *   nbdkit implementation naming, using a verbatim copy of their nbd-protocol.h
@@ -22,19 +23,31 @@ There are 2 examples provided :
 
 ## History
 
-On Playstation 2, there is no standardized central partition table like GPT for hard disk partitioning, nor is there a standard file system but PFS and HDLoader. In fact, there are few tools capable of handling hard disks, especially under Linux, and the servers developed in the past to handle these disks via the network did not use a standard protocol, which required each software wishing to handle the disks to include a specific client part, which were broken when the toolchain was updated. The same goes for the memory cards and other block devices on this console, which is why I decided to implement NBD on this target first.
+On Playstation 2, there is no standardized central partition table like GPT for
+hard disk partitioning, nor is there a standard file system but PFS and
+HDLoader. In fact, there are few tools capable of handling hard disks,
+especially under Linux, and the servers developed in the past to handle these
+disks via the network did not use a standard protocol, which required each
+software wishing to handle the disks to include a specific client part,
+which were broken when the toolchain was updated. The same goes for the memory
+cards and other block devices on this console, which is why I decided to
+implement NBD on this target first.
 
 ## Status
 
-Although this server is not yet complete in respect of the minimal requirements defined by the [NBD protocol](https://github.com/NetworkBlockDevice/nbd/blob/master/doc/proto.md#baseline), it is nevertheless usable with certain clients. In a [RERO spirit](https://en.wikipedia.org/wiki/Release_early,_release_often) i publish this "AS-IS".
+Although this server is not yet complete in respect of the minimal requirements
+defined by the [NBD protocol](https://github.com/NetworkBlockDevice/nbd/blob/master/doc/proto.md#baseline),
+it is nevertheless usable with certain clients. In a [RERO spirit](https://en.wikipedia.org/wiki/Release_early,_release_often)
+i publish this "AS-IS".
 
 Known supported clients :
 
 *   nbdfuse (provided by libnbd), works on windows with WSL2.
-*   nbd-client -no-optgo
+*   nbd-client
 *   Ceph for Windows (wnbd-client.exe)
 
 ## TODO
+
 *   event loop based on select()
 *   provide a clean API
 *   fix NBD_FLAG_FIXED_NEWSTYLE negotiation

@@ -46,7 +46,7 @@
  */
 
 #include <string.h>
-#include "lwnbd.h"
+#include <lwnbd.h>
 
 char gdefaultexport[32];
 
@@ -57,11 +57,11 @@ static int nbd_context_flush_(nbd_context const *const me);
 /* constructor */
 void nbd_context_ctor(nbd_context *const me)
 {
-    static struct nbd_context_Vtbl const vtbl = {/* vtbl of the nbd_context class */
-                                                 &nbd_context_read_,
-                                                 &nbd_context_write_,
-                                                 &nbd_context_flush_};
-    me->vptr = &vtbl; /* "hook" the vptr to the vtbl */
+    static struct lwnbd_operations const nbdopts = {/* nbdopts of the nbd_context class */
+                                                    &nbd_context_read_,
+                                                    &nbd_context_write_,
+                                                    &nbd_context_flush_};
+    me->vptr = &nbdopts; /* "hook" the vptr to the nbdopts */
 }
 
 /* nbd_context class implementations of its virtual functions... */

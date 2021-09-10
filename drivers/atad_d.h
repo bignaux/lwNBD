@@ -1,7 +1,7 @@
 #ifndef ATAD_DRIVERS_NBD_H
 #define ATAD_DRIVERS_NBD_H
 
-#include "../lwnbd.h"
+#include <lwnbd.h>
 
 #ifdef __cplusplus
 extern "C" {

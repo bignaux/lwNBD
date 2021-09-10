@@ -57,12 +57,12 @@
  * @{
  */
 
- /**
+/**
   *
   */
- #if !defined APP_NAME || defined __DOXYGEN__
- #define APP_NAME "lwNBD"
- #endif
+#if !defined APP_NAME || defined __DOXYGEN__
+#define APP_NAME "lwNBD"
+#endif
 
 /**
  * Enable NBD debug messages

@@ -3,7 +3,7 @@
 ##################################
 
 CC=gcc
-CFLAGS=-Wall -DDEBUG
+CFLAGS=-Wall -DDEBUG -I.
 OBJ=lwnbd_linux.o nbd_protocol.o lwnbd.o drivers/stdio_d.o
 
 lwNBD: $(OBJ)
