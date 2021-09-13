@@ -2,9 +2,10 @@ LICENSE
 lwnbdsvr.c
 nbd_opts.h
 nbd_protocol.c
-nbd-protocol.h
 lwnbd.c
 lwnbd.h
 README.md
 drivers/atad_d.c
 drivers/atad_d.h
+drivers/ioman_d.c
+drivers/ioman_d.h

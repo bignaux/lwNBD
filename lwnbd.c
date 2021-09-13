@@ -90,11 +90,14 @@ nbd_context *nbd_context_getDefaultExportByName(nbd_context **nbd_contexts, cons
 {
     nbd_context **ptr_ctx = nbd_contexts;
     while (*ptr_ctx) {
-        if (strncmp((*ptr_ctx)->export_name, exportname, 32) == 0)
-            break;
+        if (strncmp((*ptr_ctx)->export_name, exportname, 32) == 0) {
+            LOG("searched for \"%s\" ... found.\n", exportname);
+            return *ptr_ctx;
+        }
         ptr_ctx++;
     }
-    return *ptr_ctx;
+    LOG("searched for \"%s\" ... not found.\n", exportname);
+    return NULL;
 }
 
 /*
@@ -130,8 +133,8 @@ int nbd_init(nbd_context **ctx)
     int tcp_socket, client_socket = -1;
     struct sockaddr_in peer;
     socklen_t addrlen;
-    register int r;
-    nbd_context *ctxt;
+    register err_t r;
+    nbd_context *nego_ctx = NULL;
 
     peer.sin_family = AF_INET;
     peer.sin_port = htons(NBD_SERVER_PORT);
@@ -160,17 +163,16 @@ int nbd_init(nbd_context **ctx)
                 goto error;
 
             LOG("a client connected.\n");
-            ctxt = negotiation_phase(client_socket, ctx);
-            if (ctxt != NULL)
-                r = transmission_phase(client_socket, ctxt);
-            else
-                LOG("handshake failed.\n");
-
-            if (r != NBD_SUCCESS)
-                LOG("an error occured during transmission phase.\n");
-
+            r = negotiation_phase(client_socket, ctx, &nego_ctx);
+            if (r == 0) {
+                r = transmission_phase(client_socket, nego_ctx);
+                if (r == -1)
+                    LOG("an error occured during transmission phase.\n");
+            } else if (r == -2) {
+                LOG("an error occured during negotiation_phase phase.\n");
+            }
             close(client_socket);
-            LOG("a client disconnected.\n");
+            LOG("a client disconnected.\n\n\n");
         }
     }
 error:

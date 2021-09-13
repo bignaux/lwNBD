@@ -44,24 +44,24 @@
 #include "nbd-protocol.h"
 #include "nbd_opts.h"
 
+#include <stdint.h>
+#include <stdio.h>
+
 #define LOG(format, args...) \
     printf(APP_NAME ": " format, ##args)
 
-#include <stdint.h>
-#include <stdio.h>
+#ifdef DEBUG
+#define DEBUGLOG LOG
+#else
+#define DEBUGLOG(args...) \
+    do {                  \
+    } while (0)
+#endif
 
 //#include "lwip/apps/nbd_opts.h"
 //#include "lwip/err.h"
 //#include "lwip/pbuf.h"
 //#include "lwip/mem.h"
-
-#ifdef DEBUG
-#define dbgprintf(args...) printf(args)
-#else
-#define dbgprintf(args...) \
-    do {                   \
-    } while (0)
-#endif
 
 #ifdef __linux__
 #include <sys/socket.h>
@@ -71,6 +71,7 @@
 
 #include <assert.h> //todo: move in .c
 
+typedef signed char err_t;
 //TODO : manage endianess
 #define htonll(x) htobe64(x)
 #define ntohll(x) be64toh(x)
@@ -183,8 +184,8 @@ int nbd_init(nbd_context **ctx);
 
 // in nbd_protocol.c
 //todo: const ctxs
-nbd_context *negotiation_phase(const int client_socket, nbd_context **ctxs);
-int transmission_phase(const int client_socket, const nbd_context *ctx);
+err_t negotiation_phase(const int client_socket, nbd_context **ctxs, nbd_context **ctx);
+err_t transmission_phase(const int client_socket, nbd_context *ctx);
 
 void nbd_context_ctor(nbd_context *const me);
 static inline int nbd_read(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length)

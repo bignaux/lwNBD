@@ -15,6 +15,8 @@ stdenv.mkDerivation rec{
 	] ++ checkInputs;
 
   checkInputs = [
+      #todo : filecompare
+      libnbd
       clang-tools
 		  gdb
 		  gdbgui # r -c nixos-logo-b\&w.png -o nixos.h
