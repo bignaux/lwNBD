@@ -9,3 +9,4 @@ drivers/atad_d.c
 drivers/atad_d.h
 drivers/ioman_d.c
 drivers/ioman_d.h
+platform-ps2.h

@@ -3,7 +3,9 @@
 ##################################
 
 CC=gcc
-CFLAGS=-Wall -DDEBUG -I.
+# Using -include preprocessor option let you write plateform specific code
+# without modify library source code .
+CFLAGS=-Wall -DDEBUG -I. -include platform-linux.h -DAPP_NAME=\"lwNBD-linux\"
 OBJ=lwnbd_linux.o nbd_protocol.o lwnbd.o drivers/stdio_d.o
 
 lwNBD: $(OBJ)

@@ -25,7 +25,7 @@ int ioman_ctor(ioman_driver *const me, iop_device_t *device)
 
     // support only blockdevice
     if ((device->type & IOP_DT_BLOCK) == 0) {
-        LOG("Wrong by mask:%d %s\n", device->type, device->name);
+        DEBUGLOG("Wrong by mask:%d %s\n", device->type, device->name);
         return -1;
     }
 
@@ -43,7 +43,7 @@ int ioman_ctor(ioman_driver *const me, iop_device_t *device)
 
     ret = getstat(me->device->name, &stat);
     if (ret != 0) {
-        LOG("getstat error for %s \n", me->device->name);
+        DEBUGLOG("getstat error for %s \n", me->device->name);
         return -1;
     }
 

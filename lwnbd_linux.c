@@ -1,6 +1,3 @@
-#define APP_NAME "test"
-#include "nbd_opts.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
