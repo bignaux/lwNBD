@@ -194,7 +194,7 @@ int mcman_ctor(mcman_driver *const me, int device)
     McDetectCard2(device, 0);
 
     // Retrieve MC info
-    McGetCardSpec(device, 0, &pageLen, &pagesPerBlock, &cardSize, &flags);
+    result = McGetCardSpec(device, 0, &pageLen, &pagesPerBlock, &cardSize, &flags);
 
 
     if (result == sceMcResSucceed) {
