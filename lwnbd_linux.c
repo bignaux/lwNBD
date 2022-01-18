@@ -41,9 +41,9 @@ int main(int argc, char **argv)
 
     successed_exported_ctx = lwnbdInitExport(nbd_contexts, argc, argv);
 
-    dfexp = nbd_context_getDefaultExportByName(nbd_contexts, gdefaultexport);
+    dfexp = getExportByName(nbd_contexts, gdefaultexport);
     if (dfexp != NULL)
-        LOG("default export found : %s\n", dfexp->export_name);
+        DEBUGLOG("default export found : %s\n", dfexp->export_name);
 
     if (!successed_exported_ctx) {
         LOG("nothing to export.\n");

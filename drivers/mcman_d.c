@@ -2,8 +2,9 @@
 // alexparrado (2021)
 
 #include "mcman_d.h"
-#include <stdint.h>
+#include <intrman.h>
 #include <mcman.h>
+#include <stdint.h>
 #include <sysmem.h>
 
 // Buffer to temporary store block data
@@ -175,16 +176,16 @@ int mcman_flush_(nbd_context const *const me)
 int mcman_ctor(mcman_driver *const me, int device)
 {
 
-    u16 pageLen;
-    u16 pagesPerCluster;
-    u32 clustersTotal;
+    s16 pageLen;
+    // u16 pagesPerCluster;
+    // u32 clustersTotal;
     u8 flags;
     int result;
     int cardSize;
 
     me->device = device;
 
-    static struct nbd_context_Vtbl const vtbl = {
+    static struct lwnbd_operations const nbdopts = {
         &mcman_read_,
         &mcman_write_,
         &mcman_flush_,
@@ -204,7 +205,7 @@ int mcman_ctor(mcman_driver *const me, int device)
 
         // Initializa context
         nbd_context_ctor(&me->super); /* call the superclass' ctor */
-        me->super.vptr = &vtbl;       /* override the vptr */
+        me->super.vptr = &nbdopts;       /* override the vptr */
         // Description of export
         strcpy(me->super.export_desc, "PlayStation 2 MC via MCMAN");
         sprintf(me->super.export_name, "%s%d", "mc", me->device);

@@ -14,7 +14,7 @@ lwNBD: $(OBJ)
 .PHONY: clean
 
 clean:
-		rm -f $(OBJ) *~ core lwNBD
+	rm -f $(OBJ) *~ core lwNBD
 
 format:
 	find . -type f -a \( -iname \*.h -o -iname \*.c \) | xargs clang-format -i
@@ -25,12 +25,13 @@ format:
 
 DEST=~/devel/Open-PS2-Loader
 IP=192.168.1.45
-DEV=/dev/nbd4
+DEV=/dev/nbd2
 
-sync:
+rsync:
 	#git -C $(DEST) checkout nbd
 	#rm $(DEST)/modules/network/lwnbdsvr/lwNBD/*
 	#rm -r $(DEST)/modules/network/lwnbdsvr/obj/
+	# -u cause issue when git fetch in dest....
 	rsync -avu --files-from=opl.rsync . $(DEST)/modules/network/lwnbdsvr/
 
 softdev2:
@@ -40,5 +41,7 @@ softdev2:
 	rm -f opl/softdev2/OPNPS2LD.ELF
 	cp $(DEST)/opl.elf opl/softdev2/OPNPS2LD.ELF
 	diff $(DEST)/opl.elf opl/softdev2/OPNPS2LD.ELF
+	#sync --file-system opl
 	umount opl
+	sleep 5
 	sudo nbd-client -d $(DEV)

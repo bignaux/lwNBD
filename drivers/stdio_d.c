@@ -45,7 +45,7 @@ int file_ctor(file_driver *const me, const char *pathname)
     bname = strdup(pathname);
     filename = basename(bname);
     strncpy(me->super.export_name, filename, 31); //troncate name
-    LOG("bname = %s, filename = %s export = %s\n", bname, filename, me->super.export_name);
+    DEBUGLOG("bname = %s, filename = %s export = %s\n", bname, filename, me->super.export_name);
     me->super.blocksize = 512;
     me->super.buffer = nbd_buffer;
     me->super.eflags = NBD_FLAG_HAS_FLAGS | NBD_FLAG_SEND_FLUSH;
