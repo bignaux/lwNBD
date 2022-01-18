@@ -1,14 +1,16 @@
 #include "irx_imports.h"
 #include <lwnbd.h>
 #include "drivers/atad_d.h"
+#include "drivers/mcman_d.h"
 #include "drivers/ioman_d.h"
 
 IRX_ID(APP_NAME, 1, 1);
 static int nbd_tid;
 extern struct irx_export_table _exp_lwnbdsvr;
 
-//need to be global to be accessible from thread
+// need to be global to be accessible from thread
 atad_driver hdd[2]; // could have 2 ATA disks
+mcman_driver mc[2]; // For two MC ports
 ioman_driver iodev[32];
 nbd_context *nbd_contexts[10];
 
@@ -27,6 +29,14 @@ int _start(int argc, char **argv)
         ret = atad_ctor(&hdd[i], i);
         if (ret == 0) {
             nbd_contexts[successed_exported_ctx] = &hdd[i].super;
+            successed_exported_ctx++;
+        }
+    }
+
+    for (int i = 0; i < 2; i++) {
+        ret = mcman_ctor(&mc[i], i);
+        if (ret == 0) {
+            nbd_contexts[successed_exported_ctx] = &mc[i].super;
             successed_exported_ctx++;
         }
     }
