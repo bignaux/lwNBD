@@ -74,7 +74,6 @@ err_t negotiation_phase(const int client_socket, nbd_context **ctxs, nbd_context
         return -1;
     cflags = htonl(cflags);
 
-    DEBUGLOG("client flags %d\n", cflags);
     if (cflags != gflags) {
         LOG("Unsupported client flags %d\n", cflags);
         return -1;
@@ -107,7 +106,7 @@ err_t negotiation_phase(const int client_socket, nbd_context **ctxs, nbd_context
             "NBD_OPT_LIST_META_CONTEXT",
             "NBD_OPT_SET_META_CONTEXT",
         };
-        DEBUGLOG("%s\n", NBD_OPTIONS[new_opt.option]);
+        LOG("%s\n", NBD_OPTIONS[new_opt.option]);
 #endif
         new_opt.optlen = htonl(new_opt.optlen);
 
@@ -123,18 +122,19 @@ err_t negotiation_phase(const int client_socket, nbd_context **ctxs, nbd_context
                 struct nbd_export_name_option_reply handshake_finish;
                 //temporary workaround
                 if (new_opt.optlen > 0) {
-                    *ctx = getExportByName(ctxs, (const char *)&nbd_buffer);
+                    *ctx = nbd_context_getDefaultExportByName(ctxs, (const char *)&nbd_buffer);
                 } else
-                    *ctx = getExportByName(ctxs, gdefaultexport);
+                    *ctx = nbd_context_getDefaultExportByName(ctxs, gdefaultexport);
                 //TODO: is that correct ?
                 if (*ctx == NULL)
                     *ctx = ctxs[0];
                 handshake_finish.exportsize = htonll((*ctx)->export_size);
                 handshake_finish.eflags = htons((*ctx)->eflags);
                 memset(handshake_finish.zeroes, 0, sizeof(handshake_finish.zeroes));
-                // NBD_FLAG_C_NO_ZEROES not defined by nbd-protocol.h, another useless term from proto.md
                 size = send(client_socket, &handshake_finish,
                             (cflags & NBD_FLAG_NO_ZEROES) ? offsetof(struct nbd_export_name_option_reply, zeroes) : sizeof handshake_finish, 0);
+                if (size < ((cflags & NBD_FLAG_NO_ZEROES) ? offsetof(struct nbd_export_name_option_reply, zeroes) : sizeof handshake_finish))
+                    return -1;
                 return NBD_OPT_EXPORT_NAME;
             }
 
@@ -145,6 +145,8 @@ err_t negotiation_phase(const int client_socket, nbd_context **ctxs, nbd_context
                 fixed_new_option_reply.replylen = 0;
                 size = send(client_socket, &fixed_new_option_reply,
                             sizeof(struct nbd_fixed_new_option_reply), 0);
+                if (size < (sizeof(struct nbd_fixed_new_option_reply)))
+                    return -1;
                 return NBD_OPT_ABORT;
 
             case NBD_OPT_LIST: {
@@ -156,22 +158,32 @@ err_t negotiation_phase(const int client_socket, nbd_context **ctxs, nbd_context
                 while (*ptr_ctx) {
                     name_len = strlen((*ptr_ctx)->export_name);
                     DEBUGLOG("%s\n", (*ptr_ctx)->export_name);
-                    desc_len = (*ptr_ctx)->export_desc ? strlen((*ptr_ctx)->export_desc) : 0;
+                    desc_len = strlen((*ptr_ctx)->export_desc);
                     len = htonl(name_len);
                     fixed_new_option_reply.replylen = htonl(name_len + sizeof(len) +
                                                             desc_len);
 
                     size = send(client_socket, &fixed_new_option_reply,
                                 sizeof(struct nbd_fixed_new_option_reply), MSG_MORE);
+                    if (size < (sizeof(struct nbd_fixed_new_option_reply)))
+                        return -1;
                     size = send(client_socket, &len, sizeof len, MSG_MORE);
+                    if (size < (sizeof len))
+                        return -1;
                     size = send(client_socket, (*ptr_ctx)->export_name, name_len, MSG_MORE);
+                    if (size < name_len)
+                        return -1;
                     size = send(client_socket, (*ptr_ctx)->export_desc, desc_len, MSG_MORE);
+                    if (size < desc_len)
+                        return -1;
                     ptr_ctx++;
                 }
                 fixed_new_option_reply.reply = htonl(NBD_REP_ACK);
                 fixed_new_option_reply.replylen = 0;
                 size = send(client_socket, &fixed_new_option_reply,
                             sizeof(struct nbd_fixed_new_option_reply), 0);
+                if (size < sizeof(struct nbd_fixed_new_option_reply))
+                    return -1;
                 break;
             }
 
@@ -188,6 +200,8 @@ err_t negotiation_phase(const int client_socket, nbd_context **ctxs, nbd_context
                 fixed_new_option_reply.replylen = 0;
                 size = send(client_socket, &fixed_new_option_reply,
                             sizeof(struct nbd_fixed_new_option_reply), 0);
+                if (size < sizeof(struct nbd_fixed_new_option_reply))
+                    return -1;
                 break;
         }
     }
@@ -353,7 +367,10 @@ err_t transmission_phase(const int client_socket, nbd_context *ctx)
                 return 0;
 
             case NBD_CMD_FLUSH:
-                error = (nbd_flush(ctx) == 0) ? NBD_SUCCESS : NBD_EIO;
+                if (nbd_flush(ctx) == 0)
+                    error = NBD_SUCCESS;
+                else
+                    error = NBD_EIO;
                 reply.error = ntohl(error);
                 r = send(client_socket, &reply, sizeof(struct nbd_simple_reply),
                          0);

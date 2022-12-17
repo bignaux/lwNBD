@@ -83,20 +83,20 @@ static int nbd_context_flush_(nbd_context const *const me)
     return 0U; /* to avoid compiler warnings */
 }
 
-/* search for export by name
+/* search for the default export by name
    return NULL if not found any.
 */
-nbd_context *getExportByName(nbd_context **nbd_contexts, const char *exportname)
+nbd_context *nbd_context_getDefaultExportByName(nbd_context **nbd_contexts, const char *exportname)
 {
     nbd_context **ptr_ctx = nbd_contexts;
     while (*ptr_ctx) {
         if (strncmp((*ptr_ctx)->export_name, exportname, 32) == 0) {
-            // DEBUGLOG("searched for \"%s\" ... found.\n", exportname);
+            LOG("searched for \"%s\" ... found.\n", exportname);
             return *ptr_ctx;
         }
         ptr_ctx++;
     }
-    // DEBUGLOG("searched for \"%s\" ... not found.\n", exportname);
+    LOG("searched for \"%s\" ... not found.\n", exportname);
     return NULL;
 }
 
@@ -112,7 +112,7 @@ uint32_t nbd_recv(int s, void *mem, size_t len, int flags)
     //        LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE("nbd_recv(-, 0x%X, %d)\n", (int)mem, size);
     // dbgLOG("left = %u\n", left);
     do {
-        bytesRead = recv(s, mem + totalRead, left, flags);
+        bytesRead = recv(s, (void *)((uint8_t *)mem + totalRead), left, flags);
         // dbgLOG("bytesRead = %u\n", bytesRead);
         if (bytesRead <= 0) // if (bytesRead == -1) failed for nbdfuse, seems it not send NBD_CMD_DISC
             break;

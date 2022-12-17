@@ -1,47 +1,18 @@
-##################################
-#	Linux target
-##################################
+IOP_BIN = lwnbdsvr.irx
+IOP_OBJS = lwnbdsvr.o imports.o exports.o lwnbd.o nbd_protocol.o drivers/atad_d.o drivers/ioman_d.o
+IOP_INCS += -I. -I../../iopcore/common -I../../../include/ -include platform-ps2.h -DAPP_NAME=\"lwnbdsvr\"
 
-CC=gcc
-# Using -include preprocessor option let you write plateform specific code
-# without modify library source code .
-CFLAGS=-Wall -DDEBUG -I. -include platform-linux.h -DAPP_NAME=\"lwNBD-linux\"
-OBJ=lwnbd_linux.o nbd_protocol.o lwnbd.o drivers/stdio_d.o
+ifeq ($(DEBUG),1)
+IOP_CFLAGS += -DDEBUG -DNBD_DEBUG
+endif
 
-lwNBD: $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS)
+include $(PS2SDK)/Defs.make
+include ../../Rules.bin.make
+include $(PS2SDK)/samples/Makefile.iopglobal
 
-.PHONY: clean
-
-clean:
-	rm -f $(OBJ) *~ core lwNBD
-
-format:
-	find . -type f -a \( -iname \*.h -o -iname \*.c \) | xargs clang-format -i
-
-##################################
-#	PS2 OPL target
-##################################
-
-DEST=~/devel/Open-PS2-Loader
-IP=192.168.1.45
-DEV=/dev/nbd2
-
-rsync:
-	#git -C $(DEST) checkout nbd
-	#rm $(DEST)/modules/network/lwnbdsvr/lwNBD/*
-	#rm -r $(DEST)/modules/network/lwnbdsvr/obj/
-	# -u cause issue when git fetch in dest....
-	rsync -avu --files-from=opl.rsync . $(DEST)/modules/network/lwnbdsvr/
-
-softdev2:
-	sudo nbd-client -no-optgo $(IP) $(DEV)
-	#pfsfuse --partition="+OPL" $(DEV) opl/
-	pfsfuse --partition="__sysconf" $(DEV) opl/
-	rm -f opl/softdev2/OPNPS2LD.ELF
-	cp $(DEST)/opl.elf opl/softdev2/OPNPS2LD.ELF
-	diff $(DEST)/opl.elf opl/softdev2/OPNPS2LD.ELF
-	#sync --file-system opl
-	umount opl
-	sleep 5
-	sudo nbd-client -d $(DEV)
+ifneq ($(IOP_CC_VERSION),3.2.2)
+ifneq ($(IOP_CC_VERSION),3.2.3)
+# Due to usage of 64 bit integers, support code for __ashldi3 and __lshrdi3 is needed
+IOP_LIBS += -lgcc
+endif
+endif
