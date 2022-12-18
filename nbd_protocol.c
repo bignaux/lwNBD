@@ -201,7 +201,7 @@ err_t negotiation_phase(const int client_socket, nbd_context **ctxs, nbd_context
 err_t transmission_phase(const int client_socket, nbd_context *ctx)
 {
     register int r, size, error = -1, retry = NBD_MAX_RETRIES, sendflag = 0;
-    register uint32_t blkremains = 0, byteread = 0, bufbklsz = 0;
+    register uint32_t blkremains = 0, byteread = 0, bufblksz = 0;
     register uint64_t offset = 0;
     struct nbd_simple_reply reply;
     struct nbd_request request;
@@ -216,6 +216,7 @@ err_t transmission_phase(const int client_socket, nbd_context *ctx)
         /*** requests handling ***/
 
         // TODO : blocking here if no proper NBD_CMD_DISC, bad threading design ?
+        DEBUGLOG("Wait NBD_CMD ...\n");
         size = nbd_recv(client_socket, &request, sizeof(struct nbd_request), 0);
         if (size < sizeof(struct nbd_request)) {
             LOG("sizeof nbd_request waited %ld receveid %d\n", sizeof(struct nbd_request), size);
@@ -259,36 +260,47 @@ err_t transmission_phase(const int client_socket, nbd_context *ctx)
                 else {
                     error = NBD_SUCCESS;
                     sendflag = MSG_MORE;
-                    bufbklsz = NBD_BUFFER_LEN / ctx->blocksize;
+                    bufblksz = NBD_BUFFER_LEN / ctx->blocksize;
                     blkremains = request.count / ctx->blocksize;
                     offset = request.offset / ctx->blocksize;
-                    byteread = bufbklsz * ctx->blocksize;
+                    byteread = bufblksz * ctx->blocksize;
                 }
 
                 reply.error = ntohl(error);
                 r = send(client_socket, &reply, sizeof(struct nbd_simple_reply),
                          sendflag);
+                if (r != sizeof(struct nbd_simple_reply))
+                {
+                  LOG("send nbd_simple_reply failed\n");
+                }
 
                 while (sendflag) {
 
-                    if (blkremains < bufbklsz) {
-                        bufbklsz = blkremains;
-                        byteread = bufbklsz * ctx->blocksize;
+                    if (blkremains < bufblksz) {
+                        bufblksz = blkremains;
+                        byteread = bufblksz * ctx->blocksize;
                     }
 
-                    if (blkremains <= bufbklsz)
+                    if (blkremains <= bufblksz)
                         sendflag = 0;
 
-                    r = nbd_read(ctx, ctx->buffer, offset, bufbklsz);
+                    r = nbd_read(ctx, ctx->buffer, offset, bufblksz);
+                    DEBUGLOG("offset=%d bufblksz=%d sendflag=%d\n", offset, bufblksz, sendflag);
 
                     if (r == 0) {
+                        DEBUGLOG("send \n");
                         r = send(client_socket, ctx->buffer, byteread, sendflag);
                         if (r != byteread)
-                            break;
-                        offset += bufbklsz;
-                        blkremains -= bufbklsz;
+                        {
+                          LOG("NBD_CMD_READ : send failed r=%d byteread=%d\n", r, byteread);
+                          break;
+                        }
+                        else LOG("NBD_CMD_READ : send OK \n");
+                        offset += bufblksz;
+                        blkremains -= bufblksz;
                         retry = NBD_MAX_RETRIES;
                     } else if (retry) {
+                        LOG("NBD_CMD_READ : nbd_read NOK \n");
                         retry--;
                         sendflag = 1;
                     } else {
@@ -308,33 +320,33 @@ err_t transmission_phase(const int client_socket, nbd_context *ctx)
                 else {
                     error = NBD_SUCCESS;
                     sendflag = MSG_MORE;
-                    bufbklsz = NBD_BUFFER_LEN / ctx->blocksize;
+                    bufblksz = NBD_BUFFER_LEN / ctx->blocksize;
                     blkremains = request.count / ctx->blocksize;
                     offset = request.offset / ctx->blocksize;
-                    byteread = bufbklsz * ctx->blocksize;
+                    byteread = bufblksz * ctx->blocksize;
                 }
 
                 while (sendflag) {
 
-                    if (blkremains < bufbklsz) {
-                        bufbklsz = blkremains;
-                        byteread = bufbklsz * ctx->blocksize;
+                    if (blkremains < bufblksz) {
+                        bufblksz = blkremains;
+                        byteread = bufblksz * ctx->blocksize;
                     }
 
-                    if (blkremains <= bufbklsz)
+                    if (blkremains <= bufblksz)
                         sendflag = 0;
 
                     r = nbd_recv(client_socket, ctx->buffer, byteread, 0);
 
                     if (r == byteread) {
-                        r = nbd_write(ctx, ctx->buffer, offset, bufbklsz);
+                        r = nbd_write(ctx, ctx->buffer, offset, bufblksz);
                         if (r != 0) {
                             error = NBD_EIO;
                             sendflag = 0;
                             //                    	LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE, ("nbd: error read\n"));
                         }
-                        offset += bufbklsz;
-                        blkremains -= bufbklsz;
+                        offset += bufblksz;
+                        blkremains -= bufblksz;
                         retry = NBD_MAX_RETRIES;
                     } else {
                         error = NBD_EOVERFLOW; //TODO

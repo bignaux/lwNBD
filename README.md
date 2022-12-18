@@ -20,7 +20,7 @@ There are 2 examples provided :
   serve a list of files as command line parameters.
 
 * lwnbdsvr.c an IRX module for [Open-PS2-Loader](https://github.com/ps2homebrew/Open-PS2-Loader).
-  It can export hdd drive.
+  It can export hdd drive (atad_d.c driver) and MemoryCard (mcman_d.c driver).
 
 ## History
 

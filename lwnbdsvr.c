@@ -1,5 +1,12 @@
-#include "irx_imports.h"
 #include <lwnbd.h>
+#include <lwnbdsvr.h>
+
+nbd_context *nbd_contexts[10];
+#include "drivers/hdd_d.h"
+
+
+#ifdef _IOP
+#include "irx_imports.h"
 #include "drivers/atad_d.h"
 #include "drivers/ioman_d.h"
 #include "drivers/mcman_d.h"
@@ -13,7 +20,6 @@ extern struct irx_export_table _exp_lwnbdsvr;
 atad_driver hdd[2]; // could have 2 ATA disks
 ioman_driver iodev[32];
 mcman_driver mc[2]; // For two MC ports
-nbd_context *nbd_contexts[10];
 
 int _start(int argc, char **argv)
 {
@@ -80,5 +86,29 @@ int _start(int argc, char **argv)
 int _shutdown(void)
 {
     DeleteThread(nbd_tid);
+    return 0;
+}
+#endif
+
+hdd_driver hdd[2]; // could have 2 ATA disks
+
+int lwnbd_init()
+{
+    int ret, successed_exported_ctx = 0;
+
+    ret = hdd_ctor(&hdd[0], 0);
+    if (ret == 0) {
+        nbd_contexts[successed_exported_ctx] = &hdd[0].super;
+        successed_exported_ctx++;
+    }
+
+    nbd_contexts[successed_exported_ctx] = NULL;
+    if (!successed_exported_ctx) {
+        LOG("nothing to export.\n");
+        return -1;
+    }
+
+    LOG("init %d exports.\n", successed_exported_ctx);
+    nbd_init(nbd_contexts);    
     return 0;
 }

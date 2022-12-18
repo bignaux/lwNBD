@@ -16,6 +16,15 @@ static inline int atad_flush_(nbd_context const *const me)
     return ata_device_flush_cache(((atad_driver const *)me)->device);
 }
 
+static int ata_device_identify(int device, void *info)
+{
+	int res;
+
+	if(!(res = ata_io_start(info, 1, 0, 0, 0, 0, 0, (device << 4) & 0xffff, ATA_C_IDENTIFY_DEVICE))) res = ata_io_finish();
+
+	return res;
+}
+
 int atad_ctor(atad_driver *const me, int device)
 {
     me->device = device;

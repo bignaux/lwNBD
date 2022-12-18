@@ -24,18 +24,11 @@ format:
 ##################################
 
 DEST=~/devel/Open-PS2-Loader
-IP=192.168.1.45
+TARGET_IP=192.168.1.45
 DEV=/dev/nbd2
 
-rsync:
-	#git -C $(DEST) checkout nbd
-	#rm $(DEST)/modules/network/lwnbdsvr/lwNBD/*
-	#rm -r $(DEST)/modules/network/lwnbdsvr/obj/
-	# -u cause issue when git fetch in dest....
-	rsync -avu --files-from=opl.rsync . $(DEST)/modules/network/lwnbdsvr/
-
 softdev2:
-	sudo nbd-client -no-optgo $(IP) $(DEV)
+	sudo nbd-client -N hdd0 $(TARGET_IP) $(DEV)
 	#pfsfuse --partition="+OPL" $(DEV) opl/
 	pfsfuse --partition="__sysconf" $(DEV) opl/
 	rm -f opl/softdev2/OPNPS2LD.ELF
@@ -45,3 +38,6 @@ softdev2:
 	umount opl
 	sleep 5
 	sudo nbd-client -d $(DEV)
+
+nbdkill:
+	sudo lsof -t /dev/nbd* | sudo xargs -r kill -9

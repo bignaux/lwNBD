@@ -68,18 +68,21 @@ void nbd_context_ctor(nbd_context *const me)
 static int nbd_context_read_(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length)
 {
     // assert(0); /* purely-virtual function should never be called */
+    LOG("nbd_context_read_\n");
     return 0U; /* to avoid compiler warnings */
 }
 
 static int nbd_context_write_(nbd_context const *const me, void *buffer, uint64_t offset, uint32_t length)
 {
     // assert(0); /* purely-virtual function should never be called */
+    LOG("nbd_context_write_\n");
     return 0U; /* to avoid compiler warnings */
 }
 
 static int nbd_context_flush_(nbd_context const *const me)
 {
     // assert(0); /* purely-virtual function should never be called */
+    LOG("nbd_context_flush_\n");
     return 0U; /* to avoid compiler warnings */
 }
 
@@ -112,8 +115,8 @@ uint32_t nbd_recv(int s, void *mem, size_t len, int flags)
     //        LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE("nbd_recv(-, 0x%X, %d)\n", (int)mem, size);
     // dbgLOG("left = %u\n", left);
     do {
-        bytesRead = recv(s, mem + totalRead, left, flags);
-        // dbgLOG("bytesRead = %u\n", bytesRead);
+        bytesRead = recv(s, (void *)((uint8_t *)mem + totalRead), left, flags);
+        DEBUGLOG("bytesRead = %u\n", bytesRead);
         if (bytesRead <= 0) // if (bytesRead == -1) failed for nbdfuse, seems it not send NBD_CMD_DISC
             break;
 

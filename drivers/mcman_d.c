@@ -205,7 +205,7 @@ int mcman_ctor(mcman_driver *const me, int device)
 
         // Initializa context
         nbd_context_ctor(&me->super); /* call the superclass' ctor */
-        me->super.vptr = &nbdopts;       /* override the vptr */
+        me->super.vptr = &nbdopts;    /* override the vptr */
         // Description of export
         strcpy(me->super.export_desc, "PlayStation 2 MC via MCMAN");
         sprintf(me->super.export_name, "%s%d", "mc", me->device);
