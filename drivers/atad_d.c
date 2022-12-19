@@ -16,6 +16,8 @@ static inline int atad_flush_(nbd_context const *const me)
     return ata_device_flush_cache(((atad_driver const *)me)->device);
 }
 
+
+/* TODO: ATA_C_IDENTIFY_DEVICE defined in common/include/atahw.h
 static int ata_device_identify(int device, void *info)
 {
 	int res;
@@ -24,6 +26,7 @@ static int ata_device_identify(int device, void *info)
 
 	return res;
 }
+*/
 
 int atad_ctor(atad_driver *const me, int device)
 {

@@ -90,6 +90,7 @@ int _shutdown(void)
 }
 #endif
 
+#ifdef _EE
 hdd_driver hdd[2]; // could have 2 ATA disks
 
 int lwnbd_init()
@@ -109,6 +110,8 @@ int lwnbd_init()
     }
 
     LOG("init %d exports.\n", successed_exported_ctx);
-    nbd_init(nbd_contexts);    
+    nbd_init(nbd_contexts);
     return 0;
 }
+
+#endif
