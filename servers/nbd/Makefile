@@ -1,0 +1,1 @@
+OBJ += servers/nbd/nbd_protocol.o servers/nbd/nbd.o servers/nbd/tcp.o

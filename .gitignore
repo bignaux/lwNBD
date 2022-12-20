@@ -1,3 +1,7 @@
 *.o
+*.a
 lwNBD
 nbd-protocol.h
+.env
+.cproject
+.project

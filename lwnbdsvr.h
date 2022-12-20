@@ -1,1 +1,0 @@
-int lwnbd_init();
