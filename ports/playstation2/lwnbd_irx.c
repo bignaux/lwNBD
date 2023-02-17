@@ -13,12 +13,14 @@
 
 #include <lwnbd.h>
 #include "irx_imports.h"
+#include "../../plugins/memory/memory.h"
 
 IRX_ID(APP_NAME, 1, 1);
 static int nbd_tid;
 extern struct irx_export_table _exp_lwnbd;
 extern struct lwnbd_server *nbd_server_init(void);
 extern struct lwnbd_plugin *atad_plugin_init(void);
+extern struct lwnbd_plugin *memory_plugin_init(void);
 
 lwnbd_server_t nbdsrv;
 //    lwnbd_plugin_t atadplg;
@@ -27,7 +29,13 @@ lwnbd_server_t nbdsrv;
 int _start(int argc, char **argv)
 {
     iop_thread_t nbd_thread;
+    lwnbd_plugin_t atadplg, memplg;
 
+    struct memory_config iopram = {
+        .base = 0xbfc00000,
+        .name = "bios",
+        .size = 0x400000,
+    };
 
     if (argc > 1) {
         //        strcpy(gdefaultexport, argv[1]);
@@ -37,8 +45,10 @@ int _start(int argc, char **argv)
     // register exports
     RegisterLibraryEntries(&_exp_lwnbd);
 
+    memplg = lwnbd_plugin_init(memory_plugin_init);
+    lwnbd_plugin_new(memplg, &iopram);
 
-    lwnbd_plugin_init(atad_plugin_init);
+    atadplg = lwnbd_plugin_init(atad_plugin_init);
     //    mcmanplg = lwnbd_plugin_init();
 
     nbdsrv = lwnbd_server_init(nbd_server_init);

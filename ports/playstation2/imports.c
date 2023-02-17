@@ -1,4 +1,7 @@
 #include "irx_imports.h"
+
+/* clang-format off */
+
 atad_IMPORTS_start
 I_ata_get_devinfo
 I_ata_device_sector_io

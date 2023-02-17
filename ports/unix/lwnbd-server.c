@@ -19,11 +19,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../../plugins/memory/memory.h"
+
 /* static glue, could be generate :
  * #define LIST_ENTRY(x) x,
  *
  * */
 
+
+extern struct lwnbd_plugin *memory_plugin_init(void);
 extern struct lwnbd_plugin *file_plugin_init(void); // https://blog.the-pans.com/gnu-visibility-attribute/
 // plugin_init plugins_table[] = {
 //		file_plugin_init,
@@ -47,7 +51,10 @@ int gHDDStartMode;
 int main(int argc, char **argv)
 {
     lwnbd_server_t nbdsrv;
-    lwnbd_plugin_t fileplg;
+    lwnbd_plugin_t fileplg, memplg;
+
+    struct memory_config memh;
+    char data[512] = "some data to be read";
 
     int i = atexit(coucou);
     if (i != 0) {
@@ -68,12 +75,21 @@ int main(int argc, char **argv)
      *
      */
 
+
     fileplg = lwnbd_plugin_init(file_plugin_init);
+    memplg = lwnbd_plugin_init(memory_plugin_init);
 
     /* create key=value for file plugin assuming no user error */
     for (int i = 1; i < argc; i++) {
         lwnbd_plugin_config(fileplg, NULL, argv[i]);
     }
+
+    memh.base = data;
+    printf("base = 0x%lx\n", memh.base);
+    strcpy(memh.name, "data");
+    memh.size = 512;
+
+    lwnbd_plugin_new(memplg, &memh);
 
     /*
      * create a NBD server, and eventually configure it.

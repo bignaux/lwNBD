@@ -9,6 +9,17 @@
 extern "C" {
 #endif
 
+struct lwnbd_export
+{
+    void *handle; /* Plugin handle. */
+                  //    struct lwnbd_plugin *p; /* Plugin that provided handle. */
+    char name[32];
+    //    char description[64];
+    int64_t exportsize;
+    //    uint16_t eflags;
+    //    uint16_t blocksize;
+};
+
 struct lwnbd_plugin
 {
     /* private */
@@ -24,6 +35,9 @@ struct lwnbd_plugin
     void (*unload)(void);
 
     int (*config)(const char *key, const char *value);
+
+    /* create new export from custom config */
+    int (*ctor)(const void *pconfig, struct lwnbd_export *e);
 
     void (*open)(void *handle, int readonly); /* not nbdkit compatible prototype */
     void (*close)(void *handle);
@@ -41,6 +55,7 @@ struct lwnbd_plugin
     const char *magic_config_key;
 };
 
+extern int lwnbd_add_context2(struct lwnbd_plugin *p, struct lwnbd_export *e);
 extern int lwnbd_add_context(void *handle, struct lwnbd_plugin *p, const char *name, const char *description, const int64_t exportsize);
 
 

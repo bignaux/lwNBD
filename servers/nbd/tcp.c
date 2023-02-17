@@ -82,7 +82,7 @@ int nbd_start(void *handle)
         }
     }
 error:
-    LOG("failed to init server.");
+    LOG("failed to init server.\n");
     close(tcp_socket);
     return 0;
 }

@@ -3,6 +3,7 @@ CFLAGS = -Wfatal-errors -Wall -Iinclude
 OBJ = src/servers.o src/plugins.o src/contexts.o
 DEBUG ?= 0
 
+APP_VERSION := $(shell git describe --always --tags)
 TARGET ?= unix
 RONN = ronn
 MANPAGE = lwnbd.3
@@ -26,7 +27,7 @@ ifeq ($(DEBUG),1)
 endif
 
 $(BIN): $(OBJ)
-	$(CC) $(CFLAGS) -o $(BIN) $(OBJ) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $(BIN) $(OBJ) $(LDFLAGS) $(LIBS)
 
 $(MANPAGE): README.md
 	$(RONN) -r --pipe $< > $@

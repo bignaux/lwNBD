@@ -3,6 +3,8 @@ include plugins/libhdd/Makefile
 include servers/nbd/Makefile
 
 PORT_DIR = ports/playstation2
+#BIN = lwnbd.a
+
 EE_LIB = lwnbd.a
 EE_LIBS = -lc -lps2ips
 EE_INCS += -include $(PORT_DIR)/ps2sdk-compat.h -DAPP_NAME=\"lwnbdsvr\"

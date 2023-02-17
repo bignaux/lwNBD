@@ -30,6 +30,23 @@ static plugin_state_t plugins_status[MAX_NUM_PLUGINS];
     return NULL;
 }*/
 
+int lwnbd_plugin_new(lwnbd_plugin_t const plugin, const void *pconfig)
+{
+    struct lwnbd_plugin *p = plugins[plugin];
+    struct lwnbd_export e;
+
+    if (p->ctor == NULL) {
+        // fDEBUGLOG(stderr, "this plugin does not support configuration\n");
+        return -1;
+    }
+
+    if (p->ctor(pconfig, &e) == -1) {
+        return -1;
+    }
+
+    return lwnbd_add_context2(p, &e);
+}
+
 int lwnbd_plugin_config(lwnbd_plugin_t const plugin, const char *key, const char *value)
 {
     struct lwnbd_plugin *p = plugins[plugin];

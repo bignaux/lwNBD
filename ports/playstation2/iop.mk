@@ -22,6 +22,7 @@ include $(PORT_DIR)/iopglobal.mk
 #PLUGINS
 include servers/nbd/Makefile
 include plugins/atad/Makefile
+include plugins/memory/Makefile
 #include plugins/mcman/Makefile
 
 DEST ?= ~/devel/Open-PS2-Loader

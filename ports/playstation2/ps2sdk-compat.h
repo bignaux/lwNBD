@@ -2,6 +2,9 @@
 #include <stdint.h>
 
 #ifdef _IOP
+
+// no <inttypes.h>
+
 // no <stdlib.h>
 #include <sysclib.h>
 #include <iomanX.h>
@@ -26,6 +29,7 @@
 typedef int ssize_t;
 
 // TODO: Missing <byteswap.h> in PS2SDK
+// look <byteorder.h> instead
 //  pickup from https://gist.github.com/jtbr/7a43e6281e6cca353b33ee501421860c
 static inline uint64_t bswap64(uint64_t x)
 {

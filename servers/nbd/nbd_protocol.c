@@ -1,6 +1,5 @@
-#include <string.h>
 #include <stddef.h>
-
+#include <string.h>
 #include "nbd.h"
 
 /*
@@ -21,7 +20,7 @@
 uint8_t nbd_buffer[NBD_BUFFER_LEN] __attribute__((aligned(16)));
 
 /* temp */
-#define BLOCKSIZE 512
+#define BLOCKSIZE 1
 
 err_t negotiation_phase(struct nbd_server *server, const int client_socket, struct lwnbd_context **ctx)
 {
@@ -87,7 +86,7 @@ err_t negotiation_phase(struct nbd_server *server, const int client_socket, stru
         if (new_opt.optlen > 0) {
             size = nbd_recv(client_socket, &nbd_buffer, new_opt.optlen, 0);
             nbd_buffer[new_opt.optlen] = '\0';
-            DEBUGLOG("client option: %d %s.\n", new_opt.optlen, nbd_buffer);
+            DEBUGLOG("client option: sz=%d %s.\n", new_opt.optlen, nbd_buffer);
         }
 
         switch (new_opt.option) {
@@ -236,12 +235,21 @@ err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
             "NBD_CMD_BLOCK_STATUS",
         };
         LOG("%s\n", NBD_CMD[request.type]);
+#define PRI_UINT64_C_Val(value) ((unsigned long)(value >> 32)), ((unsigned long)value)
+#define PRI_UINT64              "%lx%lx"
 #endif
 
         switch (request.type) {
 
             case NBD_CMD_READ:
 
+                DEBUGLOG("request off=0x" PRI_UINT64 ", size %lu\n", PRI_UINT64_C_Val(request.offset), request.count);
+                if (request.offset == 0) {
+                    DEBUGLOG("request.offset = 0 \n");
+                }
+                if (request.count == 4096) {
+                    DEBUGLOG("request.count = 4096 \n");
+                }
                 if (request.offset + request.count > ctx->exportsize)
                     error = NBD_EIO;
                 else {

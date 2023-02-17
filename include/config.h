@@ -27,7 +27,7 @@ extern "C" {
 /* nbd_protocol options */
 
 #define MAX_RETRIES    5
-#define NBD_BUFFER_LEN 512
+#define NBD_BUFFER_LEN 4096
 
 /* plugins options - useless here ? */
 

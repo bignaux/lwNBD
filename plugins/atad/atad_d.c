@@ -34,7 +34,7 @@ static inline int atad_flush(void *handle, uint32_t flags)
     return ata_device_flush_cache(h->device);
 }
 
-void atad_load(void)
+static void atad_load(void)
 {
     for (uint8_t i = 0; i < MAX_DEVICES; i++) {
         ata_devinfo_t *dev_info = ata_get_devinfo(i);

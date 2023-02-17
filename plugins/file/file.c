@@ -139,7 +139,7 @@ static int file_ctor(const char *filename)
     bname = strdup(filename);
     h->filename = basename(bname);
 
-    // tempory workaround
+    // temporary workaround
     file_open(h, 0);
     exportsize = file_get_size(h);
     printf("size = %ld \n", exportsize);

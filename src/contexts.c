@@ -1,4 +1,5 @@
 #include "config.h"
+
 #include <lwnbd-context.h>
 #include <nbd-protocol.h>
 //#include <stdlib.h>
@@ -6,6 +7,12 @@
 
 static struct lwnbd_context contexts[MAX_CONTEXTS];
 static context_state_t contexts_status[MAX_CONTEXTS];
+
+/* TODO : temporary */
+int lwnbd_add_context2(struct lwnbd_plugin *p, struct lwnbd_export *e)
+{
+    return lwnbd_add_context(e->handle, p, e->name, p->longname, e->exportsize);
+}
 
 int lwnbd_add_context(void *handle, struct lwnbd_plugin *p, const char *name, const char *description, const int64_t exportsize)
 {
