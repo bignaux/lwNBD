@@ -137,14 +137,14 @@ err_t negotiation_phase(struct nbd_server *server, const int client_socket, stru
                 DEBUGLOG("%d export.\n", list_len);
 
                 for (i = 0; i < list_len; i++) {
-                    const struct lwnbd_context context = lwnbd_get_context_i(i);
-                    size_t name_len = strlen(context.name);
+                    const struct lwnbd_context *context = lwnbd_get_context_i(i);
+                    size_t name_len = strlen(context->name);
 
                     // TODO : fix there
-                    size_t desc_len = context.description ? strlen(context.description) : 0;
+                    size_t desc_len = context->description ? strlen(context->description) : 0;
                     uint32_t len;
 
-                    DEBUGLOG("%s\n", (context.name));
+                    DEBUGLOG("%s\n", (context->name));
 
                     len = htonl(name_len);
                     fixed_new_option_reply.replylen = htonl(
@@ -153,9 +153,9 @@ err_t negotiation_phase(struct nbd_server *server, const int client_socket, stru
                     size = send(client_socket, &fixed_new_option_reply,
                                 sizeof(struct nbd_fixed_new_option_reply), MSG_MORE);
                     size = send(client_socket, &len, sizeof len, MSG_MORE);
-                    size = send(client_socket, context.name, name_len,
+                    size = send(client_socket, context->name, name_len,
                                 MSG_MORE);
-                    size = send(client_socket, context.description, desc_len,
+                    size = send(client_socket, context->description, desc_len,
                                 MSG_MORE);
                 }
                 fixed_new_option_reply.reply = htonl(NBD_REP_ACK);

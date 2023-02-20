@@ -8,13 +8,7 @@
 static struct lwnbd_context contexts[MAX_CONTEXTS];
 static context_state_t contexts_status[MAX_CONTEXTS];
 
-/* TODO : temporary */
-int lwnbd_add_context2(struct lwnbd_plugin *p, struct lwnbd_export *e)
-{
-    return lwnbd_add_context(e->handle, p, e->name, p->longname, e->exportsize);
-}
-
-int lwnbd_add_context(void *handle, struct lwnbd_plugin *p, const char *name, const char *description, const int64_t exportsize)
+int lwnbd_add_context(struct lwnbd_plugin *p, struct lwnbd_export *e)
 {
     struct lwnbd_context *c;
     uint32_t i;
@@ -29,15 +23,22 @@ int lwnbd_add_context(void *handle, struct lwnbd_plugin *p, const char *name, co
     if (i == MAX_CONTEXTS) {
         return -1;
     }
-    DEBUGLOG("lwnbd_add_context %s \n", name);
+    DEBUGLOG("lwnbd_add_context %s\n", e->name);
 
     c = &contexts[i];
 
-    c->handle = handle;
+    c->handle = e->handle;
     c->p = p;
-    strcpy(c->name, name);
-    strcpy(c->description, description);
-    c->exportsize = exportsize;
+    strcpy(c->name, e->name);
+
+    printf("len %ld\n",strlen(e->description));
+
+    if (strlen(e->description))
+    	strcpy(c->description, e->description);
+    else
+    	strcpy(c->description, p->longname);
+
+    c->exportsize = e->exportsize;
 
     if (!p->pwrite)
         eflags |= NBD_FLAG_READ_ONLY;
@@ -62,7 +63,7 @@ void lwnbd_dump_contexts()
 
     for (i = 0; i < MAX_CONTEXTS; i++) {
         if (contexts_status[i] != CONTEXT_FREE) {
-            printf("%s %s\n", contexts[i].name, contexts[i].description);
+            printf("%s : %s\n", contexts[i].name, contexts[i].description);
         }
     }
 }
@@ -82,9 +83,9 @@ lwnbd_contexts_count()
 }
 
 const struct lwnbd_context
-lwnbd_get_context_i(size_t i)
+*lwnbd_get_context_i(size_t i)
 {
-    return contexts[i];
+    return &contexts[i];
 }
 
 /* search for context by name

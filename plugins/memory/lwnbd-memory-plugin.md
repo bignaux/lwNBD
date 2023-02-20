@@ -12,11 +12,19 @@ STATUS : WIP
 
     ps2client -h 192.168.0.10 dumpmem host:bios.bin 0xbfc00000 0x400000
 
-## documentation :
+compare bios md5 sum with http://redump.org/datfile/ps2-bios/
+
+*  [ImHex-PS2](https://github.com/bignaux/ImHex-PS2) is a repository for specific ps2 [ImHex](https://github.com/WerWolv/ImHex) stuff. It will have useful code to work with this plugin to do live RE/debug session.
+
+### documentation :
 
  [Playstation 2 Memory Mapping](https://psi-rockin.github.io/ps2tek/#memorymap)
-
+ 
 ## dump tool analysis to review :
+
+* [ImHex](https://github.com/WerWolv/ImHex) 
+
+https://github.com/WerWolv/ImHex/tree/master/plugins/builtin/source/content/providers
 
 * http://www.wxhexeditor.org/
 * https://github.com/allencch/med

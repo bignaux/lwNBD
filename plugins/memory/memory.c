@@ -1,5 +1,4 @@
-#include "../memory/memory.h"
-
+#include "memory.h"
 #include <config.h>
 #include <string.h>
 
@@ -56,6 +55,8 @@ static int memory_ctor(const void *pconfig, struct lwnbd_export *e)
     e->handle = h;
     strcpy(e->name, conf->name);
     e->exportsize = conf->size;
+    strcpy(e->description,conf->desc);
+
     return 0;
 }
 

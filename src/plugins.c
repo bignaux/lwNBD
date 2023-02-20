@@ -5,6 +5,7 @@
 #include "config.h"
 #include <lwnbd.h>
 #include <lwnbd-plugin.h>
+#include <lwnbd-context.h>
 //#include <stdlib.h>
 
 typedef enum {
@@ -36,15 +37,21 @@ int lwnbd_plugin_new(lwnbd_plugin_t const plugin, const void *pconfig)
     struct lwnbd_export e;
 
     if (p->ctor == NULL) {
-        // fDEBUGLOG(stderr, "this plugin does not support configuration\n");
+        // DEBUGLOG(stderr, "this plugin does not support configuration\n");
         return -1;
     }
+
+    e.description[0] = '\0';
 
     if (p->ctor(pconfig, &e) == -1) {
         return -1;
     }
 
-    return lwnbd_add_context2(p, &e);
+
+    printf("lwnbd_plugin_new len %ld\n",strlen(e.description));
+    lwnbd_add_context(p, &e);
+
+    return 0;
 }
 
 int lwnbd_plugin_config(lwnbd_plugin_t const plugin, const char *key, const char *value)
@@ -53,7 +60,7 @@ int lwnbd_plugin_config(lwnbd_plugin_t const plugin, const char *key, const char
     const char *lkey;
 
     if (p->config == NULL) {
-        // fDEBUGLOG(stderr, "this plugin does not support configuration\n");
+        // DEBUGLOG(stderr, "this plugin does not support configuration\n");
         return -1;
     }
 
@@ -99,7 +106,7 @@ lwnbd_plugin_t lwnbd_plugin_init(plugin_init init)
      */
     p = init();
     if (!p) {
-        // fDEBUGLOG(stderr, "plugin registration function failed\n");
+        // DEBUGLOG(stderr, "plugin registration function failed\n");
         return -1;
     }
 
@@ -107,12 +114,12 @@ lwnbd_plugin_t lwnbd_plugin_init(plugin_init init)
      * plugin struct.
      */
     //    if (p->open == NULL) {
-    //        // fDEBUGLOG(stderr, "plugin must have a .open callback\n");
+    //        // DEBUGLOG(stderr, "plugin must have a .open callback\n");
     //        return -1;
     //    }
 
     if (p->pread == NULL) {
-        // fDEBUGLOG(stderr, "plugin must have a .pread callback\n");
+        // DEBUGLOG(stderr, "plugin must have a .pread callback\n");
         return -1;
     }
 

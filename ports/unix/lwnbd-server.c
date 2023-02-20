@@ -53,8 +53,13 @@ int main(int argc, char **argv)
     lwnbd_server_t nbdsrv;
     lwnbd_plugin_t fileplg, memplg;
 
-    struct memory_config memh;
     char data[512] = "some data to be read";
+    struct memory_config memh = {
+        .base = (uint64_t) &data,
+        .name = "data",
+        .size = 512,
+		.desc = "data buffer",
+    };
 
     int i = atexit(coucou);
     if (i != 0) {
@@ -75,20 +80,15 @@ int main(int argc, char **argv)
      *
      */
 
-
     fileplg = lwnbd_plugin_init(file_plugin_init);
-    memplg = lwnbd_plugin_init(memory_plugin_init);
 
-    /* create key=value for file plugin assuming no user error */
+    /* assuming no user input error */
     for (int i = 1; i < argc; i++) {
-        lwnbd_plugin_config(fileplg, NULL, argv[i]);
+        lwnbd_plugin_new(fileplg, argv[i]);
     }
 
-    memh.base = data;
-    printf("base = 0x%lx\n", memh.base);
-    strcpy(memh.name, "data");
-    memh.size = 512;
 
+    memplg = lwnbd_plugin_init(memory_plugin_init);
     lwnbd_plugin_new(memplg, &memh);
 
     /*

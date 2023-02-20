@@ -5,9 +5,10 @@
 
 struct memory_config
 {
-    char name[32];
     uint64_t base;
     uint64_t size;
+    char name[32];
+    char desc[64]; /* export description */
 };
 
 #endif /* PLUGINS_MEMORY_H_ */

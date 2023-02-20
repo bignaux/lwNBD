@@ -23,32 +23,56 @@ extern struct lwnbd_plugin *atad_plugin_init(void);
 extern struct lwnbd_plugin *memory_plugin_init(void);
 
 lwnbd_server_t nbdsrv;
-//    lwnbd_plugin_t atadplg;
-//    lwnbd_plugin_t mcmanplg;
+
+/* from sysman */
+static int GetSizeFromDelay(int device)
+{
+	int size = (GetDelay(device) >> 16) & 0x1F;
+	return (1 << size);
+}
 
 int _start(int argc, char **argv)
 {
     iop_thread_t nbd_thread;
     lwnbd_plugin_t atadplg, memplg;
 
-    struct memory_config iopram = {
-        .base = 0xbfc00000,
+    /* TODO: manage existence */
+    struct memory_config bios = {
+        .base = 0x1FC00000,
         .name = "bios",
-        .size = 0x400000,
+        .size = GetSizeFromDelay(SSBUSC_DEV_BOOTROM), // 0x400000
+        .desc = "BIOS (rom0)",
     };
 
-    if (argc > 1) {
-        //        strcpy(gdefaultexport, argv[1]);
-        //        LOG("default export : %s\n", gdefaultexport);
-    }
+    struct memory_config iopram = {
+        .base = 0,
+        .size = QueryMemSize(),
+        .name = "ram",
+        .desc = "IOP main RAM",
+    };
 
-    // register exports
+    struct memory_config dvdrom = {
+        .base = GetBaseAddress(SSBUSC_DEV_DVDROM),
+        .size = GetSizeFromDelay(SSBUSC_DEV_DVDROM),
+        .name = "dvdrom",
+        .desc = "DVD-ROM rom",
+    };
+
+	if (argc > 1) {
+//		strcpy(gdefaultexport, argv[1]);
+//		LOG("default export : %s\n", gdefaultexport);
+//		lwnbd_server_config(nbdsrv, "defaultexport", gdefaultexport);
+	}
+
     RegisterLibraryEntries(&_exp_lwnbd);
+
+    atadplg = lwnbd_plugin_init(atad_plugin_init);
 
     memplg = lwnbd_plugin_init(memory_plugin_init);
     lwnbd_plugin_new(memplg, &iopram);
+    lwnbd_plugin_new(memplg, &bios);
+    lwnbd_plugin_new(memplg, &dvdrom);
 
-    atadplg = lwnbd_plugin_init(atad_plugin_init);
     //    mcmanplg = lwnbd_plugin_init();
 
     nbdsrv = lwnbd_server_init(nbd_server_init);

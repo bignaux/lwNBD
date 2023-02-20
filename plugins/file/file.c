@@ -1,14 +1,13 @@
 #include <config.h>
+#include <fcntl.h>
 #include <libgen.h> // TODO: remove basename() usage
 #include <lwnbd-plugin.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 #define PLUGIN_NAME             file
 #define FILE_DRIVER_MAX_DEVICES 10
-static struct lwnbd_plugin plugin;
 
 /* The per-connection handle. */
 struct handle
@@ -121,12 +120,12 @@ static void file_open(void *handle, int readonly)
     //    return 0;
 }
 
-static int file_ctor(const char *filename)
+static int file_ctor(const void *pconfig, struct lwnbd_export *e)
 {
-    int64_t exportsize;
     struct handle *h;
     char *bname;
     uint32_t i;
+    const char *filename = pconfig;
 
     for (i = 0; i < FILE_DRIVER_MAX_DEVICES; i++) {
         if (handle_in_use[i] == HANDLE_FREE) {
@@ -141,19 +140,11 @@ static int file_ctor(const char *filename)
 
     // temporary workaround
     file_open(h, 0);
-    exportsize = file_get_size(h);
-    printf("size = %ld \n", exportsize);
+    e->exportsize = file_get_size(h);
 
-
-    return lwnbd_add_context(h, &plugin, h->filename, plugin.longname, exportsize);
-}
-
-static int file_config(const char *key, const char *value)
-{
-    if (strcmp(key, "file") == 0) {
-        return file_ctor(value);
-    }
-    return -1;
+    e->handle = h;
+    strcpy(e->name, h->filename);
+    return 0;
 }
 
 static void file_close(void *handle)
@@ -167,8 +158,7 @@ static struct lwnbd_plugin plugin = {
     .longname =
         "lwnbd file plugin",
     .version = PACKAGE_VERSION,
-    .config = file_config,
-    .magic_config_key = "file",
+	.ctor = file_ctor,
     .open = file_open,
     .close = file_close,
     .pread = file_pread,

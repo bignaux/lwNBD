@@ -9,10 +9,10 @@
 #include <loadcore.h>
 #include <mcman.h>
 #include <ps2ip.h>
+#include <ssbusc.h>
 #include <stdio.h>
 #include <sysclib.h>
 #include <sysmem.h>
 #include <thbase.h>
 #include <thsemap.h>
-
 #endif

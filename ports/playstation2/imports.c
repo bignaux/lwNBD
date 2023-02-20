@@ -42,9 +42,16 @@ I_DeleteThread
 I_StartThread
 thbase_IMPORTS_end
 
+ssbusc_IMPORTS_start
+I_GetBaseAddress
+I_GetDelay
+ssbusc_IMPORTS_end
+
+
 sysmem_IMPORTS_start
 I_AllocSysMemory
 I_FreeSysMemory
+I_QueryMemSize
 sysmem_IMPORTS_end
 
 sysclib_IMPORTS_start

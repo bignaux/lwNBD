@@ -14,7 +14,7 @@ struct lwnbd_export
     void *handle; /* Plugin handle. */
                   //    struct lwnbd_plugin *p; /* Plugin that provided handle. */
     char name[32];
-    //    char description[64];
+    char description[64]; /* optional */
     int64_t exportsize;
     //    uint16_t eflags;
     //    uint16_t blocksize;
@@ -54,10 +54,6 @@ struct lwnbd_plugin
 
     const char *magic_config_key;
 };
-
-extern int lwnbd_add_context2(struct lwnbd_plugin *p, struct lwnbd_export *e);
-extern int lwnbd_add_context(void *handle, struct lwnbd_plugin *p, const char *name, const char *description, const int64_t exportsize);
-
 
 #define M1(x)       x##_##plugin_init
 #define FUNCINIT(x) M1(x)

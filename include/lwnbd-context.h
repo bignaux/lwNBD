@@ -28,10 +28,9 @@ struct lwnbd_context
 
 /* contexts.c */
 size_t lwnbd_contexts_count();
-int lwnbd_add_context2(struct lwnbd_plugin *p, struct lwnbd_export *e);
-int lwnbd_add_context(void *handle, struct lwnbd_plugin *p, const char *name, const char *description, const int64_t exportsize);
+int lwnbd_add_context(struct lwnbd_plugin *p, struct lwnbd_export *e);
 struct lwnbd_context *lwnbd_get_context(const char *contextname);
-const struct lwnbd_context lwnbd_get_context_i(size_t i);
+const struct lwnbd_context *lwnbd_get_context_i(size_t i);
 void lwnbd_dump_contexts();
 
 #ifdef __cplusplus

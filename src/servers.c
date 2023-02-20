@@ -37,7 +37,7 @@ lwnbd_server_t lwnbd_server_init(server_init init)
      */
     s = init();
     if (!s) {
-        // fDEBUGLOG(stderr, "server registration function failed\n");
+        // DEBUGLOG(stderr, "server registration function failed\n");
         return -1;
     }
 
@@ -45,12 +45,12 @@ lwnbd_server_t lwnbd_server_init(server_init init)
      * server struct.
      */
     if (s->start == NULL) {
-        // fDEBUGLOG(stderr, "server must have a .start callback\n");
+        // DEBUGLOG(stderr, "server must have a .start callback\n");
         return -1;
     }
 
     if (s->new == NULL) {
-        // fDEBUGLOG(stderr, "server must have a .new callback\n");
+        // DEBUGLOG(stderr, "server must have a .new callback\n");
         return -1;
     }
 
@@ -73,7 +73,7 @@ int lwnbd_server_config(lwnbd_server_t const handle, const char *key, const char
 
     DEBUGLOG("server %s: %s=%s\n", si->s->name, key, value);
     //    if (s->config == NULL) {
-    //        //fDEBUGLOG(stderr, "this server does not support configuration\n");
+    //        //DEBUGLOG(stderr, "this server does not support configuration\n");
     //        exit(EXIT_FAILURE);
     //    }
     //
