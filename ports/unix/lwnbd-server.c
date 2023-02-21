@@ -55,10 +55,10 @@ int main(int argc, char **argv)
 
     char data[512] = "some data to be read";
     struct memory_config memh = {
-        .base = (uint64_t) &data,
+        .base = (uint64_t)&data,
         .name = "data",
         .size = 512,
-		.desc = "data buffer",
+        .desc = "data buffer",
     };
 
     int i = atexit(coucou);

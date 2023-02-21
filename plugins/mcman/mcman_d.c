@@ -2,17 +2,24 @@
 // alexparrado (2021)
 // TODO : remove dynamic alloc
 
+#include <config.h>
 #include <intrman.h>
 #include <lwnbd-plugin.h>
 #include <mcman.h>
 #include <stdint.h>
 #include <sysmem.h>
 
-typedef struct mcman_plugin
+#define PLUGIN_NAME mcman
+#define MAX_DEVICES 2
+
+struct handle
 {
-    lwnbd_plugin super;
     int device;
-} mcman_plugin;
+    uint16_t blocksize;
+};
+
+static struct handle handles[MAX_DEVICES];
+//static int handle_in_use[MAX_DEVICES];
 
 // Buffer to temporary store block data
 uint8_t *bbuffer;
@@ -114,18 +121,18 @@ int injectPages(int port, int block, int pageSize, int offset, int nPages, int p
 }
 
 // NBD read method
-int mcman_read_(lwnbd_plugin const *const me, void *buffer, uint64_t offset, uint32_t length)
+int mcman_pread(void *handle, void *buf, uint32_t count, uint64_t offset, uint32_t flags)
 {
-
+    struct handle *h = handle;
     int result, i;
 
     result = sceMcResSucceed;
 
-    uint8_t *aux = (uint8_t *)buffer;
+    uint8_t *aux = (uint8_t *)buf;
 
     // Read requested pages
-    for (i = 0; i < length; i++) {
-        result = McReadPage(((mcman_plugin const *)me)->device, 0, offset + i, aux + i * (me->blocksize));
+    for (i = 0; i < count; i++) {
+        result = McReadPage(h->device, 0, offset + i, aux + i * (h->blocksize));
 
         if (result != sceMcResSucceed)
             break;
@@ -135,25 +142,26 @@ int mcman_read_(lwnbd_plugin const *const me, void *buffer, uint64_t offset, uin
 }
 
 // NBD write method
-int mcman_write_(lwnbd_plugin const *const me, void *buffer, uint64_t offset, uint32_t length)
+int mcman_pwrite(void *handle, const void *buf, uint32_t count,
+                 uint64_t offset, uint32_t flags)
 {
-
+    struct handle *h = handle;
     int result = 0, i;
     uint32_t startBlock, endBlock;
     int nPages, blockOffset;
 
-    int remainingPages = length;
+    int remainingPages = count;
     int writtenPages = 0;
 
     // Start and end blocks
     startBlock = (offset / pagesPerBlock);
-    endBlock = ((offset + length - 1) / pagesPerBlock);
+    endBlock = ((offset + count - 1) / pagesPerBlock);
 
     // Offset in block (measured in pages)
     blockOffset = (offset & (pagesPerBlock - 1));
 
     // Auxiliary pointer
-    uint8_t *aux = (uint8_t *)buffer;
+    uint8_t *aux = (uint8_t *)buf;
 
     // Process involved blocks
     for (i = startBlock; i <= endBlock; i++) {
@@ -162,7 +170,7 @@ int mcman_write_(lwnbd_plugin const *const me, void *buffer, uint64_t offset, ui
         nPages = (remainingPages >= (pagesPerBlock - blockOffset)) ? (pagesPerBlock - blockOffset) : remainingPages;
 
         // Inject pages to block
-        result = injectPages(((mcman_plugin const *)me)->device, i, (me->blocksize), blockOffset, nPages, pagesPerBlock, aux + writtenPages * (me->blocksize));
+        result = injectPages(h->device, i, (h->blocksize), blockOffset, nPages, pagesPerBlock, aux + writtenPages * (h->blocksize));
 
         if (result != sceMcResSucceed)
             break;
@@ -176,28 +184,14 @@ int mcman_write_(lwnbd_plugin const *const me, void *buffer, uint64_t offset, ui
 }
 
 // TODO
-int mcman_flush_(lwnbd_plugin const *const me)
+int mcman_flush(void *handle, uint32_t flags)
 {
     return 0;
 }
 
-int mcman_register(lwnbd_plugin lwnbd_plugins, uint16_t eflags)
+int mcman_ctor(const void *pconfig, struct lwnbd_export *e)
 {
-    mcman_plugin mc[2]; // For two MC ports
-    int i, j, ret, successed_exported_ctx = 0;
-    for (int i = 0; i < 2; i++) {
-        ret = mcman_ctor(&mc[i], i);
-        if (ret == 0) {
-            lwnbd_plugins[successed_exported_ctx] = &mc[i].super;
-            successed_exported_ctx++;
-        }
-    }
-
-    return 0;
-}
-
-int mcman_ctor(mcman_plugin *const me, int device)
-{
+	uint8_t device = *(uint8_t*)pconfig;
 
     s16 pageLen;
     // u16 pagesPerCluster;
@@ -206,39 +200,43 @@ int mcman_ctor(mcman_plugin *const me, int device)
     int result;
     int cardSize;
 
-    me->device = device;
-
-    static struct lwnbd_plugin_ops const nbdopts = {
-        &mcman_read_,
-        &mcman_write_,
-        &mcman_flush_,
-    };
-
     // Detect MC
     McDetectCard2(device, 0);
 
     // Retrieve MC info
     result = McGetCardSpec(device, 0, &pageLen, &pagesPerBlock, &cardSize, &flags);
 
-
     if (result == sceMcResSucceed) {
+
+    	struct handle *h = &handles[device];
+        e->handle = h;
+        h->device = device;
 
         // Make room for block data
         bbuffer = SysAlloc(pageLen * pagesPerBlock);
 
-        // Initializa context
-        lwnbd_plugin_ctor(&me->super); /* call the superclass' ctor */
-        me->super.vptr = &nbdopts;     /* override the vptr */
         // Description of export
-        strcpy(me->super.export_desc, "PlayStation 2 MC via MCMAN");
-        sprintf(me->super.export_name, "%s%d", "mc", me->device);
-        me->super.blocksize = pageLen;
-        me->super.eflags = NBD_FLAG_HAS_FLAGS;
+        sprintf(e->name, "mc%d", device);
+        h->blocksize = pageLen;
 
         // Size of export
-        me->super.exportsize = cardSize * pageLen;
+        e->exportsize = (int64_t)cardSize * pageLen;
+
         return 0;
 
     } else
         return 1;
 }
+
+static struct lwnbd_plugin plugin = {
+    .name = "mcman",
+    .longname = "PlayStation 2 MemoryCard via MCMAN",
+    .version = PACKAGE_VERSION,
+    //    .load = mcman_load,
+    .ctor = mcman_ctor,
+    .pread = mcman_pread,
+    .pwrite = mcman_pwrite,
+    .flush = mcman_flush,
+};
+
+NBDKIT_REGISTER_PLUGIN(plugin)

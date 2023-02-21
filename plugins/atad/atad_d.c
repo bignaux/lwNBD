@@ -4,13 +4,14 @@
 
 #define PLUGIN_NAME atad
 #define MAX_DEVICES 2
-static struct lwnbd_plugin plugin;
+
 struct handle
 {
     int device;
 };
 
-struct handle handles[MAX_DEVICES];
+static struct handle handles[MAX_DEVICES];
+//static int handle_in_use[MAX_DEVICES];
 
 static inline int atad_pread(void *handle, void *buf, uint32_t count,
                              uint64_t offset, uint32_t flags)
@@ -36,31 +37,28 @@ static inline int atad_flush(void *handle, uint32_t flags)
 
 static int atad_ctor(const void *pconfig, struct lwnbd_export *e)
 {
-	uint8_t i = pconfig;
-    ata_devinfo_t *dev_info = ata_get_devinfo(i);
+    uint8_t device = *(uint8_t*)pconfig;
+    ata_devinfo_t *dev_info = ata_get_devinfo(device);
 
-    if (dev_info != NULL && dev_info->exists) {
-        struct handle *h = &handles[i];
-        h->device = i;
-        e->exportsize = (int64_t)dev_info->total_sectors * 512;
-        sprintf(e->name, "hdd%d", i & MAX_DEVICES);
-        e->handle = h;
-    }
+	if (dev_info != NULL && dev_info->exists) {
+		struct handle *h = &handles[device];
+		h->device = device;
+		e->exportsize = (int64_t) dev_info->total_sectors * 512;
+		sprintf(e->name, "hdd%d", device);
+		e->handle = h;
+
+		return 0;
+
+	} else
+		return 1;
 }
-
-//static void atad_load(void)
-//{
-//    for (uint8_t i = 0; i < MAX_DEVICES; i++) {
-//    	atad_ctor(i, struct lwnbd_export *e);
-//    }
-//}
 
 static struct lwnbd_plugin plugin = {
     .name = "atad",
     .longname = "PlayStation 2 HDD via ATAD",
     .version = PACKAGE_VERSION,
-//    .load = atad_load,
-	.ctor = atad_ctor,
+    //    .load = atad_load,
+    .ctor = atad_ctor,
     .pread = atad_pread,
     .pwrite = atad_pwrite,
     .flush = atad_flush,

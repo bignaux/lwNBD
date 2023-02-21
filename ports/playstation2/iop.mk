@@ -23,7 +23,7 @@ include $(PORT_DIR)/iopglobal.mk
 include servers/nbd/Makefile
 include plugins/atad/Makefile
 include plugins/memory/Makefile
-#include plugins/mcman/Makefile
+include plugins/mcman/Makefile
 
 DEST ?= ~/devel/Open-PS2-Loader
 TARGET_IP ?= 192.168.1.45

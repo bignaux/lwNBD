@@ -158,7 +158,7 @@ static struct lwnbd_plugin plugin = {
     .longname =
         "lwnbd file plugin",
     .version = PACKAGE_VERSION,
-	.ctor = file_ctor,
+    .ctor = file_ctor,
     .open = file_open,
     .close = file_close,
     .pread = file_pread,

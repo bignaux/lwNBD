@@ -31,12 +31,12 @@ int lwnbd_add_context(struct lwnbd_plugin *p, struct lwnbd_export *e)
     c->p = p;
     strcpy(c->name, e->name);
 
-    printf("len %ld\n",strlen(e->description));
+//    printf("len %ld\n", strlen(e->description));
 
     if (strlen(e->description))
-    	strcpy(c->description, e->description);
+        strcpy(c->description, e->description);
     else
-    	strcpy(c->description, p->longname);
+        strcpy(c->description, p->longname);
 
     c->exportsize = e->exportsize;
 
@@ -83,7 +83,8 @@ lwnbd_contexts_count()
 }
 
 const struct lwnbd_context
-*lwnbd_get_context_i(size_t i)
+    *
+    lwnbd_get_context_i(size_t i)
 {
     return &contexts[i];
 }

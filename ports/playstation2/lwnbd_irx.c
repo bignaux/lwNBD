@@ -20,6 +20,7 @@ static int nbd_tid;
 extern struct irx_export_table _exp_lwnbd;
 extern struct lwnbd_server *nbd_server_init(void);
 extern struct lwnbd_plugin *atad_plugin_init(void);
+extern struct lwnbd_plugin *mcman_plugin_init(void);
 extern struct lwnbd_plugin *memory_plugin_init(void);
 
 lwnbd_server_t nbdsrv;
@@ -27,14 +28,14 @@ lwnbd_server_t nbdsrv;
 /* from sysman */
 static int GetSizeFromDelay(int device)
 {
-	int size = (GetDelay(device) >> 16) & 0x1F;
-	return (1 << size);
+    int size = (GetDelay(device) >> 16) & 0x1F;
+    return (1 << size);
 }
 
 int _start(int argc, char **argv)
 {
     iop_thread_t nbd_thread;
-    lwnbd_plugin_t atadplg, memplg;
+    lwnbd_plugin_t atadplg, memplg, mcmanplg;
 
     /* TODO: manage existence */
     struct memory_config bios = {
@@ -51,29 +52,35 @@ int _start(int argc, char **argv)
         .desc = "IOP main RAM",
     };
 
-    struct memory_config dvdrom = {
-        .base = GetBaseAddress(SSBUSC_DEV_DVDROM),
-        .size = GetSizeFromDelay(SSBUSC_DEV_DVDROM),
-        .name = "dvdrom",
-        .desc = "DVD-ROM rom",
-    };
+//    struct memory_config dvdrom = {
+//        .base = GetBaseAddress(SSBUSC_DEV_DVDROM),
+//        .size = GetSizeFromDelay(SSBUSC_DEV_DVDROM),
+//        .name = "dvdrom",
+//        .desc = "DVD-ROM rom",
+//    };
 
-	if (argc > 1) {
-//		strcpy(gdefaultexport, argv[1]);
-//		LOG("default export : %s\n", gdefaultexport);
-//		lwnbd_server_config(nbdsrv, "defaultexport", gdefaultexport);
-	}
+    if (argc > 1) {
+        //		strcpy(gdefaultexport, argv[1]);
+        //		LOG("default export : %s\n", gdefaultexport);
+        //		lwnbd_server_config(nbdsrv, "defaultexport", gdefaultexport);
+    }
 
     RegisterLibraryEntries(&_exp_lwnbd);
 
-    atadplg = lwnbd_plugin_init(atad_plugin_init);
+	atadplg = lwnbd_plugin_init(atad_plugin_init);
+	for (uint8_t i = 0; i < 2; i++) {
+		lwnbd_plugin_new(atadplg, &i);
+	}
+
+	mcmanplg = lwnbd_plugin_init(mcman_plugin_init);
+	for (uint8_t i = 0; i < 2; i++) {
+		lwnbd_plugin_new(mcmanplg, &i);
+	}
 
     memplg = lwnbd_plugin_init(memory_plugin_init);
     lwnbd_plugin_new(memplg, &iopram);
     lwnbd_plugin_new(memplg, &bios);
-    lwnbd_plugin_new(memplg, &dvdrom);
-
-    //    mcmanplg = lwnbd_plugin_init();
+    //    lwnbd_plugin_new(memplg, &dvdrom);
 
     nbdsrv = lwnbd_server_init(nbd_server_init);
 

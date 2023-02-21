@@ -43,12 +43,10 @@ int lwnbd_plugin_new(lwnbd_plugin_t const plugin, const void *pconfig)
 
     e.description[0] = '\0';
 
-    if (p->ctor(pconfig, &e) == -1) {
+    if (p->ctor(pconfig, &e) != 0) {
         return -1;
     }
 
-
-    printf("lwnbd_plugin_new len %ld\n",strlen(e.description));
     lwnbd_add_context(p, &e);
 
     return 0;
