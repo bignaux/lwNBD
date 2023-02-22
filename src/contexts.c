@@ -31,7 +31,7 @@ int lwnbd_add_context(struct lwnbd_plugin *p, struct lwnbd_export *e)
     c->p = p;
     strcpy(c->name, e->name);
 
-//    printf("len %ld\n", strlen(e->description));
+    //    printf("len %ld\n", strlen(e->description));
 
     if (strlen(e->description))
         strcpy(c->description, e->description);

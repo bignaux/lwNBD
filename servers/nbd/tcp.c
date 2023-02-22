@@ -20,7 +20,7 @@ uint32_t nbd_recv(int s, void *mem, size_t len, int flags)
     // dbgLOG("left = %u\n", left);
     do {
         bytesRead = recv(s, (void *)((uint8_t *)mem + totalRead), left, flags);
-        //        DEBUGLOG("bytesRead = %u\n", bytesRead);
+                DEBUGLOG("bytesRead = %u\n", bytesRead);
         if (bytesRead <= 0) // if (bytesRead == -1) failed for nbdfuse, seems it not send NBD_CMD_DISC
             break;
 

@@ -17,27 +17,12 @@ typedef enum {
 static struct lwnbd_plugin *plugins[MAX_NUM_PLUGINS];
 static plugin_state_t plugins_status[MAX_NUM_PLUGINS];
 
-/*struct lwnbd_plugin *get_plugin_by_name(lwnbd_server_t const handle, const char *name)
-{
-    for (uint32_t i = 0; i < MAX_NUM_PLUGINS; i++) {
-        if (plugins_status[i] == PLUGIN_CREATED) {
-            if ( ! strcmp(plugins[i]->name, name) )
-            {
-//				DEBUGLOG("found plugin at index %d\n",i);
-                return plugins[i];
-            }
-        }
-    }
-    return NULL;
-}*/
-
 int lwnbd_plugin_new(lwnbd_plugin_t const plugin, const void *pconfig)
 {
     struct lwnbd_plugin *p = plugins[plugin];
     struct lwnbd_export e;
 
     if (p->ctor == NULL) {
-        // DEBUGLOG(stderr, "this plugin does not support configuration\n");
         return -1;
     }
 
@@ -48,7 +33,6 @@ int lwnbd_plugin_new(lwnbd_plugin_t const plugin, const void *pconfig)
     }
 
     lwnbd_add_context(p, &e);
-
     return 0;
 }
 
@@ -129,3 +113,17 @@ lwnbd_plugin_t lwnbd_plugin_init(plugin_init init)
     DEBUGLOG("plugin %s registered\n", p->name);
     return i;
 }
+
+/*struct lwnbd_plugin *get_plugin_by_name(lwnbd_server_t const handle, const char *name)
+{
+    for (uint32_t i = 0; i < MAX_NUM_PLUGINS; i++) {
+        if (plugins_status[i] == PLUGIN_CREATED) {
+            if ( ! strcmp(plugins[i]->name, name) )
+            {
+//				DEBUGLOG("found plugin at index %d\n",i);
+                return plugins[i];
+            }
+        }
+    }
+    return NULL;
+}*/

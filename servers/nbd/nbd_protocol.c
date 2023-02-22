@@ -293,7 +293,7 @@ err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
                         blkremains -= bufblksz;
                         retry = MAX_RETRIES;
                     } else if (retry) {
-                        LOG("NBD_CMD_READ : nbd_pread NOK \n");
+                        LOG("NBD_CMD_READ : NOK : %d\n", r);
                         retry--;
                         sendflag = 1;
                     } else {

@@ -40,6 +40,3 @@ softdev2:
 	umount opl
 	sleep 5
 	sudo nbd-client -d $(DEV)
-
-nbdcleanup:
-	sudo lsof -t /dev/nbd* | sudo xargs -r kill -9

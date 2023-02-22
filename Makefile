@@ -35,6 +35,9 @@ $(MANPAGE): README.md
 clean:
 	rm -f $(BIN) $(MANPAGE) $(OBJ) *~ core 
 
+nbdcleanup:
+	sudo lsof -t /dev/nbd* | sudo xargs -r kill -9
+
 # hackish but let you check/format same way both CI and your own env.
 # and manage .clang-format-ignore file properly.
 cfla = $(WORKSPACE)/tools/clang-format-lint-action

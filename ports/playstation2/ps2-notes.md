@@ -9,6 +9,20 @@ IOP modules use -fno-toplevel-reorder for export/import .
 EE : uint32_t => long unsigned int _> %ld
 
 
+## workflow (see helloworld)
+
+docker pull ghcr.io/ps2dev/ps2dev:latest
+
+go in $WORKSPACE !
+docker run -it -w /app -v "$(pwd)":/app ps2dev/ps2dev:latest
+
+apk add build-base git zip gawk python3 py3-pip bash
+pip3 install -r requirements.txt
+git config --global --add safe.directory /app
+
+rm -f ./modules/network/lwNBD/lwnbdsvr.irx && make DEBUG
+
+
 ## IOP debug
 
   udptty.irx send stdout to udp broadcast.
@@ -70,7 +84,10 @@ It'd reduce driver depend on ioman wrapping (ie: udptty) .
 
 BDM is another tentative to make a common interface for PS2 block device, acting same like lwnbd. It's a shame to miss the opportunity to have a functional and universal interface regardless of the type of device, but that's the social situation of this project at this moment. Bringing out the possibilities of being able to share a common software interface from an input device like a gamepad to a storage device is not easy without having to show all the possibilities that this kind of thing offers.
 
-HID :
+## idea
+
+TAS/HID :
+
 * https://github.com/nmelihsensoy/virtual-hid-tcp
 * https://dzone.com/articles/build-your-own-usb-hid-joystick-device-and-game-co
 

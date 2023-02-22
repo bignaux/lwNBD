@@ -1,6 +1,10 @@
 lwNBD-mcman-plugin(1) -- Playstation 2 MemoryCard plugin
 =============================================
 
+TARGETS : PlayStation 2
+
+STATUS : WIP
+
 ## Usage : use your PS2 as a memory card adapter !
 
 connect with your favorite nbd client :
@@ -13,11 +17,7 @@ connect with your favorite nbd client :
     Negotiation: ..size = 8MB
     bs=512, sz=8388608 bytes
 
-backup with your favorite raw copy tool :
-
-
-
-Use [ps2mcfs](https://github.com/FranciscoDA/ps2mcfs) to mount your memory card : 
+Eventually, use [ps2mcfs](https://github.com/FranciscoDA/ps2mcfs) to mount your memory card : 
 
     $ ./fuseps2mc /dev/nbd2 test/
 
@@ -25,3 +25,6 @@ Use [ps2mcfs](https://github.com/FranciscoDA/ps2mcfs) to mount your memory card 
 ## SEE ALSO
  
   [PlayStation 2 Memory Card File System](http://www.csclub.uwaterloo.ca:11068/mymc/ps2mcfs.html)
+  [windows mymc_2.6.g2.dist.7z](http://sourceforge.net/projects/mymc-opl/files/mymc_2.6.g2.dist.7z/download)
+  [ps3-memorycard-adapter](https://github.com/vpelletier/ps3-memorycard-adapter/tree/master/nbd)
+  [ps3mca-tool](https://github.com/jimmikaelkael/ps3mca-tool)

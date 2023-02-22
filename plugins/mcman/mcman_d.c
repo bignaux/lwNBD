@@ -1,6 +1,8 @@
 // MC plugin for PS2-NBD server
-// alexparrado (2021)
+// alexparrado (2021) ronan bignaux(2023)
 // TODO : remove dynamic alloc
+// TODO : add slot to pconfig ?
+// TODO : format e->description according to Memory Card device types and port/slot
 
 #include <config.h>
 #include <intrman.h>
@@ -8,6 +10,24 @@
 #include <mcman.h>
 #include <stdint.h>
 #include <sysmem.h>
+
+/*
+// MCMAN basic error codes
+#define sceMcResSucceed         0
+#define sceMcResChangedCard     -1
+#define sceMcResNoFormat        -2
+#define sceMcResFullDevice      -3
+#define sceMcResNoEntry         -4
+#define sceMcResDeniedPermit    -5
+#define sceMcResNotEmpty        -6
+#define sceMcResUpLimitHandle   -7
+#define sceMcResFailReplace     -8
+#define sceMcResFailResetAuth   -11
+#define sceMcResFailDetect      -12
+#define sceMcResFailDetect2     -13
+#define sceMcResDeniedPS1Permit -51
+#define sceMcResFailAuth        -90
+ */
 
 #define PLUGIN_NAME mcman
 #define MAX_DEVICES 2
@@ -19,7 +39,7 @@ struct handle
 };
 
 static struct handle handles[MAX_DEVICES];
-//static int handle_in_use[MAX_DEVICES];
+// static int handle_in_use[MAX_DEVICES];
 
 // Buffer to temporary store block data
 uint8_t *bbuffer;
@@ -126,7 +146,7 @@ int mcman_pread(void *handle, void *buf, uint32_t count, uint64_t offset, uint32
     struct handle *h = handle;
     int result, i;
 
-    result = sceMcResSucceed;
+    result = sceMcResSucceed; // = 0
 
     uint8_t *aux = (uint8_t *)buf;
 
@@ -191,7 +211,7 @@ int mcman_flush(void *handle, uint32_t flags)
 
 int mcman_ctor(const void *pconfig, struct lwnbd_export *e)
 {
-	uint8_t device = *(uint8_t*)pconfig;
+    uint8_t device = *(uint8_t *)pconfig;
 
     s16 pageLen;
     // u16 pagesPerCluster;
@@ -208,7 +228,7 @@ int mcman_ctor(const void *pconfig, struct lwnbd_export *e)
 
     if (result == sceMcResSucceed) {
 
-    	struct handle *h = &handles[device];
+        struct handle *h = &handles[device];
         e->handle = h;
         h->device = device;
 

@@ -52,12 +52,12 @@ int _start(int argc, char **argv)
         .desc = "IOP main RAM",
     };
 
-//    struct memory_config dvdrom = {
-//        .base = GetBaseAddress(SSBUSC_DEV_DVDROM),
-//        .size = GetSizeFromDelay(SSBUSC_DEV_DVDROM),
-//        .name = "dvdrom",
-//        .desc = "DVD-ROM rom",
-//    };
+    //    struct memory_config dvdrom = {
+    //        .base = GetBaseAddress(SSBUSC_DEV_DVDROM),
+    //        .size = GetSizeFromDelay(SSBUSC_DEV_DVDROM),
+    //        .name = "dvdrom",
+    //        .desc = "DVD-ROM rom",
+    //    };
 
     if (argc > 1) {
         //		strcpy(gdefaultexport, argv[1]);
@@ -67,15 +67,15 @@ int _start(int argc, char **argv)
 
     RegisterLibraryEntries(&_exp_lwnbd);
 
-	atadplg = lwnbd_plugin_init(atad_plugin_init);
-	for (uint8_t i = 0; i < 2; i++) {
-		lwnbd_plugin_new(atadplg, &i);
-	}
+    atadplg = lwnbd_plugin_init(atad_plugin_init);
+    for (uint8_t i = 0; i < 2; i++) {
+        lwnbd_plugin_new(atadplg, &i);
+    }
 
-	mcmanplg = lwnbd_plugin_init(mcman_plugin_init);
-	for (uint8_t i = 0; i < 2; i++) {
-		lwnbd_plugin_new(mcmanplg, &i);
-	}
+    mcmanplg = lwnbd_plugin_init(mcman_plugin_init);
+    for (uint8_t i = 0; i < 2; i++) {
+        lwnbd_plugin_new(mcmanplg, &i);
+    }
 
     memplg = lwnbd_plugin_init(memory_plugin_init);
     lwnbd_plugin_new(memplg, &iopram);
