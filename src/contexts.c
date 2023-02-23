@@ -82,7 +82,7 @@ lwnbd_contexts_count()
     return i;
 }
 
-const struct lwnbd_context
+struct lwnbd_context
     *
     lwnbd_get_context_i(size_t i)
 {

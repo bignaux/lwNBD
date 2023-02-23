@@ -68,12 +68,12 @@ int _start(int argc, char **argv)
     RegisterLibraryEntries(&_exp_lwnbd);
 
     atadplg = lwnbd_plugin_init(atad_plugin_init);
-    for (uint8_t i = 0; i < 2; i++) {
+    for (int i = 0; i < 2; i++) {
         lwnbd_plugin_new(atadplg, &i);
     }
 
     mcmanplg = lwnbd_plugin_init(mcman_plugin_init);
-    for (uint8_t i = 0; i < 2; i++) {
+    for (int i = 0; i < 2; i++) {
         lwnbd_plugin_new(mcmanplg, &i);
     }
 
@@ -87,7 +87,7 @@ int _start(int argc, char **argv)
     nbd_thread.attr = TH_C;
     nbd_thread.option = 0;
     nbd_thread.thread = (void *)lwnbd_server_start;
-    nbd_thread.stacksize = 0x800;
+    nbd_thread.stacksize = 0x2000; // 0x800;
     nbd_thread.priority = 0x10;
 
     nbd_tid = CreateThread(&nbd_thread);

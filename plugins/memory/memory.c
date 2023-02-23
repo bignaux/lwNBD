@@ -12,13 +12,13 @@ typedef enum {
 } handle_state_t;
 
 /* specific plugin private data */
-static uint64_t handles[MEM_DRIVER_MAX_DEVICES];
+static intptr_t handles[MEM_DRIVER_MAX_DEVICES];
 static int handle_in_use[MEM_DRIVER_MAX_DEVICES];
 
 static inline int memory_pread(void *handle, void *buf, uint32_t count,
                                uint64_t offset, uint32_t flags)
 {
-    uint64_t *h = handle;
+    intptr_t *h = handle;
     memcpy(buf, (void *)*h + offset, count);
     return 0;
 }
@@ -26,7 +26,7 @@ static inline int memory_pread(void *handle, void *buf, uint32_t count,
 static inline int memory_pwrite(void *handle, const void *buf, uint32_t count,
                                 uint64_t offset, uint32_t flags)
 {
-    uint64_t *h = handle;
+    intptr_t *h = handle;
     memcpy((void *)*h + offset, buf, count);
     return 0;
 }
@@ -38,7 +38,7 @@ static inline int memory_flush(void *handle, uint32_t flags)
 
 static int memory_ctor(const void *pconfig, struct lwnbd_export *e)
 {
-    uint64_t *h;
+    intptr_t *h;
     const struct memory_config *conf = pconfig;
     uint32_t i;
 

@@ -23,5 +23,6 @@ on Linux, you can auto-mount partitions with [hdl-dump](https://github.com/ps2ho
     
 ## SEE ALSO
  
-[pfsshell](https://github.com/ps2homebrew/pfsshell)
-[nixos wiki](https://nixos.wiki/wiki/Playstation2#HDD_Partitioning)
+ [pfsshell](https://github.com/ps2homebrew/pfsshell)
+ 
+ [nixos wiki](https://nixos.wiki/wiki/Playstation2#HDD_Partitioning)

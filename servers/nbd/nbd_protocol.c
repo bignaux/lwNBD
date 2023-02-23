@@ -137,11 +137,9 @@ err_t negotiation_phase(struct nbd_server *server, const int client_socket, stru
                 DEBUGLOG("%d export.\n", list_len);
 
                 for (i = 0; i < list_len; i++) {
-                    const struct lwnbd_context *context = lwnbd_get_context_i(i);
+                    struct lwnbd_context *context = lwnbd_get_context_i(i);
                     size_t name_len = strlen(context->name);
-
-                    // TODO : fix there
-                    size_t desc_len = context->description ? strlen(context->description) : 0;
+                    size_t desc_len = strlen(context->description);
                     uint32_t len;
 
                     DEBUGLOG("%s\n", (context->name));

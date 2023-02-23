@@ -27,9 +27,9 @@ static struct handle handles[MAX_DEVICES];
 static inline int atad_pread(void *handle, void *buf, uint32_t count,
                              uint64_t offset, uint32_t flags)
 {
-    struct handle *h = handle;
-    printf("h->device = %d\n",h->device);
-    return ata_device_sector_io(h->device, buf, (uint32_t)offset, count,
+    //    struct handle *h = handle;
+    //    printf("atad_pread h->device = %d\n",h->device);
+    return ata_device_sector_io(0, buf, (uint32_t)offset, count,
                                 ATA_DIR_READ);
 }
 
@@ -49,7 +49,7 @@ static inline int atad_flush(void *handle, uint32_t flags)
 
 static int atad_ctor(const void *pconfig, struct lwnbd_export *e)
 {
-    uint8_t device = *(uint8_t *)pconfig;
+    int device = *(int *)pconfig;
     ata_devinfo_t *dev_info = ata_get_devinfo(device);
 
     if (dev_info != NULL && dev_info->exists) {
@@ -59,6 +59,7 @@ static int atad_ctor(const void *pconfig, struct lwnbd_export *e)
         sprintf(e->name, "hdd%d", device);
         e->handle = h;
 
+        printf("atad_ctor h->device = %d\n", h->device);
         return 0;
 
     } else
