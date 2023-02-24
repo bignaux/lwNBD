@@ -59,6 +59,7 @@ i publish this "AS-IS".
 
 Known supported clients :
 
+* nbdcopy (provided by libnbd)
 * nbdfuse (provided by libnbd), works on windows with WSL2.
 * nbd-client
 * Ceph for Windows (wnbd-client.exe)

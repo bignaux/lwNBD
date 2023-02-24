@@ -7,12 +7,14 @@ STATUS : DONE
 
 ## Usage with nbd server : 
 
-connect with your favorite nbd client :
 
     $ nbd-client -l 192.168.1.45
     Negotiation: ..
     hdd0: PlayStation 2 HDD via ATAD
     mc0: PlayStation 2 MC via MCMAN
+
+connect with your favorite nbd client :
+    
     $ nbd-client -N hdd0 192.168.1.45 /dev/nbd1
     Negotiation: ..size = 114473MB
     bs=512, sz=120034123776 bytes

@@ -40,8 +40,8 @@ int _start(int argc, char **argv)
     /* TODO: manage existence */
     struct memory_config bios = {
         .base = 0x1FC00000,
-        .name = "bios",
         .size = GetSizeFromDelay(SSBUSC_DEV_BOOTROM), // 0x400000
+        .name = "bios",
         .desc = "BIOS (rom0)",
     };
 

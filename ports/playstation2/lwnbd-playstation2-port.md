@@ -21,7 +21,7 @@ EE : uint32_t => long unsigned int _> %ld
     pip3 install -r requirements.txt
     git config --global --add safe.directory /app
     
-    rm -f ./modules/network/lwNBD/lwnbdsvr.irx && make DEBUG
+    rm -f ./modules/network/lwNBD/lwnbdsvr.irx && make LWNBD_DEBUG=1
 
     make -C modules/network/lwNBD/ TARGET=iop clean
     
@@ -91,6 +91,8 @@ BDM is another tentative to make a common interface for PS2 block device, acting
 Loader to replace ps2link
 
 enable OPL in-game 
+
+screenshot plugin (see ee_core/src/igs_api.c)
 
 OPL UI "service manager" to configure plugin/server start [off] [boot] [in-game]
 

@@ -24,6 +24,8 @@ endif
 
 ifeq ($(DEBUG),1)
 	CFLAGS += -DDEBUG
+else ifeq ($(LWNBD_DEBUG),1)
+	CFLAGS += -DDEBUG
 endif
 
 $(BIN): $(OBJ)
