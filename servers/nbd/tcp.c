@@ -38,6 +38,7 @@ int nbd_start(void *handle)
     socklen_t addrlen;
     register err_t r;
     struct lwnbd_context *nego_ctx = NULL;
+    struct nbd_server *server = handle;
 
     peer.sin_family = AF_INET;
     peer.sin_port = htons(nbd_server_get_port(handle));
@@ -68,16 +69,30 @@ int nbd_start(void *handle)
                 goto error;
 
             LOG("a client connected.\n");
-            r = negotiation_phase(handle, client_socket, &nego_ctx);
+
+            if (!nbd_server_get_preinit(handle)) {
+                r = protocol_handshake(handle, client_socket, &nego_ctx);
+                if (r == -1) {
+                    LOG("an error occured during negotiation_phase phase.\n");
+                }
+            } else {
+                nego_ctx = lwnbd_get_context(server->defaultexport);
+                if (nego_ctx != NULL) {
+                    r = NBD_OPT_EXPORT_NAME;
+                    DEBUGLOG("export context %s.\n", nego_ctx->name);
+                } else {
+                    LOG("You need to provide a default export to use preinit.\n");
+                    r = -1;
+                }
+            }
+
             if (r == NBD_OPT_EXPORT_NAME) {
                 // TODO : make other ctx available for other connection
                 r = transmission_phase(client_socket, nego_ctx);
                 if (r == -1)
                     LOG("an error occured during transmission phase.\n");
-            } else if (r == -1) {
-                LOG("an error occured during negotiation_phase phase.\n");
-            }
-            close(client_socket);
+            } else
+                close(client_socket);
             LOG("a client disconnected.\n\n\n");
         }
     }

@@ -35,6 +35,11 @@ struct nbd_server
     uint32_t gflags; // nbd proto global flag
     char defaultexport[32];
     int readonly; /* TODO: all exports would be readonly */
+    /*
+     * Some nbd client has options to use a preinitialized connection, and to specify the device size
+     * and skip this step. (nbd-client -preinit -size <bytes> )
+     */
+    int preinit;
 };
 
 /* tcp.c */
@@ -45,9 +50,12 @@ int nbd_start(void *handle);
 uint32_t nbd_server_get_gflags(void *handle);
 char *nbd_server_get_defaultexport(void *handle);
 uint16_t nbd_server_get_port(void *handle);
+int nbd_server_get_preinit(void *handle);
 
-/* nbd_protocol.c */
-err_t negotiation_phase(struct nbd_server *server, const int client_socket, struct lwnbd_context **ctx);
+/* protocol-handshake.c */
+err_t protocol_handshake(struct nbd_server *server, const int client_socket, struct lwnbd_context **ctx);
+
+/* protocol.c */
 err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx);
 
 #ifdef __cplusplus

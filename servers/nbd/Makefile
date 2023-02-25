@@ -1,1 +1,1 @@
-OBJ += servers/nbd/nbd_protocol.o servers/nbd/nbd.o servers/nbd/tcp.o
+OBJ += servers/nbd/protocol-handshake.o servers/nbd/protocol.o servers/nbd/nbd.o servers/nbd/tcp.o

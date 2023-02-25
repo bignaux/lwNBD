@@ -34,8 +34,6 @@ struct lwnbd_plugin
     void (*load)(void);
     void (*unload)(void);
 
-    int (*config)(const char *key, const char *value);
-
     /* create new export from custom config */
     int (*ctor)(const void *pconfig, struct lwnbd_export *e);
 
@@ -52,6 +50,10 @@ struct lwnbd_plugin
     int (*trim)(void *handle, uint32_t count, uint64_t offset, uint32_t flags);
     int (*zero)(void *handle, uint32_t count, uint64_t offset, uint32_t flags);
 
+    /*
+     *
+     * */
+    int (*config)(const char *key, const char *value);
     const char *magic_config_key;
 };
 

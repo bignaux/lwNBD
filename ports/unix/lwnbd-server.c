@@ -98,11 +98,12 @@ int main(int argc, char **argv)
 
     nbdsrv = lwnbd_server_init(nbd_server_init);
     lwnbd_server_config(nbdsrv, "defaultexport", "README.md");
+    lwnbd_server_config(nbdsrv, "preinit", NULL);
     if (!gEnableWrite)
         lwnbd_server_config(nbdsrv, "readonly", NULL);
 
     lwnbd_dump_contexts();
-    lwnbd_dump_server(nbdsrv);
+    lwnbd_server_dump(nbdsrv);
 
     // TODO: blocking server, need to go background, with PID file
     lwnbd_server_start(nbdsrv);

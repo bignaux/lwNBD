@@ -69,8 +69,7 @@ void lwnbd_dump_contexts()
 }
 
 
-size_t
-lwnbd_contexts_count()
+size_t lwnbd_contexts_count()
 {
     size_t i;
 
@@ -82,15 +81,14 @@ lwnbd_contexts_count()
     return i;
 }
 
-struct lwnbd_context
-    *
-    lwnbd_get_context_i(size_t i)
+struct lwnbd_context *lwnbd_get_context_i(size_t i)
 {
     return &contexts[i];
 }
 
 /* search for context by name
  * (TODO: if contextname is NULL, search for default one if set.)
+ * BUG : if contextname is NULL, it returns something ...
  * return NULL if not found any.
  */
 struct lwnbd_context *lwnbd_get_context(const char *contextname)

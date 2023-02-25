@@ -69,17 +69,15 @@ lwnbd_server_t lwnbd_server_init(server_init init)
 int lwnbd_server_config(lwnbd_server_t const handle, const char *key, const char *value)
 {
     struct server_instance *si = &servers[handle];
-    //    struct lwnbd_server *s = si->s;
+    struct lwnbd_server *s = si->s;
 
     DEBUGLOG("server %s: %s=%s\n", si->s->name, key, value);
-    //    if (s->config == NULL) {
-    //        //DEBUGLOG(stderr, "this server does not support configuration\n");
-    //        exit(EXIT_FAILURE);
-    //    }
-    //
-    //    if (s->config(si->handle, key, value) == -1)
-    //        exit(EXIT_FAILURE);
-    return 0;
+    if (s->config == NULL) {
+        DEBUGLOG("this server does not support configuration\n");
+        return -1;
+    }
+
+    return (s->config(si->handle, key, value));
 }
 
 
@@ -112,7 +110,7 @@ int lwnbd_server_config(lwnbd_server_t const handle, const char *key, const char
 //	}
 //}
 
-int lwnbd_dump_server(lwnbd_server_t const handle)
+int lwnbd_server_dump(lwnbd_server_t const handle)
 {
     struct server_instance *si = &servers[handle];
     struct lwnbd_server *s = si->s;
