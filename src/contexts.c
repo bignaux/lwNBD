@@ -23,7 +23,6 @@ int lwnbd_add_context(struct lwnbd_plugin *p, struct lwnbd_export *e)
     if (i == MAX_CONTEXTS) {
         return -1;
     }
-    DEBUGLOG("lwnbd_add_context %s\n", e->name);
 
     c = &contexts[i];
 
@@ -48,6 +47,7 @@ int lwnbd_add_context(struct lwnbd_plugin *p, struct lwnbd_export *e)
 
     c->eflags = eflags;
     contexts_status[i] = CONTEXT_CREATED;
+    DEBUGLOG("Add context %s: %s\n", c->name, c->description);
     return 0;
 }
 
@@ -87,22 +87,23 @@ struct lwnbd_context *lwnbd_get_context_i(size_t i)
 }
 
 /* search for context by name
- * (TODO: if contextname is NULL, search for default one if set.)
- * BUG : if contextname is NULL, it returns something ...
  * return NULL if not found any.
  */
 struct lwnbd_context *lwnbd_get_context(const char *contextname)
 {
-    struct lwnbd_context *ptr_ctx = contexts;
 
-    while (ptr_ctx) {
+    //    if ( strlen(contextname) == 0)
+    //    	return NULL;
+
+    /*  a bit noob but since we don't have hole ... */
+    for (uint8_t i = 0; i < lwnbd_contexts_count(); i++) {
+        struct lwnbd_context *ptr_ctx = lwnbd_get_context_i(i);
         if (strncmp((ptr_ctx)->name, contextname, 32) == 0) {
-            //             DEBUGLOG("searched for \"%s\" ... found.\n", contextname);
+            //            DEBUGLOG("searched for \"%s\" ... found.\n", contextname);
             return ptr_ctx;
         }
-        ptr_ctx++;
     }
-    DEBUGLOG("searched for \"%s\" ... not found.\n", contextname);
+    //    DEBUGLOG("searched for \"%s\" ... not found.\n", contextname);
     return NULL;
 }
 

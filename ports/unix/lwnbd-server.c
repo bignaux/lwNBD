@@ -87,7 +87,6 @@ int main(int argc, char **argv)
         lwnbd_plugin_new(fileplg, argv[i]);
     }
 
-
     memplg = lwnbd_plugin_init(memory_plugin_init);
     lwnbd_plugin_new(memplg, &memh);
 
@@ -97,8 +96,9 @@ int main(int argc, char **argv)
      */
 
     nbdsrv = lwnbd_server_init(nbd_server_init);
-    lwnbd_server_config(nbdsrv, "defaultexport", "README.md");
-    lwnbd_server_config(nbdsrv, "preinit", NULL);
+
+    lwnbd_server_config(nbdsrv, "default-export", "README.md");
+    //    lwnbd_server_config(nbdsrv, "preinit", NULL);
     if (!gEnableWrite)
         lwnbd_server_config(nbdsrv, "readonly", NULL);
 

@@ -28,18 +28,17 @@ extern "C" {
 
 struct nbd_server
 {
-    //	struct server_ops const *vptr;
     /* move in key/value store */
     uint16_t port;
     uint16_t max_retry;
     uint32_t gflags; // nbd proto global flag
     char defaultexport[32];
-    int readonly; /* TODO: all exports would be readonly */
+    uint8_t readonly; /* all exports would be read only */
     /*
      * Some nbd client has options to use a preinitialized connection, and to specify the device size
-     * and skip this step. (nbd-client -preinit -size <bytes> )
+     * and skip protocol handshake. (nbd-client -preinit -size <bytes> )
      */
-    int preinit;
+    uint8_t preinit;
 };
 
 /* tcp.c */

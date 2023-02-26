@@ -9,6 +9,7 @@ static struct nbd_server nbd_servers = {
     .max_retry = MAX_RETRIES,
     .gflags = (NBD_FLAG_FIXED_NEWSTYLE | NBD_FLAG_NO_ZEROES),
     .preinit = 0,
+    .readonly = 0,
 };
 
 void nbd_server_set_preinit(void *handle, int preinit)
@@ -44,7 +45,7 @@ uint16_t nbd_server_get_port(void *handle)
 int nbd_config(void *handle, const char *key, const char *value)
 {
     struct nbd_server *s = handle;
-    if (strcmp(key, "defaultexport") == 0) {
+    if (strcmp(key, "default-export") == 0) {
         strncpy(s->defaultexport, value, 31);
     } else if (strcmp(key, "readonly") == 0) {
         s->readonly = 1;

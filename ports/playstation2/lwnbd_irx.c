@@ -32,10 +32,18 @@ static int GetSizeFromDelay(int device)
     return (1 << size);
 }
 
+/* Temporary, TODO : export API */
+struct lwnbd_config
+{
+    char defaultexport[32];
+    uint8_t readonly;
+};
+
 int _start(int argc, char **argv)
 {
     iop_thread_t nbd_thread;
     lwnbd_plugin_t atadplg, memplg, mcmanplg;
+    struct lwnbd_config *config;
 
     /* TODO: manage existence */
     struct memory_config bios = {
@@ -59,10 +67,13 @@ int _start(int argc, char **argv)
     //        .desc = "DVD-ROM rom",
     //    };
 
+    nbdsrv = lwnbd_server_init(nbd_server_init);
+
     if (argc > 1) {
-        //		strcpy(gdefaultexport, argv[1]);
-        //		LOG("default export : %s\n", gdefaultexport);
-        //		lwnbd_server_config(nbdsrv, "defaultexport", gdefaultexport);
+        config = (struct lwnbd_config *)argv[1];
+        lwnbd_server_config(nbdsrv, "default-export", config->defaultexport);
+        if (config->readonly)
+            lwnbd_server_config(nbdsrv, "readonly", NULL);
     }
 
     RegisterLibraryEntries(&_exp_lwnbd);
@@ -81,8 +92,6 @@ int _start(int argc, char **argv)
     lwnbd_plugin_new(memplg, &iopram);
     lwnbd_plugin_new(memplg, &bios);
     //    lwnbd_plugin_new(memplg, &dvdrom);
-
-    nbdsrv = lwnbd_server_init(nbd_server_init);
 
     nbd_thread.attr = TH_C;
     nbd_thread.option = 0;

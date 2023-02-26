@@ -12,14 +12,11 @@
  */
 uint32_t nbd_recv(int s, void *mem, size_t len, int flags)
 {
-    ssize_t bytesRead;
     uint32_t left = len;
     uint32_t totalRead = 0;
 
-    //        LWIP_DEBUGF(NBD_DEBUG | LWIP_DBG_STATE("nbd_recv(-, 0x%X, %d)\n", (int)mem, size);
-    // dbgLOG("left = %u\n", left);
     do {
-        bytesRead = recv(s, (void *)((uint8_t *)mem + totalRead), left, flags);
+        ssize_t bytesRead = recv(s, (void *)((uint8_t *)mem + totalRead), left, flags);
         DEBUGLOG("bytesRead = %u\n", bytesRead);
         if (bytesRead <= 0) // if (bytesRead == -1) failed for nbdfuse, seems it not send NBD_CMD_DISC
             break;

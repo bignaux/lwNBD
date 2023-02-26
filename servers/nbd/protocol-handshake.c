@@ -103,7 +103,13 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
                 }
 
                 handshake_finish.exportsize = htonll((*ctx)->exportsize);
-                handshake_finish.eflags = htons((*ctx)->eflags);
+
+                /* could be hardened, here we trust client */
+                if (server->readonly)
+                    handshake_finish.eflags = htons((*ctx)->eflags | NBD_FLAG_READ_ONLY);
+                else
+                    handshake_finish.eflags = htons((*ctx)->eflags);
+
                 memset(handshake_finish.zeroes, 0, sizeof(handshake_finish.zeroes));
                 // NBD_FLAG_C_NO_ZEROES not defined by nbd-protocol.h, another useless term from proto.md
                 size = send(client_socket, &handshake_finish,
