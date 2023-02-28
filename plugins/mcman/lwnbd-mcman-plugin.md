@@ -21,10 +21,14 @@ Eventually, use [ps2mcfs](https://github.com/FranciscoDA/ps2mcfs) to mount your 
 
     $ ./fuseps2mc /dev/nbd2 test/
 
+one-liner backup :
+
+    $ $ nbdcopy -p nbd://192.168.1.45/mc1 ps2-mc1.mc
+    100% [****************************************]
     
 ## SEE ALSO
  
-  [PlayStation 2 Memory Card File System](http://www.csclub.uwaterloo.ca:11068/mymc/ps2mcfs.html)
-  [windows mymc_2.6.g2.dist.7z](http://sourceforge.net/projects/mymc-opl/files/mymc_2.6.g2.dist.7z/download)
-  [ps3-memorycard-adapter](https://github.com/vpelletier/ps3-memorycard-adapter/tree/master/nbd)
-  [ps3mca-tool](https://github.com/jimmikaelkael/ps3mca-tool)
+* [PlayStation 2 Memory Card File System](http://www.csclub.uwaterloo.ca:11068/mymc/ps2mcfs.html)
+* [windows mymc_2.6.g2.dist.7z](http://sourceforge.net/projects/mymc-opl/files/mymc_2.6.g2.dist.7z/download)
+* [ps3-memorycard-adapter](https://github.com/vpelletier/ps3-memorycard-adapter/tree/master/nbd)
+* [ps3mca-tool](https://github.com/jimmikaelkael/ps3mca-tool)

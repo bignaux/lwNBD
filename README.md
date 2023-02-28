@@ -36,7 +36,7 @@ There are 2 targets supported :
   purpose of the support is to facilitate development.
 
 * Playstation 2 IOP via an IRX module for [Open-PS2-Loader](https://github.com/ps2homebrew/Open-PS2-Loader).
-  It can export hdd drive (*atad* plugin) and MemoryCard (*mcman* plugin). PS2SDK use lwip [v2.0.3](https://github.com/ps2dev/lwip/tree/ps2-v2.0.3).
+  It can export hdd drive (*atad* plugin), MemoryCard (*mcman* plugin), rom0 and IOP ram (*memory* plugin). PS2SDK use lwip [v2.0.3](https://github.com/ps2dev/lwip/tree/ps2-v2.0.3).
 
 ## HISTORY
 

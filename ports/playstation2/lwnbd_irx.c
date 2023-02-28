@@ -32,18 +32,17 @@ static int GetSizeFromDelay(int device)
     return (1 << size);
 }
 
-/* Temporary, TODO : export API */
-struct lwnbd_config
-{
-    char defaultexport[32];
-    uint8_t readonly;
-};
-
 int _start(int argc, char **argv)
 {
     iop_thread_t nbd_thread;
     lwnbd_plugin_t atadplg, memplg, mcmanplg;
-    struct lwnbd_config *config;
+
+    /* Temporary, TODO : export API */
+    struct lwnbd_config
+    {
+        char defaultexport[32];
+        uint8_t readonly;
+    };
 
     /* TODO: manage existence */
     struct memory_config bios = {
@@ -70,11 +69,13 @@ int _start(int argc, char **argv)
     nbdsrv = lwnbd_server_init(nbd_server_init);
 
     if (argc > 1) {
-        config = (struct lwnbd_config *)argv[1];
+        struct lwnbd_config *config = (struct lwnbd_config *)argv[1];
         lwnbd_server_config(nbdsrv, "default-export", config->defaultexport);
         if (config->readonly)
             lwnbd_server_config(nbdsrv, "readonly", NULL);
     }
+
+    //    lwnbd_server_config(nbdsrv, "preinit", NULL);
 
     RegisterLibraryEntries(&_exp_lwnbd);
 

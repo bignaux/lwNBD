@@ -1,5 +1,5 @@
 // MC plugin for PS2-NBD server
-// alexparrado (2021) ronan bignaux(2023)
+// alexparrado (2021) & ronan bignaux (2023)
 // TODO : remove dynamic alloc
 // TODO : add slot to pconfig ?
 // TODO : format e->description according to Memory Card device types and port/slot
@@ -10,24 +10,6 @@
 #include <mcman.h>
 #include <stdint.h>
 #include <sysmem.h>
-
-/*
-// MCMAN basic error codes
-#define sceMcResSucceed         0
-#define sceMcResChangedCard     -1
-#define sceMcResNoFormat        -2
-#define sceMcResFullDevice      -3
-#define sceMcResNoEntry         -4
-#define sceMcResDeniedPermit    -5
-#define sceMcResNotEmpty        -6
-#define sceMcResUpLimitHandle   -7
-#define sceMcResFailReplace     -8
-#define sceMcResFailResetAuth   -11
-#define sceMcResFailDetect      -12
-#define sceMcResFailDetect2     -13
-#define sceMcResDeniedPS1Permit -51
-#define sceMcResFailAuth        -90
- */
 
 #define PLUGIN_NAME mcman
 #define MAX_DEVICES 2
@@ -48,7 +30,7 @@ uint8_t *bbuffer;
 uint16_t pagesPerBlock;
 
 // Functions for memory allocation
-void *SysAlloc(u64 size)
+static void *SysAlloc(u64 size)
 {
     int oldstate;
     register void *p;
@@ -60,7 +42,8 @@ void *SysAlloc(u64 size)
     return p;
 }
 
-int SysFree(void *area)
+/*
+static int SysFree(void *area)
 {
     int oldstate;
     register int r;
@@ -71,9 +54,10 @@ int SysFree(void *area)
 
     return r;
 }
+*/
 
 // Function to write a block into flash
-int writeBlock(int port, int block, u8 *buffer, int pageSize, int ppb)
+static int writeBlock(int port, int block, u8 *buffer, int pageSize, int ppb)
 {
     int j;
     uint8_t ecc[16];
@@ -105,7 +89,7 @@ int writeBlock(int port, int block, u8 *buffer, int pageSize, int ppb)
 }
 
 // Function to read a block from flash
-int readBlock(int port, int block, u8 *buffer, int pageSize, int ppb)
+static int readBlock(int port, int block, u8 *buffer, int pageSize, int ppb)
 {
     int j;
     int result;
@@ -120,7 +104,7 @@ int readBlock(int port, int block, u8 *buffer, int pageSize, int ppb)
 }
 
 // Function to inject pages to flash
-int injectPages(int port, int block, int pageSize, int offset, int nPages, int ppb, u8 *buffer)
+static int injectPages(int port, int block, int pageSize, int offset, int nPages, int ppb, u8 *buffer)
 {
     int result;
 
@@ -141,7 +125,7 @@ int injectPages(int port, int block, int pageSize, int offset, int nPages, int p
 }
 
 // NBD read method
-int mcman_pread(void *handle, void *buf, uint32_t count, uint64_t offset, uint32_t flags)
+static int mcman_pread(void *handle, void *buf, uint32_t count, uint64_t offset, uint32_t flags)
 {
     struct handle *h = handle;
     int result, i;
@@ -162,8 +146,8 @@ int mcman_pread(void *handle, void *buf, uint32_t count, uint64_t offset, uint32
 }
 
 // NBD write method
-int mcman_pwrite(void *handle, const void *buf, uint32_t count,
-                 uint64_t offset, uint32_t flags)
+static int mcman_pwrite(void *handle, const void *buf, uint32_t count,
+                        uint64_t offset, uint32_t flags)
 {
     struct handle *h = handle;
     int result = 0, i;
@@ -204,12 +188,12 @@ int mcman_pwrite(void *handle, const void *buf, uint32_t count,
 }
 
 // TODO
-int mcman_flush(void *handle, uint32_t flags)
+static int mcman_flush(void *handle, uint32_t flags)
 {
     return 0;
 }
 
-int mcman_ctor(const void *pconfig, struct lwnbd_export *e)
+static int mcman_ctor(const void *pconfig, struct lwnbd_export *e)
 {
     uint8_t device = *(uint8_t *)pconfig;
 
@@ -233,7 +217,7 @@ int mcman_ctor(const void *pconfig, struct lwnbd_export *e)
         h->device = device;
 
         // Make room for block data
-        bbuffer = SysAlloc(pageLen * pagesPerBlock);
+        bbuffer = SysAlloc(pageLen * pagesPerBlock); // TODO: not here
 
         // Description of export
         sprintf(e->name, "mc%d", device);
@@ -248,6 +232,16 @@ int mcman_ctor(const void *pconfig, struct lwnbd_export *e)
         return 1;
 }
 
+static int mcman_block_size(void *handle,
+                   uint32_t *minimum, uint32_t *preferred, uint32_t *maximum)
+{
+	struct handle *h = handle;
+	*minimum = 512;//h->blocksize;
+	*preferred = 512;//h->blocksize
+	*maximum = 512; //h->blocksize;
+	return 0;
+}
+
 static struct lwnbd_plugin plugin = {
     .name = "mcman",
     .longname = "PlayStation 2 MemoryCard via MCMAN",
@@ -257,6 +251,7 @@ static struct lwnbd_plugin plugin = {
     .pread = mcman_pread,
     .pwrite = mcman_pwrite,
     .flush = mcman_flush,
+	.block_size = mcman_block_size,
 };
 
 NBDKIT_REGISTER_PLUGIN(plugin)

@@ -5,17 +5,6 @@
 #define PLUGIN_NAME atad
 #define MAX_DEVICES 2
 
-/* Error definitions.
-#define ATA_RES_ERR_NOTREADY -501
-#define ATA_RES_ERR_TIMEOUT  -502
-#define ATA_RES_ERR_IO       -503
-#define ATA_RES_ERR_NODATA   -504
-#define ATA_RES_ERR_NODEV    -505
-#define ATA_RES_ERR_CMD      -506
-#define ATA_RES_ERR_LOCKED   -509
-#define ATA_RES_ERR_ICRC     -510
-*/
-
 struct handle
 {
     int device;
@@ -27,10 +16,9 @@ static struct handle handles[MAX_DEVICES];
 static inline int atad_pread(void *handle, void *buf, uint32_t count,
                              uint64_t offset, uint32_t flags)
 {
-    //    struct handle *h = handle;
-    //    printf("atad_pread h->device = %d\n",h->device);
-    return ata_device_sector_io(0, buf, (uint32_t)offset, count,
-                                ATA_DIR_READ);
+    struct handle *h = handle;
+    //    printf("atad_pread d = %d, off = %u count %d \n", h->device,(uint32_t)offset,count);
+    return ata_device_sector_io(h->device, buf, (uint32_t)offset, count, ATA_DIR_READ);
 }
 
 static inline int atad_pwrite(void *handle, const void *buf, uint32_t count,
@@ -59,11 +47,19 @@ static int atad_ctor(const void *pconfig, struct lwnbd_export *e)
         sprintf(e->name, "hdd%d", device);
         e->handle = h;
 
-        printf("atad_ctor h->device = %d\n", h->device);
         return 0;
 
     } else
         return 1;
+}
+
+static int atad_block_size(void *handle,
+                   uint32_t *minimum, uint32_t *preferred, uint32_t *maximum)
+{
+	*minimum = 512;
+	*preferred = 4096;
+	*maximum = 4096;
+	return 0;
 }
 
 static struct lwnbd_plugin plugin = {
@@ -75,6 +71,7 @@ static struct lwnbd_plugin plugin = {
     .pread = atad_pread,
     .pwrite = atad_pwrite,
     .flush = atad_flush,
+	.block_size = atad_block_size,
 };
 
 NBDKIT_REGISTER_PLUGIN(plugin)

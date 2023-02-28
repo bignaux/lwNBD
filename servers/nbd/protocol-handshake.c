@@ -79,6 +79,8 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
 
         if (new_opt.optlen > 0) {
             size = nbd_recv(client_socket, &nbd_buffer, new_opt.optlen, 0);
+            if (size < new_opt.optlen)
+                return -1;
             nbd_buffer[new_opt.optlen] = '\0';
             DEBUGLOG("client option: sz=%d %s.\n", new_opt.optlen, nbd_buffer);
         }
@@ -114,6 +116,7 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
                 // NBD_FLAG_C_NO_ZEROES not defined by nbd-protocol.h, another useless term from proto.md
                 size = send(client_socket, &handshake_finish,
                             (cflags & NBD_FLAG_NO_ZEROES) ? offsetof(struct nbd_export_name_option_reply, zeroes) : sizeof handshake_finish, 0);
+
                 return NBD_OPT_EXPORT_NAME;
             }
 

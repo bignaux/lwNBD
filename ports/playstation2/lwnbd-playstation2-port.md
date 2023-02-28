@@ -88,13 +88,16 @@ BDM is another tentative to make a common interface for PS2 block device, acting
 
 ## idea, c'mon pick one (or more!)
 
+custom build (like nbdtty ...)
+
 Loader to replace ps2link
 
-enable OPL in-game 
+enable OPL in-game
 
-screenshot plugin (see ee_core/src/igs_api.c)
+screenshot plugin (see ee_core/src/igs_api.c or ps2sdk one)
+GS plugin [see](https://github.com/F0bes/gs4ps2)
 
-OPL UI "service manager" to configure plugin/server start [off] [boot] [in-game]
+OPL UI "service manager" to configure plugin/server start opl{x} in-game{x} 
 
 HDL plugin to provide easy drop of iso, copy entire device (ftp or http)
 

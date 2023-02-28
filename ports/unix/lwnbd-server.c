@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     lwnbd_server_t nbdsrv;
     lwnbd_plugin_t fileplg, memplg;
 
-    char data[512] = "some data to be read";
+    char data[512] = "some data to be read\0";
     struct memory_config memh = {
         .base = (uint64_t)&data,
         .name = "data",

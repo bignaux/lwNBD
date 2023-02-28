@@ -50,7 +50,7 @@ int file_pread(void *handle, void *buf, uint32_t count, uint64_t offset,
 {
     struct handle *h = handle;
 
-    printf("file_pread, count=%d offset=%ld \n", count, offset);
+    //    printf("file_pread, count=%d offset=%ld \n", count, offset);
 
     while (count > 0) {
         ssize_t r = pread(h->fd, buf, count, offset);
@@ -66,7 +66,7 @@ int file_pread(void *handle, void *buf, uint32_t count, uint64_t offset,
         count -= r;
         offset += r;
 
-        printf("buffer : %s\n", (char *)buf);
+        //        printf("buffer : %s\n", (char *)buf);
     }
     return 0;
 }
@@ -153,6 +153,15 @@ static void file_close(void *handle)
     close(h->fd);
 }
 
+static int file_block_size(void *handle,
+                   uint32_t *minimum, uint32_t *preferred, uint32_t *maximum)
+{
+	*minimum = 1;
+    *preferred = 1;
+    *maximum = 1;
+	return 0;
+}
+
 static struct lwnbd_plugin plugin = {
     .name = "file",
     .longname =
@@ -164,6 +173,7 @@ static struct lwnbd_plugin plugin = {
     .pread = file_pread,
     .pwrite = file_pwrite,
     .flush = file_flush,
+	.block_size = file_block_size,
 };
 
 NBDKIT_REGISTER_PLUGIN(plugin)

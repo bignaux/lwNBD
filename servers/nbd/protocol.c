@@ -18,14 +18,11 @@
  */
 uint8_t nbd_buffer[NBD_BUFFER_LEN] __attribute__((aligned(16)));
 
-/* temp */
-#define BLOCKSIZE 1
-
 err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
 {
     // TODO: fix bug on non 512 blocksize context
-    register int r, size, error = -1, retry = MAX_RETRIES, sendflag = 0;
-    register uint32_t blkremains = 0, byteread = 0, bufblksz = 0;
+    register int error, retry = MAX_RETRIES, sendflag = 0;
+    register uint32_t r, blocksize, blkremains = 0, byteread = 0, bufblksz = 0;
     register uint64_t offset = 0;
     struct nbd_simple_reply reply;
     struct nbd_request request;
@@ -35,15 +32,17 @@ err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
         return -1;
     }
 
+    blocksize = ctx->minimum_block_size;
+
     while (1) {
 
         /*** requests handling ***/
 
         // TODO : blocking here if no proper NBD_CMD_DISC, bad threading design ?
         DEBUGLOG("Wait NBD_CMD ...\n");
-        size = nbd_recv(client_socket, &request, sizeof(struct nbd_request), 0);
-        if (size < sizeof(struct nbd_request)) {
-            LOG("sizeof nbd_request waited %ld receveid %d\n", sizeof(struct nbd_request), size);
+        r = nbd_recv(client_socket, &request, sizeof(struct nbd_request), 0);
+        if (r < sizeof(struct nbd_request)) {
+            LOG("sizeof nbd_request waited %ld receveid %d\n", sizeof(struct nbd_request), r);
             return -1;
         }
 
@@ -73,8 +72,6 @@ err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
             "NBD_CMD_BLOCK_STATUS",
         };
         LOG("%s\n", NBD_CMD[request.type]);
-#define PRI_UINT64_C_Val(value) ((unsigned long)(value >> 32)), ((unsigned long)value)
-#define PRI_UINT64              "%lx%lx"
 #endif
 
         switch (request.type) {
@@ -93,10 +90,10 @@ err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
                 else {
                     error = NBD_SUCCESS;
                     sendflag = MSG_MORE;
-                    bufblksz = NBD_BUFFER_LEN / BLOCKSIZE;
-                    blkremains = request.count / BLOCKSIZE;
-                    offset = request.offset / BLOCKSIZE;
-                    byteread = bufblksz * BLOCKSIZE;
+                    bufblksz = NBD_BUFFER_LEN / blocksize;
+                    blkremains = request.count / blocksize;
+                    offset = request.offset / blocksize;
+                    byteread = bufblksz * blocksize;
                 }
 
                 reply.error = ntohl(error);
@@ -110,7 +107,7 @@ err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
 
                     if (blkremains < bufblksz) {
                         bufblksz = blkremains;
-                        byteread = bufblksz * BLOCKSIZE;
+                        byteread = bufblksz * blocksize;
                     }
 
                     if (blkremains <= bufblksz)
@@ -151,17 +148,17 @@ err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
                 else {
                     error = NBD_SUCCESS;
                     sendflag = MSG_MORE;
-                    bufblksz = NBD_BUFFER_LEN / BLOCKSIZE;
-                    blkremains = request.count / BLOCKSIZE;
-                    offset = request.offset / BLOCKSIZE;
-                    byteread = bufblksz * BLOCKSIZE;
+                    bufblksz = NBD_BUFFER_LEN / blocksize;
+                    blkremains = request.count / blocksize;
+                    offset = request.offset / blocksize;
+                    byteread = bufblksz * blocksize;
                 }
 
                 while (sendflag) {
 
                     if (blkremains < bufblksz) {
                         bufblksz = blkremains;
-                        byteread = bufblksz * BLOCKSIZE;
+                        byteread = bufblksz * blocksize;
                     }
 
                     if (blkremains <= bufblksz)

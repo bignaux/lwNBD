@@ -12,37 +12,32 @@ static struct nbd_server nbd_servers = {
     .readonly = 0,
 };
 
-void nbd_server_set_preinit(void *handle, int preinit)
+void nbd_server_set_preinit(struct nbd_server *h, int preinit)
 {
-    struct nbd_server *h = handle;
     h->preinit = preinit;
 }
 
-int nbd_server_get_preinit(void *handle)
+int nbd_server_get_preinit(struct nbd_server *h)
 {
-    struct nbd_server *h = handle;
     return h->preinit;
 }
 
-uint32_t nbd_server_get_gflags(void *handle)
+uint32_t nbd_server_get_gflags(struct nbd_server *h)
 {
-    struct nbd_server *h = handle;
     return h->gflags;
 }
 
-char *nbd_server_get_defaultexport(void *handle)
+char *nbd_server_get_defaultexport(struct nbd_server *h)
 {
-    struct nbd_server *h = handle;
     return h->defaultexport;
 }
 
-uint16_t nbd_server_get_port(void *handle)
+uint16_t nbd_server_get_port(struct nbd_server *h)
 {
-    struct nbd_server *h = handle;
     return h->port;
 }
 
-int nbd_config(void *handle, const char *key, const char *value)
+static int nbd_config(void *handle, const char *key, const char *value)
 {
     struct nbd_server *s = handle;
     if (strcmp(key, "default-export") == 0) {
@@ -65,7 +60,12 @@ int nbd_config(void *handle, const char *key, const char *value)
     return 0;
 }
 
-void *nbd_new(void)
+static int nbd_start(void *handle)
+{
+    return tcp_loop(handle);
+}
+
+static void *nbd_new(void)
 {
     return &nbd_servers;
 }

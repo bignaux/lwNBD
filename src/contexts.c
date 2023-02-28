@@ -13,6 +13,7 @@ int lwnbd_add_context(struct lwnbd_plugin *p, struct lwnbd_export *e)
     struct lwnbd_context *c;
     uint32_t i;
     uint16_t eflags = NBD_FLAG_HAS_FLAGS;
+    uint32_t minimum, preferred, maximum;
 
     for (i = 0; i < MAX_CONTEXTS; i++) {
         if (contexts_status[i] == CONTEXT_FREE) {
@@ -30,7 +31,7 @@ int lwnbd_add_context(struct lwnbd_plugin *p, struct lwnbd_export *e)
     c->p = p;
     strcpy(c->name, e->name);
 
-    //    printf("len %ld\n", strlen(e->description));
+//        printf("len %ld\n", strlen(e->description));
 
     if (strlen(e->description))
         strcpy(c->description, e->description);
@@ -44,10 +45,22 @@ int lwnbd_add_context(struct lwnbd_plugin *p, struct lwnbd_export *e)
 
     if (p->flush)
         eflags |= NBD_FLAG_SEND_FLUSH;
-
     c->eflags = eflags;
+
+	if (p->block_size) {
+		p->block_size(c->handle, &minimum, &preferred, &maximum);
+	}
+	else
+		minimum = preferred = maximum = 512;
+
+	c->minimum_block_size = minimum;
+	c->preferred_block_size = preferred;
+	c->maximum_block_size = maximum;
+
+//	printf("preferred_block_size %u\n", c->preferred_block_size);
+
     contexts_status[i] = CONTEXT_CREATED;
-    DEBUGLOG("Add context %s: %s\n", c->name, c->description);
+    DEBUGLOG("Add context %s: %s 0x" PRI_UINT64 " %p\n", c->name, c->description, PRI_UINT64_C_Val(c->exportsize), c);
     return 0;
 }
 

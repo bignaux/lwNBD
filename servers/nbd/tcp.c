@@ -9,6 +9,7 @@
 
 /*
  * https://lwip.fandom.com/wiki/Receiving_data_with_LWIP
+ * pread() eq for nbd server.
  */
 uint32_t nbd_recv(int s, void *mem, size_t len, int flags)
 {
@@ -19,7 +20,7 @@ uint32_t nbd_recv(int s, void *mem, size_t len, int flags)
         ssize_t bytesRead = recv(s, (void *)((uint8_t *)mem + totalRead), left, flags);
         DEBUGLOG("bytesRead = %u\n", bytesRead);
         if (bytesRead <= 0) // if (bytesRead == -1) failed for nbdfuse, seems it not send NBD_CMD_DISC
-            break;
+            return -1;
 
         left -= bytesRead;
         totalRead += bytesRead;
@@ -28,7 +29,7 @@ uint32_t nbd_recv(int s, void *mem, size_t len, int flags)
     return totalRead;
 }
 
-int nbd_start(void *handle)
+int tcp_loop(void *handle)
 {
     int tcp_socket, client_socket = -1;
     struct sockaddr_in peer;

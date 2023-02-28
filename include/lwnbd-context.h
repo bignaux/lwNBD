@@ -23,7 +23,9 @@ struct lwnbd_context
     char description[64];
     int64_t exportsize;
     uint16_t eflags;
-    uint16_t blocksize;
+    uint32_t minimum_block_size;
+	uint32_t preferred_block_size;
+	uint32_t maximum_block_size;
 };
 
 /* contexts.c */

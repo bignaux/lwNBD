@@ -13,13 +13,17 @@ extern "C" {
 #define LOG(format, args...) \
     printf(APP_NAME ": " format, ##args)
 
+
 #ifdef DEBUG
-#define DEBUGLOG LOG
+#define PRI_UINT64_C_Val(value) ((unsigned long)(value >> 32)), ((unsigned long)value)
+#define PRI_UINT64              "%lx%lx"
+#define DEBUGLOG                LOG
 #else
 #define DEBUGLOG(args...) \
     do {                  \
     } while (0)
 #endif
+
 
 /* server options */
 #define MAX_NUM_SERVERS 2

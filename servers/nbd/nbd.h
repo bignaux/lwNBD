@@ -43,13 +43,13 @@ struct nbd_server
 
 /* tcp.c */
 uint32_t nbd_recv(int s, void *mem, size_t len, int flags);
-int nbd_start(void *handle);
+int tcp_loop(void *handle);
 
 /* nbd.c */
-uint32_t nbd_server_get_gflags(void *handle);
-char *nbd_server_get_defaultexport(void *handle);
-uint16_t nbd_server_get_port(void *handle);
-int nbd_server_get_preinit(void *handle);
+uint32_t nbd_server_get_gflags(struct nbd_server *h);
+char *nbd_server_get_defaultexport(struct nbd_server *h);
+uint16_t nbd_server_get_port(struct nbd_server *h);
+int nbd_server_get_preinit(struct nbd_server *h);
 
 /* protocol-handshake.c */
 err_t protocol_handshake(struct nbd_server *server, const int client_socket, struct lwnbd_context **ctx);
