@@ -89,14 +89,11 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
 
             case NBD_OPT_EXPORT_NAME: {
                 struct nbd_export_name_option_reply handshake_finish;
-                // temporary workaround
+
                 if (new_opt.optlen > 0) {
                     *ctx = lwnbd_get_context((const char *)&nbd_buffer);
                 } else
                     *ctx = lwnbd_get_context(server->defaultexport);
-                // TODO: is that correct ?
-                //				if (*ctx == NULL)
-                //					*ctx = ctxs[0];
 
                 /* proto.md: If the server is unwilling to allow the export, it MUST terminate the session. */
                 if (*ctx == NULL) {

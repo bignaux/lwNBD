@@ -154,12 +154,12 @@ static void file_close(void *handle)
 }
 
 static int file_block_size(void *handle,
-                   uint32_t *minimum, uint32_t *preferred, uint32_t *maximum)
+                           uint32_t *minimum, uint32_t *preferred, uint32_t *maximum)
 {
-	*minimum = 1;
+    *minimum = 1;
     *preferred = 1;
     *maximum = 1;
-	return 0;
+    return 0;
 }
 
 static struct lwnbd_plugin plugin = {
@@ -173,7 +173,7 @@ static struct lwnbd_plugin plugin = {
     .pread = file_pread,
     .pwrite = file_pwrite,
     .flush = file_flush,
-	.block_size = file_block_size,
+    .block_size = file_block_size,
 };
 
 NBDKIT_REGISTER_PLUGIN(plugin)

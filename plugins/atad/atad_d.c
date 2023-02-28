@@ -54,12 +54,12 @@ static int atad_ctor(const void *pconfig, struct lwnbd_export *e)
 }
 
 static int atad_block_size(void *handle,
-                   uint32_t *minimum, uint32_t *preferred, uint32_t *maximum)
+                           uint32_t *minimum, uint32_t *preferred, uint32_t *maximum)
 {
-	*minimum = 512;
-	*preferred = 4096;
-	*maximum = 4096;
-	return 0;
+    *minimum = 512;
+    *preferred = 4096;
+    *maximum = 4096;
+    return 0;
 }
 
 static struct lwnbd_plugin plugin = {
@@ -71,7 +71,7 @@ static struct lwnbd_plugin plugin = {
     .pread = atad_pread,
     .pwrite = atad_pwrite,
     .flush = atad_flush,
-	.block_size = atad_block_size,
+    .block_size = atad_block_size,
 };
 
 NBDKIT_REGISTER_PLUGIN(plugin)

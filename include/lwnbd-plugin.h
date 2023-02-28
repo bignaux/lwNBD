@@ -47,8 +47,8 @@ struct lwnbd_plugin
     int (*zero)(void *handle, uint32_t count, uint64_t offset, uint32_t flags);
 
     /* currently only use minimum */
-    int (*block_size) (void *handle,
-                       uint32_t *minimum, uint32_t *preferred, uint32_t *maximum);
+    int (*block_size)(void *handle,
+                      uint32_t *minimum, uint32_t *preferred, uint32_t *maximum);
 
     int (*config)(const char *key, const char *value);
     const char *magic_config_key;

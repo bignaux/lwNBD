@@ -233,13 +233,13 @@ static int mcman_ctor(const void *pconfig, struct lwnbd_export *e)
 }
 
 static int mcman_block_size(void *handle,
-                   uint32_t *minimum, uint32_t *preferred, uint32_t *maximum)
+                            uint32_t *minimum, uint32_t *preferred, uint32_t *maximum)
 {
-	struct handle *h = handle;
-	*minimum = 512;//h->blocksize;
-	*preferred = 512;//h->blocksize
-	*maximum = 512; //h->blocksize;
-	return 0;
+    //    struct handle *h = handle;
+    *minimum = 512;   // h->blocksize;
+    *preferred = 512; // h->blocksize
+    *maximum = 512;   // h->blocksize;
+    return 0;
 }
 
 static struct lwnbd_plugin plugin = {
@@ -251,7 +251,7 @@ static struct lwnbd_plugin plugin = {
     .pread = mcman_pread,
     .pwrite = mcman_pwrite,
     .flush = mcman_flush,
-	.block_size = mcman_block_size,
+    .block_size = mcman_block_size,
 };
 
 NBDKIT_REGISTER_PLUGIN(plugin)

@@ -61,10 +61,10 @@ static int memory_ctor(const void *pconfig, struct lwnbd_export *e)
 }
 
 static int memory_block_size(void *handle,
-                   uint32_t *minimum, uint32_t *preferred, uint32_t *maximum)
+                             uint32_t *minimum, uint32_t *preferred, uint32_t *maximum)
 {
-	*minimum = *preferred = *maximum = 1;
-	return 0;
+    *minimum = *preferred = *maximum = 1;
+    return 0;
 }
 
 static struct lwnbd_plugin plugin = {
@@ -75,7 +75,7 @@ static struct lwnbd_plugin plugin = {
     .pread = memory_pread,
     .pwrite = memory_pwrite,
     .flush = memory_flush,
-	.block_size = memory_block_size,
+    .block_size = memory_block_size,
 };
 
 NBDKIT_REGISTER_PLUGIN(plugin)

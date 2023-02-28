@@ -79,12 +79,6 @@ err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
             case NBD_CMD_READ:
 
                 DEBUGLOG("request off=0x" PRI_UINT64 ", size %lu\n", PRI_UINT64_C_Val(request.offset), request.count);
-                if (request.offset == 0) {
-                    DEBUGLOG("request.offset = 0 \n");
-                }
-                if (request.count == 4096) {
-                    DEBUGLOG("request.count = 4096 \n");
-                }
                 if (request.offset + request.count > ctx->exportsize)
                     error = NBD_EIO;
                 else {
