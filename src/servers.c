@@ -115,6 +115,7 @@ int lwnbd_server_dump(lwnbd_server_t const handle)
     struct server_instance *si = &servers[handle];
     struct lwnbd_server *s = si->s;
 
+    (void)s->name;
     DEBUGLOG("%s ready...\n", s->name);
 
     //    for (uint32_t i = 0; i < MAX_NUM_PLUGINS; i++)

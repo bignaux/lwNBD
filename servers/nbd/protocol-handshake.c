@@ -113,6 +113,8 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
                 // NBD_FLAG_C_NO_ZEROES not defined by nbd-protocol.h, another useless term from proto.md
                 size = send(client_socket, &handshake_finish,
                             (cflags & NBD_FLAG_NO_ZEROES) ? offsetof(struct nbd_export_name_option_reply, zeroes) : sizeof handshake_finish, 0);
+                if (size < ((cflags & NBD_FLAG_NO_ZEROES) ? offsetof(struct nbd_export_name_option_reply, zeroes) : sizeof handshake_finish))
+                    return -1;
 
                 return NBD_OPT_EXPORT_NAME;
             }
@@ -124,6 +126,7 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
                 fixed_new_option_reply.replylen = 0;
                 size = send(client_socket, &fixed_new_option_reply,
                             sizeof(struct nbd_fixed_new_option_reply), 0);
+
                 return NBD_OPT_ABORT;
 
             case NBD_OPT_LIST: {
@@ -150,11 +153,19 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
 
                     size = send(client_socket, &fixed_new_option_reply,
                                 sizeof(struct nbd_fixed_new_option_reply), MSG_MORE);
+                    if (size < (sizeof(struct nbd_fixed_new_option_reply)))
+                        return -1;
                     size = send(client_socket, &len, sizeof len, MSG_MORE);
+                    if (size < (sizeof len))
+                        return -1;
                     size = send(client_socket, context->name, name_len,
                                 MSG_MORE);
+                    if (size < name_len)
+                        return -1;
                     size = send(client_socket, context->description, desc_len,
                                 MSG_MORE);
+                    if (size < desc_len)
+                        return -1;
                 }
                 fixed_new_option_reply.reply = htonl(NBD_REP_ACK);
                 fixed_new_option_reply.replylen = 0;
