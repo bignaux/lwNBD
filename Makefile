@@ -22,10 +22,13 @@ ifeq ($(TARGET),ee)
 include ports/playstation2/ee.mk
 endif
 
-ifeq ($(DEBUG),1)
-	CFLAGS += -DDEBUG
-else ifeq ($(LWNBD_DEBUG),1)
-	CFLAGS += -DDEBUG
+ifeq ($(LWNBD_DEBUG),0)
+else ifeq ($(DEBUG),1)
+	LWNBD_DEBUG = 1
+endif
+
+ifeq ($(LWNBD_DEBUG),1)
+	CFLAGS += -DLWNBD_DEBUG
 endif
 
 $(BIN): $(OBJ)

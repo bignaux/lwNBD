@@ -14,7 +14,7 @@ extern "C" {
     printf(APP_NAME ": " format, ##args)
 
 
-#ifdef DEBUG
+#ifdef LWNBD_DEBUG
 #define PRI_UINT64_C_Val(value) ((unsigned long)(value >> 32)), ((unsigned long)value)
 #define PRI_UINT64              "%lx%lx"
 #define DEBUGLOG                LOG

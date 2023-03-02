@@ -60,7 +60,7 @@ err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
         reply.magic = htonl(NBD_SIMPLE_REPLY_MAGIC);
         reply.handle = request.handle;
 
-#ifdef DEBUG
+#ifdef LWNBD_DEBUG
         static const char *NBD_CMD[] = {
             "NBD_CMD_READ",
             "NBD_CMD_WRITE",

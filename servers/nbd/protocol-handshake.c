@@ -55,7 +55,7 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
             return -1;
 
         new_opt.option = htonl(new_opt.option);
-#ifdef DEBUG
+#ifdef LWNBD_DEBUG
         static const char *NBD_OPTIONS[] = {
             NULL,
             "NBD_OPT_EXPORT_NAME",
