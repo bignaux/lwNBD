@@ -11,6 +11,10 @@ EE : uint32_t => long unsigned int _> %ld
 
 ## workflow (see helloworld)
 
+
+    rm -fr download_lwNBD.sh modules/network/lwNBD/ 
+    ln -rs ../lwNBD modules/network/lwNBD
+
     docker pull ghcr.io/ps2dev/ps2dev:latest
     
    go in $WORKSPACE !

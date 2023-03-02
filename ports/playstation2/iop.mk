@@ -24,6 +24,7 @@ include servers/nbd/Makefile
 include plugins/atad/Makefile
 include plugins/memory/Makefile
 include plugins/mcman/Makefile
+include plugins/tty/Makefile
 
 DEST ?= ~/devel/Open-PS2-Loader
 TARGET_IP ?= 192.168.1.45

@@ -9,8 +9,10 @@ I_ata_device_flush_cache
 atad_IMPORTS_end
 
 iomanX_IMPORTS_start
-I_GetDeviceList
+I_AddDrv
 I_close
+I_DelDrv
+I_GetDeviceList
 I_getstat
 I_open
 I_write
@@ -42,11 +44,24 @@ I_DeleteThread
 I_StartThread
 thbase_IMPORTS_end
 
+thevent_IMPORTS_start
+I_CreateEventFlag
+I_DeleteEventFlag
+I_SetEventFlag
+I_WaitEventFlag
+thevent_IMPORTS_end
+
+thsemap_IMPORTS_start
+I_CreateSema
+I_DeleteSema
+I_SignalSema
+I_WaitSema
+thsemap_IMPORTS_end
+
 ssbusc_IMPORTS_start
 I_GetBaseAddress
 I_GetDelay
 ssbusc_IMPORTS_end
-
 
 sysmem_IMPORTS_start
 I_AllocSysMemory

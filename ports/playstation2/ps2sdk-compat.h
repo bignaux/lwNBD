@@ -4,7 +4,6 @@
 #ifdef _IOP
 
 // no <inttypes.h>
-
 // no <stdlib.h>
 #include <sysclib.h>
 #include <iomanX.h>
@@ -15,15 +14,8 @@
 
 #endif /* _IOP */
 
-//#define EXIT_FAILURE 1
-//#define EXIT_SUCCESS 0
-//#define exit(x)      LOG("exit")
 
-// why not provide lwip/sockets.h ?
-// missing in iop/tcpip/tcpip/include/ps2ip.h
-// to avoid confusion with iomanX close() ?
 #define close(x) lwip_close(x)
-
 
 // missing in <unistd.h>
 typedef int ssize_t;

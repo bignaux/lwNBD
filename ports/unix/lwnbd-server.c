@@ -26,7 +26,6 @@
  *
  * */
 
-
 extern struct lwnbd_plugin *memory_plugin_init(void);
 extern struct lwnbd_plugin *file_plugin_init(void); // https://blog.the-pans.com/gnu-visibility-attribute/
 // plugin_init plugins_table[] = {

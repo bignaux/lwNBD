@@ -22,6 +22,7 @@ extern struct lwnbd_server *nbd_server_init(void);
 extern struct lwnbd_plugin *atad_plugin_init(void);
 extern struct lwnbd_plugin *mcman_plugin_init(void);
 extern struct lwnbd_plugin *memory_plugin_init(void);
+extern struct lwnbd_plugin *tty_plugin_init(void);
 
 lwnbd_server_t nbdsrv;
 
@@ -35,7 +36,7 @@ static int GetSizeFromDelay(int device)
 int _start(int argc, char **argv)
 {
     iop_thread_t nbd_thread;
-    lwnbd_plugin_t atadplg, memplg, mcmanplg;
+    lwnbd_plugin_t atadplg, memplg, mcmanplg, ttyplg;
 
     /* Temporary, TODO : export API */
     struct lwnbd_config
@@ -93,6 +94,10 @@ int _start(int argc, char **argv)
     lwnbd_plugin_new(memplg, &iopram);
     lwnbd_plugin_new(memplg, &bios);
     //    lwnbd_plugin_new(memplg, &dvdrom);
+
+
+    ttyplg = lwnbd_plugin_init(tty_plugin_init);
+    lwnbd_plugin_new(ttyplg, NULL);
 
     nbd_thread.attr = TH_C;
     nbd_thread.option = 0;
