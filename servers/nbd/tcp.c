@@ -1,3 +1,4 @@
+#include <sys/socket.h>
 #include "nbd.h"
 
 /*

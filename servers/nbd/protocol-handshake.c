@@ -1,7 +1,8 @@
+#include <endian.h>
 #include <stddef.h>
 #include <string.h>
 #include "nbd.h"
-
+#include <sys/socket.h>
 
 /*
  * nbdkit alloc this size ...

@@ -3,7 +3,7 @@ CC = $(IOP_CC)
 BIN = lwnbdsvr.irx
 PORT_DIR = ports/playstation2
 OBJ += $(PORT_DIR)/lwnbd_irx.o $(PORT_DIR)/exports.o $(PORT_DIR)/imports.o
-INCS += -I$(PORT_DIR) -include $(PORT_DIR)/ps2sdk-compat.h -DAPP_NAME=\"lwnbdsvr\"
+INCS += -I$(PORT_DIR)/include -include $(PORT_DIR)/ps2sdk-compat.h -DAPP_NAME=\"lwnbdsvr\"
 
 all: $(BIN)
 

@@ -1,22 +1,16 @@
 #include <config.h>
 #include <errno.h>
-
+#include <iomanX.h>
 #include <lwnbd-plugin.h>
 #include <string.h>
-#include <thsemap.h>
 #include <thevent.h>
-
-// workaround
-#undef close
-#include <iomanX.h>
 
 #define PLUGIN_NAME tty
 #define DEVNAME     "tty"
 #define TTY_SIZE    4096
 
 /* poor man ring buffer */
-char ringbuffer[TTY_SIZE];
-static int pos = 0;
+char ringbuffer[TTY_SIZE + 1];
 static int64_t rwhence = 0; // consumer
 static int64_t wwhence = 0; // producer
 static int ev = -1;
@@ -25,11 +19,49 @@ static int ev = -1;
 #define EF_TTY_TRANSFER_BUSY (1 << 0)
 #define EF_TTY_TRANSFER_DATA (1 << 1) // data to read
 
-static int tty_init(iop_device_t *device);
-static int tty_deinit(iop_device_t *device);
-static int tty_stdout_fd(void);
-static int tty_write(iop_file_t *file, void *buf, size_t size);
-static int tty_error(void);
+/* Ioman TTY driver part */
+
+static int tty_init(iop_device_t *device)
+{
+    return 0;
+}
+
+static int tty_deinit(iop_device_t *device)
+{
+    return 0;
+}
+
+static int tty_stdout_fd(void)
+{
+    return 1;
+}
+
+static int tty_write(iop_file_t *file, void *buf, size_t size)
+{
+    int pos = wwhence % TTY_SIZE;
+
+    WaitEventFlag(ev, EF_TTY_TRANSFER_IDLE, 0, NULL);
+    SetEventFlag(ev, EF_TTY_TRANSFER_BUSY);
+    // very stupid rb , verify at least rwhence !
+    if (pos + size > TTY_SIZE) {
+        int sz1, sz = TTY_SIZE - pos;
+        memcpy(ringbuffer + pos, buf, sz);
+
+        sz1 = size - sz;
+        memcpy(ringbuffer, buf + sz, sz1);
+    } else
+        memcpy(ringbuffer + pos, buf, size);
+
+    wwhence += size;
+
+    SetEventFlag(ev, EF_TTY_TRANSFER_DATA);
+    return 0;
+}
+
+static int tty_error(void)
+{
+    return -EIO;
+}
 
 /* device ops */
 static iop_device_ops_t tty_ops = {
@@ -61,68 +93,58 @@ static iop_device_t tty_device = {
     &tty_ops,
 };
 
-/* Ioman TTY driver.  */
 
-static int tty_init(iop_device_t *device)
-{
-    return 0;
-}
-
-static int tty_deinit(iop_device_t *device)
-{
-    return 0;
-}
-
-static int tty_stdout_fd(void)
-{
-    return 1;
-}
-
-static int tty_write(iop_file_t *file, void *buf, size_t size)
-{
-    int res = 0;
-
-    WaitEventFlag(ev, EF_TTY_TRANSFER_IDLE, 0, NULL);
-    SetEventFlag(ev, EF_TTY_TRANSFER_BUSY);
-    if (pos + size > TTY_SIZE)
-        pos = 0;
-
-    memcpy(ringbuffer + pos, buf, size);
-    pos += size;
-    wwhence += size;
-
-    SetEventFlag(ev, EF_TTY_TRANSFER_DATA);
-    return res;
-}
-
-static int tty_error(void)
-{
-    return -EIO;
-}
-
-
-/******************* lwNBD side *******************/
+/* lwNBD TTY driver part */
 
 static inline int nbdtty_pread(void *handle, void *buf, uint32_t count,
                                uint64_t offset, uint32_t flags)
 {
-    int wait = 1;
+    int pos = rwhence % TTY_SIZE;
 
     /*
-     * TODO : hack for nbd client that try to scan data over the export like nbd-client
+     * hack for nbd clients that try to scan data over the export like nbd-client
      */
-
+    //    if (offset == 0)           // offset reseted
+    //    	rwhence = 0;
+    //    else if (offset > rwhence) // scan data detected
+    //    {
+    //    	memset(buf, 0, count);
+    //    	return 0;
+    //    }
+    //    else if (offset < rwhence) // would not happend ?
+    //    	rwhence = offset;
 
     /*
-     * hack to block here if no new data available to simulate the stream
+     * hack to block here if not enough new data available to simulate the stream
      */
-    WaitEventFlag(ev, EF_TTY_TRANSFER_DATA, 0, NULL);
-    SetEventFlag(ev, EF_TTY_TRANSFER_BUSY);
+    while (1) {
+        WaitEventFlag(ev, EF_TTY_TRANSFER_DATA, 0, NULL);
+        SetEventFlag(ev, EF_TTY_TRANSFER_BUSY);
 
-    memcpy(buf, ringbuffer, count);
+        // not enough data to read
+        if (rwhence + count > wwhence) {
+            SetEventFlag(ev, EF_TTY_TRANSFER_IDLE);
+            continue;
+        } else
+            break;
+    }
+
+    if (pos + count > TTY_SIZE) {
+        int sz1, sz = TTY_SIZE - pos;
+        memcpy(buf, ringbuffer + pos, sz);
+
+        sz1 = count - sz;
+        memcpy(buf + sz, ringbuffer, sz1);
+    } else
+        memcpy(buf, ringbuffer + pos, count);
+
     rwhence += count;
 
-    SetEventFlag(ev, EF_TTY_TRANSFER_IDLE);
+    if (rwhence < wwhence) // still data to read
+        SetEventFlag(ev, EF_TTY_TRANSFER_DATA);
+    else
+        SetEventFlag(ev, EF_TTY_TRANSFER_IDLE);
+
     return 0;
 }
 
@@ -162,7 +184,8 @@ static int nbdtty_ctor(const void *pconfig, struct lwnbd_export *e)
      * since NBD doesn't support stream, we need to lie about size
      * to have enough for our session
      */
-    e->exportsize = UINT64_MAX;
+    //    e->exportsize = INT64_MAX;
+    e->exportsize = 0x7FFFFFFFFFFFE00; // %512 = 0 for nbd-client compat
     return 0;
 }
 
