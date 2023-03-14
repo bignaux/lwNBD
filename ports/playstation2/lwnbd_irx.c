@@ -13,42 +13,65 @@
 
 #include <lwnbd.h>
 #include "irx_imports.h"
-#include "../../plugins/memory/memory.h"
+#include "ioplib.h"
 
 IRX_ID(APP_NAME, 1, 1);
 static int nbd_tid;
 extern struct irx_export_table _exp_lwnbd;
-extern struct lwnbd_server *nbd_server_init(void);
-extern struct lwnbd_plugin *atad_plugin_init(void);
-extern struct lwnbd_plugin *mcman_plugin_init(void);
-extern struct lwnbd_plugin *memory_plugin_init(void);
-extern struct lwnbd_plugin *tty_plugin_init(void);
+
+static SifRpcDataQueue_t SifQueueData;
+static SifRpcServerData_t SifServerData;
+static int RpcThreadID;
+static unsigned char SifServerRxBuffer[64];
+static unsigned char SifServerTxBuffer[32];
 
 lwnbd_server_t nbdsrv;
 
-/* from sysman */
-static int GetSizeFromDelay(int device)
+enum LWNBD_SERVER_CMD {
+    LWNBD_SERVER_CMD_START,
+    LWNBD_SERVER_CMD_STOP,
+};
+static int sid = 0x2A39;
+
+struct lwnbd_config
 {
-    int size = (GetDelay(device) >> 16) & 0x1F;
-    return (1 << size);
-}
+    char defaultexport[32];
+    uint8_t readonly;
+};
 
-int _start(int argc, char **argv)
+static int config(struct lwnbd_config *config)
 {
-    iop_thread_t nbd_thread;
-    lwnbd_plugin_t atadplg, memplg, mcmanplg, ttyplg;
+    nbdsrv = lwnbd_server_init(nbd_server_init);
 
-    /* Temporary, TODO : export API */
-    struct lwnbd_config
-    {
-        char defaultexport[32];
-        uint8_t readonly;
-    };
+    lwnbd_server_config(nbdsrv, "default-export", config->defaultexport);
+    if (config->readonly)
+        lwnbd_server_config(nbdsrv, "readonly", NULL);
 
-    /* TODO: manage existence */
+
+        //    lwnbd_server_config(nbdsrv, "preinit", NULL);
+        // print twice doesn't give same result ...
+        //    print_memorymap();
+        //    print_memorymap();
+
+#ifdef PLUGIN_ATAD
+    lwnbd_plugin_t atadplg = lwnbd_plugin_init(atad_plugin_init);
+    for (int i = 0; i < 2; i++) {
+        lwnbd_plugin_new(atadplg, &i);
+    }
+#endif
+
+#ifdef PLUGIN_MCMAN
+    lwnbd_plugin_t mcmanplg = lwnbd_plugin_init(mcman_plugin_init);
+    for (int i = 0; i < 2; i++) {
+        lwnbd_plugin_new(mcmanplg, &i);
+    }
+#endif
+
+#ifdef PLUGIN_MEMORY
+    lwnbd_plugin_t memplg = lwnbd_plugin_init(memory_plugin_init);
     struct memory_config bios = {
         .base = 0x1FC00000,
-        .size = GetSizeFromDelay(SSBUSC_DEV_BOOTROM), // 0x400000
+        .size = 0x400000, // GetSizeFromDelay(SSBUSC_DEV_BOOTROM)
         .name = "bios",
         .desc = "BIOS (rom0)",
     };
@@ -60,62 +83,90 @@ int _start(int argc, char **argv)
         .desc = "IOP main RAM",
     };
 
-    //    struct memory_config dvdrom = {
-    //        .base = GetBaseAddress(SSBUSC_DEV_DVDROM),
-    //        .size = GetSizeFromDelay(SSBUSC_DEV_DVDROM),
-    //        .name = "dvdrom",
-    //        .desc = "DVD-ROM rom",
-    //    };
-
-    nbdsrv = lwnbd_server_init(nbd_server_init);
-
-    if (argc > 1) {
-        struct lwnbd_config *config = (struct lwnbd_config *)argv[1];
-        lwnbd_server_config(nbdsrv, "default-export", config->defaultexport);
-        if (config->readonly)
-            lwnbd_server_config(nbdsrv, "readonly", NULL);
-    }
-
-    //    lwnbd_server_config(nbdsrv, "preinit", NULL);
-
-    RegisterLibraryEntries(&_exp_lwnbd);
-
-    atadplg = lwnbd_plugin_init(atad_plugin_init);
-    for (int i = 0; i < 2; i++) {
-        lwnbd_plugin_new(atadplg, &i);
-    }
-
-    mcmanplg = lwnbd_plugin_init(mcman_plugin_init);
-    for (int i = 0; i < 2; i++) {
-        lwnbd_plugin_new(mcmanplg, &i);
-    }
-
-    memplg = lwnbd_plugin_init(memory_plugin_init);
     lwnbd_plugin_new(memplg, &iopram);
     lwnbd_plugin_new(memplg, &bios);
     //    lwnbd_plugin_new(memplg, &dvdrom);
+#endif
 
+    //#ifdef PLUGIN_TTY
+    //    lwnbd_plugin_t ttyplg = lwnbd_plugin_init(tty_plugin_init);
+    //    lwnbd_plugin_new(ttyplg, NULL);
+    //#endif
 
-    ttyplg = lwnbd_plugin_init(tty_plugin_init);
-    lwnbd_plugin_new(ttyplg, NULL);
+#ifdef PLUGIN_BDM
+    lwnbd_plugin_t bdmplg = lwnbd_plugin_init(bdm_plugin_init);
+    lwnbd_plugin_new(bdmplg, NULL);
+#endif
 
-    nbd_thread.attr = TH_C;
-    nbd_thread.option = 0;
-    nbd_thread.thread = (void *)lwnbd_server_start;
-    nbd_thread.stacksize = 0x2000; // 0x800;
-    nbd_thread.priority = 0x10;
+    return 0;
+}
 
-    nbd_tid = CreateThread(&nbd_thread);
+static void *SifRpc_handler(int fno, void *buffer, int nbytes)
+{
+    iop_thread_t nbd_thread;
 
-    // int StartThreadArgs(int thid, int args, void *argp);
-    //    StartThread(nbd_tid, (struct lwnbd_plugin *)lwnbd_plugins);
-    StartThread(nbd_tid, (struct lwnbd_server_t *)nbdsrv);
-    return MODULE_RESIDENT_END;
+    switch (fno) {
+        case LWNBD_SERVER_CMD_START:
+            config((struct lwnbd_config *)buffer);
+
+            nbd_thread.attr = TH_C;
+            nbd_thread.option = 0;
+            nbd_thread.thread = (void *)lwnbd_server_start;
+            nbd_thread.stacksize = 0x800;
+            nbd_thread.priority = 0x10;
+
+            nbd_tid = CreateThread(&nbd_thread);
+
+            *(int *)SifServerTxBuffer = StartThread(nbd_tid, (struct lwnbd_server_t *)nbdsrv);
+            break;
+        case LWNBD_SERVER_CMD_STOP:
+            // TODO
+//            TerminateThread(nbd_tid);
+            DeleteThread(nbd_tid);
+            break;
+        default:
+            *(int *)SifServerTxBuffer = -ENXIO;
+    }
+    return SifServerTxBuffer;
+}
+
+static void RpcThread(void *arg)
+{
+    sceSifSetRpcQueue(&SifQueueData, GetThreadId());
+    sceSifRegisterRpc(&SifServerData, sid, &SifRpc_handler, SifServerRxBuffer, NULL, NULL, &SifQueueData);
+    sceSifRpcLoop(&SifQueueData);
+}
+
+int _start(int argc, char **argv)
+{
+    int result;
+    iop_thread_t thread;
+
+    if (RegisterLibraryEntries(&_exp_lwnbd) == 0) {
+        thread.attr = TH_C;
+        thread.option = sid;
+        thread.thread = &RpcThread;
+        thread.priority = 0x20;
+        thread.stacksize = 0x800;
+        if ((RpcThreadID = CreateThread(&thread)) > 0) {
+            StartThread(RpcThreadID, NULL);
+            result = 0;
+        } else {
+            result = RpcThreadID;
+            ReleaseLibraryEntries(&_exp_lwnbd);
+        }
+    } else {
+        result = -1;
+    }
+
+    return (result == 0 ? MODULE_RESIDENT_END : MODULE_NO_RESIDENT_END);
 }
 
 // TODO complete with nbd_server_stop
 int _shutdown(void)
 {
-    DeleteThread(nbd_tid);
-    return 0;
+    ReleaseLibraryEntries(&_exp_lwnbd);
+//    TerminateThread(RpcThreadID);
+    DeleteThread(RpcThreadID);
+    return MODULE_NO_RESIDENT_END;
 }

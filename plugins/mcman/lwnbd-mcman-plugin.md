@@ -32,3 +32,4 @@ one-liner backup :
 * [windows mymc_2.6.g2.dist.7z](http://sourceforge.net/projects/mymc-opl/files/mymc_2.6.g2.dist.7z/download)
 * [ps3-memorycard-adapter](https://github.com/vpelletier/ps3-memorycard-adapter/tree/master/nbd)
 * [ps3mca-tool](https://github.com/jimmikaelkael/ps3mca-tool)
+* [Card_Adapter on psdevwiki](https://www.psdevwiki.com/ps3/Card_Adapter)

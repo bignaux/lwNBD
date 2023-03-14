@@ -44,11 +44,12 @@ static int tty_write(iop_file_t *file, void *buf, size_t size)
     SetEventFlag(ev, EF_TTY_TRANSFER_BUSY);
     // very stupid rb , verify at least rwhence !
     if (pos + size > TTY_SIZE) {
-        int sz1, sz = TTY_SIZE - pos;
+        int sz = TTY_SIZE - pos;
         memcpy(ringbuffer + pos, buf, sz);
 
-        sz1 = size - sz;
-        memcpy(ringbuffer, buf + sz, sz1);
+        buf += sz;
+        sz = size - sz;
+        memcpy(ringbuffer, buf, sz);
     } else
         memcpy(ringbuffer + pos, buf, size);
 
@@ -130,11 +131,12 @@ static inline int nbdtty_pread(void *handle, void *buf, uint32_t count,
     }
 
     if (pos + count > TTY_SIZE) {
-        int sz1, sz = TTY_SIZE - pos;
+        int sz = TTY_SIZE - pos;
         memcpy(buf, ringbuffer + pos, sz);
 
-        sz1 = count - sz;
-        memcpy(buf + sz, ringbuffer, sz1);
+        buf += sz;
+        sz = count - sz;
+        memcpy(buf, ringbuffer, sz);
     } else
         memcpy(buf, ringbuffer + pos, count);
 
@@ -149,7 +151,7 @@ static inline int nbdtty_pread(void *handle, void *buf, uint32_t count,
 }
 
 /*
- * pconfig could be the .buffer + .size
+ * pconfig could be the .buffer + .size, a path ...
  */
 static int nbdtty_ctor(const void *pconfig, struct lwnbd_export *e)
 {
@@ -180,13 +182,16 @@ static int nbdtty_ctor(const void *pconfig, struct lwnbd_export *e)
 
     strcpy(e->name, "tty");
 
+    return 0;
+}
+
+static int64_t nbdtty_get_size(void *handle)
+{
     /**
      * since NBD doesn't support stream, we need to lie about size
      * to have enough for our session
      */
-    //    e->exportsize = INT64_MAX;
-    e->exportsize = 0x7FFFFFFFFFFFE00; // %512 = 0 for nbd-client compat
-    return 0;
+    return 0x7FFFFFFFFFFFE00; // %512 = 0 for nbd-client compat
 }
 
 static int nbdtty_block_size(void *handle,
@@ -206,6 +211,7 @@ static struct lwnbd_plugin plugin = {
     .pread = nbdtty_pread,
     //    .pwrite = tty_pwrite,
     //    .flush = tty_flush,
+    .get_size = nbdtty_get_size,
     .block_size = nbdtty_block_size,
 };
 

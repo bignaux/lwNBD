@@ -2,12 +2,27 @@
 
 /* clang-format off */
 
+#ifdef PLUGIN_ATAD
 atad_IMPORTS_start
-I_ata_get_devinfo
-I_ata_device_sector_io
 I_ata_device_flush_cache
+I_ata_device_sce_identify_drive
+I_ata_device_sector_io
+I_ata_get_devinfo
 atad_IMPORTS_end
+#endif
 
+#ifdef PLUGIN_BDM
+bdm_IMPORTS_start
+I_bdm_connect_bd
+I_bdm_disconnect_bd
+//I_bdm_connect_fs
+//I_bdm_disconnect_fs
+I_bdm_get_bd
+//I_bdm_RegisterCallback
+bdm_IMPORTS_end
+#endif
+
+#ifdef PLUGIN_TTY
 iomanX_IMPORTS_start
 I_AddDrv
 I_close
@@ -17,6 +32,7 @@ I_getstat
 I_open
 I_write
 iomanX_IMPORTS_end
+#endif
 
 intrman_IMPORTS_start
 I_CpuEnableIntr
@@ -26,8 +42,10 @@ intrman_IMPORTS_end
 
 loadcore_IMPORTS_start
 I_RegisterLibraryEntries
+I_ReleaseLibraryEntries
 loadcore_IMPORTS_end
 
+#ifdef PLUGIN_NBD
 ps2ip_IMPORTS_start
 I_lwip_accept
 I_lwip_bind
@@ -37,10 +55,12 @@ I_lwip_recv
 I_lwip_send
 I_lwip_socket
 ps2ip_IMPORTS_end
+#endif
 
 thbase_IMPORTS_start
 I_CreateThread
 I_DeleteThread
+I_GetThreadId
 I_StartThread
 thbase_IMPORTS_end
 
@@ -58,10 +78,22 @@ I_SignalSema
 I_WaitSema
 thsemap_IMPORTS_end
 
+#ifdef PLUGIN_MEMORY
 ssbusc_IMPORTS_start
 I_GetBaseAddress
 I_GetDelay
 ssbusc_IMPORTS_end
+#endif
+
+sifcmd_IMPORTS_start
+I_isceSifSendCmd
+I_sceSifInitRpc
+I_sceSifSetRpcQueue
+I_sceSifRegisterRpc
+I_sceSifRpcLoop
+I_sceSifBindRpc
+I_sceSifCallRpc
+sifcmd_IMPORTS_end
 
 sysmem_IMPORTS_start
 I_AllocSysMemory
@@ -84,6 +116,7 @@ stdio_IMPORTS_start
 I_printf
 stdio_IMPORTS_end
 
+#ifdef PLUGIN_MCMAN
 xmcman_IMPORTS_start
 I_McDataChecksum
 I_McDetectCard2
@@ -95,3 +128,4 @@ I_McReadCluster
 I_McReadPage
 I_McWritePage
 xmcman_IMPORTS_end
+#endif

@@ -13,7 +13,6 @@
 /* ... so we shared the big buffer */
 extern uint8_t nbd_buffer[];
 
-
 err_t protocol_handshake(struct nbd_server *server, const int client_socket, struct lwnbd_context **ctx)
 {
     register int size;
@@ -93,6 +92,11 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
 
                 if (new_opt.optlen > 0) {
                     *ctx = lwnbd_get_context((const char *)&nbd_buffer);
+
+                    //                    if (*ctx == NULL) {
+                    //                        *ctx = lwnbd_get_context_uri((const char *)&nbd_buffer);
+                    //                    }
+
                 } else
                     *ctx = lwnbd_get_context(server->defaultexport);
 
@@ -127,20 +131,18 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
                 fixed_new_option_reply.replylen = 0;
                 size = send(client_socket, &fixed_new_option_reply,
                             sizeof(struct nbd_fixed_new_option_reply), 0);
+                if (size < sizeof(struct nbd_fixed_new_option_reply))
+                    return -1;
 
                 return NBD_OPT_ABORT;
 
             case NBD_OPT_LIST: {
 
-                size_t i, list_len;
                 fixed_new_option_reply.magic = htonll(NBD_REP_MAGIC);
                 fixed_new_option_reply.option = htonl(new_opt.option);
                 fixed_new_option_reply.reply = htonl(NBD_REP_SERVER);
-                list_len = lwnbd_contexts_count();
 
-                DEBUGLOG("%d export.\n", list_len);
-
-                for (i = 0; i < list_len; i++) {
+                for (size_t i = 0; i < lwnbd_contexts_count(); i++) {
                     struct lwnbd_context *context = lwnbd_get_context_i(i);
                     size_t name_len = strlen(context->name);
                     size_t desc_len = strlen(context->description);
@@ -172,6 +174,8 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
                 fixed_new_option_reply.replylen = 0;
                 size = send(client_socket, &fixed_new_option_reply,
                             sizeof(struct nbd_fixed_new_option_reply), 0);
+                if (size < sizeof(struct nbd_fixed_new_option_reply))
+                    return -1;
                 break;
             }
 
@@ -188,6 +192,8 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
                 fixed_new_option_reply.replylen = 0;
                 size = send(client_socket, &fixed_new_option_reply,
                             sizeof(struct nbd_fixed_new_option_reply), 0);
+                if (size < sizeof(struct nbd_fixed_new_option_reply))
+                    return -1;
                 break;
         }
     }

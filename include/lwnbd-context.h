@@ -12,6 +12,7 @@ extern "C" {
 typedef enum {
     CONTEXT_FREE,
     CONTEXT_CREATED,
+    CONTEXT_FILLED,
     //	CONTEXT_INUSE,
 } context_state_t;
 
@@ -32,6 +33,7 @@ struct lwnbd_context
 size_t lwnbd_contexts_count();
 int lwnbd_add_context(struct lwnbd_plugin *p, struct lwnbd_export *e);
 struct lwnbd_context *lwnbd_get_context(const char *contextname);
+struct lwnbd_context *lwnbd_get_context_uri(const char *uri, struct lwnbd_context *ctx);
 struct lwnbd_context *lwnbd_get_context_i(size_t i);
 void lwnbd_dump_contexts();
 

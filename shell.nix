@@ -19,6 +19,7 @@ stdenv.mkDerivation rec{
     eclipses.eclipse-cpp
     libnbd
     clang-tools
+    #curl
     gdb
     gdbgui
     iaito

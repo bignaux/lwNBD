@@ -1,3 +1,3 @@
 OBJ += plugins/file/file.o
-#PLUGIN = file.a
+PLUGIN_FILE = 1
 #include ../common-rules.mk

@@ -17,6 +17,7 @@
 struct handle
 {
     int device;
+    int64_t size;
     uint16_t blocksize;
 };
 
@@ -224,12 +225,18 @@ static int mcman_ctor(const void *pconfig, struct lwnbd_export *e)
         h->blocksize = pageLen;
 
         // Size of export
-        e->exportsize = (int64_t)cardSize * pageLen;
+        h->size = (int64_t)cardSize * pageLen;
 
         return 0;
 
     } else
         return 1;
+}
+
+static int64_t mcman_get_size(void *handle)
+{
+    struct handle *h = handle;
+    return h->size;
 }
 
 static int mcman_block_size(void *handle,
@@ -251,6 +258,7 @@ static struct lwnbd_plugin plugin = {
     .pread = mcman_pread,
     .pwrite = mcman_pwrite,
     .flush = mcman_flush,
+    .get_size = mcman_get_size,
     .block_size = mcman_block_size,
 };
 

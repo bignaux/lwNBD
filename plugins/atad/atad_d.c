@@ -2,16 +2,16 @@
 #include <config.h>
 #include <lwnbd-plugin.h>
 
-#define PLUGIN_NAME atad
-#define MAX_DEVICES 2
-
 struct handle
 {
     int device;
+    int64_t size;
 };
 
+#define PLUGIN_NAME atad
+#define MAX_DEVICES 2
+
 static struct handle handles[MAX_DEVICES];
-// static int handle_in_use[MAX_DEVICES];
 
 static inline int atad_pread(void *handle, void *buf, uint32_t count,
                              uint64_t offset, uint32_t flags)
@@ -43,7 +43,7 @@ static int atad_ctor(const void *pconfig, struct lwnbd_export *e)
     if (dev_info != NULL && dev_info->exists) {
         struct handle *h = &handles[device];
         h->device = device;
-        e->exportsize = (int64_t)dev_info->total_sectors * 512;
+        h->size = (int64_t)dev_info->total_sectors * 512;
         sprintf(e->name, "hdd%d", device);
         e->handle = h;
 
@@ -51,6 +51,36 @@ static int atad_ctor(const void *pconfig, struct lwnbd_export *e)
 
     } else
         return 1;
+}
+
+/* nbdcopy nbd://192.168.1.45/hdd0/identify - | hdparm --Istdin  */
+int identify(int argc, char **argv, void *result, int64_t *size)
+{
+    return ata_device_sce_identify_drive(argc, result);
+}
+// int ata_device_idle(int device, int period);
+// int ata_device_smart_get_status(int device);
+// int ata_device_smart_save_attr(int device);
+
+static int atad_ctrl(void *handle, char *path, struct lwnbd_command *cmd)
+{
+    struct handle *h = handle;
+
+    if (strcmp("identify", path)) {
+        cmd->cmd = identify;
+        cmd->argc = h->device;
+        cmd->size = 256;
+        return 0;
+    }
+
+    else
+        return -1;
+}
+
+static int64_t atad_get_size(void *handle)
+{
+    struct handle *h = handle;
+    return h->size;
 }
 
 static int atad_block_size(void *handle,
@@ -71,7 +101,9 @@ static struct lwnbd_plugin plugin = {
     .pread = atad_pread,
     .pwrite = atad_pwrite,
     .flush = atad_flush,
+    .get_size = atad_get_size,
     .block_size = atad_block_size,
+    .ctrl = atad_ctrl,
 };
 
 NBDKIT_REGISTER_PLUGIN(plugin)

@@ -1,5 +1,5 @@
 #include <config.h>
-#include <fcntl.h>
+#include <sys/fcntl.h>
 #include <libgen.h> // TODO: remove basename() usage
 #include <lwnbd-plugin.h>
 #include <stdio.h>
@@ -26,24 +26,6 @@ typedef enum {
 /* specific plugin private data */
 static struct handle handles[FILE_DRIVER_MAX_DEVICES];
 static int handle_in_use[FILE_DRIVER_MAX_DEVICES];
-
-/* Get the file size. */
-/*
- * if no newlib, no fstat :
- fseek(h->fp, 0L, SEEK_END);
- me->super.export_size = ftell(h->fp);
- */
-static int64_t file_get_size(void *handle)
-{
-    struct handle *h = handle;
-    struct stat statbuf;
-
-    if (fstat(h->fd, &statbuf) == -1) {
-        //		nbdkit_error("fstat: %m");
-        return -1;
-    }
-    return statbuf.st_size;
-}
 
 int file_pread(void *handle, void *buf, uint32_t count, uint64_t offset,
                uint32_t flags)
@@ -138,10 +120,6 @@ static int file_ctor(const void *pconfig, struct lwnbd_export *e)
     bname = strdup(filename);
     h->filename = basename(bname);
 
-    // temporary workaround
-    file_open(h, 0);
-    e->exportsize = file_get_size(h);
-
     e->handle = h;
     strcpy(e->name, h->filename);
     return 0;
@@ -151,6 +129,24 @@ static void file_close(void *handle)
 {
     struct handle *h = handle;
     close(h->fd);
+}
+
+/*
+ * if no newlib, no fstat :
+ fseek(h->fp, 0L, SEEK_END);
+ me->super.export_size = ftell(h->fp);
+ */
+static int64_t file_get_size(void *handle)
+{
+    struct handle *h = handle;
+    struct stat statbuf;
+
+    file_open(h, 0);
+    if (fstat(h->fd, &statbuf) == -1) {
+        //		nbdkit_error("fstat: %m");
+        return -1;
+    }
+    return statbuf.st_size;
 }
 
 static int file_block_size(void *handle,
@@ -173,6 +169,7 @@ static struct lwnbd_plugin plugin = {
     .pread = file_pread,
     .pwrite = file_pwrite,
     .flush = file_flush,
+    .get_size = file_get_size,
     .block_size = file_block_size,
 };
 

@@ -38,7 +38,8 @@ int lwnbd_add_context(struct lwnbd_plugin *p, struct lwnbd_export *e)
     else
         strcpy(c->description, p->longname);
 
-    c->exportsize = e->exportsize;
+    if (p->get_size)
+        c->exportsize = p->get_size(c->handle);
 
     if (!p->pwrite)
         eflags |= NBD_FLAG_READ_ONLY;

@@ -5,8 +5,8 @@
 
 struct memory_config
 {
-    uint64_t base;
-    uint64_t size;
+    intptr_t base;
+    intptr_t size;
     char name[32];
     char desc[64]; /* export description */
 };

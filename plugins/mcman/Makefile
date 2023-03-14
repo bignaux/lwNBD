@@ -1,3 +1,3 @@
 OBJ += plugins/mcman/mcman_d.o
-#PLUGIN = mcman.a
+PLUGIN_MCMAN = 1
 #include ../common-rules.mk

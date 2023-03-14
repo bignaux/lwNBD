@@ -16,7 +16,16 @@ struct lwnbd_export
 
     /* lwnbd specific */
     void *handle; /* Plugin handle. */
-    int64_t exportsize;
+};
+
+/* experimental */
+struct lwnbd_command
+{
+    int (*cmd)(int argc, char **argv, void *result, int64_t *size);
+    int argc;
+    char **argv;
+    void *result; /* return of cmd() */
+    int64_t size; /* size of result */
 };
 
 struct lwnbd_plugin
@@ -31,7 +40,7 @@ struct lwnbd_plugin
     const char *description;
 
     void (*load)(void);
-    void (*unload)(void);
+    void (*unload)(void); /* not implemented */
 
     void (*open)(void *handle, int readonly); /* not nbdkit compatible prototype */
     void (*close)(void *handle);
@@ -43,8 +52,8 @@ struct lwnbd_plugin
     int (*pwrite)(void *handle, const void *buf, uint32_t count,
                   uint64_t offset, uint32_t flags);
     int (*flush)(void *handle, uint32_t flags);
-    int (*trim)(void *handle, uint32_t count, uint64_t offset, uint32_t flags);
-    int (*zero)(void *handle, uint32_t count, uint64_t offset, uint32_t flags);
+    int (*trim)(void *handle, uint32_t count, uint64_t offset, uint32_t flags); /* not implemented */
+    int (*zero)(void *handle, uint32_t count, uint64_t offset, uint32_t flags); /* not implemented */
 
     /* currently only use minimum */
     int (*block_size)(void *handle,
@@ -55,8 +64,8 @@ struct lwnbd_plugin
 
     /* lwnbd specific after nbdkit compat */
 
-    /* create new export from custom config */
-    int (*ctor)(const void *pconfig, struct lwnbd_export *e);
+    int (*ctor)(const void *pconfig, struct lwnbd_export *e);      /* create new export from custom config */
+    int (*ctrl)(void *handle, char *cmd, struct lwnbd_command *c); /* experimental */
 };
 
 #define M1(x)       x##_##plugin_init

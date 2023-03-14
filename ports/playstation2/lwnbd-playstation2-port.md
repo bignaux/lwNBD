@@ -9,7 +9,7 @@ IOP modules use -fno-toplevel-reorder for export/import .
 EE : uint32_t => long unsigned int _> %ld
 
 
-## workflow (see helloworld)
+## workflow (see helloworld - wip)
 
 
     rm -fr download_lwNBD.sh modules/network/lwNBD/ 
@@ -17,21 +17,39 @@ EE : uint32_t => long unsigned int _> %ld
 
     docker pull ghcr.io/ps2dev/ps2dev:latest
     
-   go in $WORKSPACE !
+   go in $PS2_WORKSPACE !
     
     docker run -it -w /app -v "$(pwd)":/app ps2dev/ps2dev:latest
+    export PS2_WORKSPACE=/app (should be in a docker script)
+    cd Open-PS2-Loader
     
     apk add build-base git zip gawk python3 py3-pip bash
     pip3 install -r requirements.txt
-    git config --global --add safe.directory /app
+    #git config --global --add safe.directory /app
+    git config --system --add safe.directory "*"
     
-    rm -f ./modules/network/lwNBD/lwnbdsvr.irx && make LWNBD_DEBUG=1
+    
+    
+    rm -f ./modules/network/lwNBD/lwnbdsvr.irx 
 
-    make -C modules/network/lwNBD/ TARGET=iop clean
+    make -C modules/network/lwNBD/ TARGET=iop clean && make LWNBD_DEBUG=1
     
 ## IOP debug
 
   udptty.irx send stdout to udp broadcast.
+  
+    Open log : nc -ukl 18194
+    with promiscous : tshark -o data.show_as_text:TRUE -f "dst port 18194" -Tfields -e data.text
+    #issue is filtering on dst only make cmd send to same port
+    
+    socat - UDP-LISTEN:18194
+    socat - udp-recv:18194
+    socat - udp:$PS2HOSTNAME:18194
+    
+    tshark -o data.show_as_text:TRUE -f "dst port 18194" -Tjson -e data.text | jq
+    (todo: add filter from ps2, alias ps2listen )
+    snffing : sudo tcpdump udp port 18194 -vv -A
+  
   
   iopdebug library to manage breakpoint. see in action : https://github.com/asmblur/pshell
   
@@ -91,6 +109,9 @@ It'd reduce driver depend on ioman wrapping (ie: udptty) .
 BDM is another tentative to make a common interface for PS2 block device, acting same like lwnbd. It's a shame to miss the opportunity to have a functional and universal interface regardless of the type of device, but that's the social situation of this project at this moment. Bringing out the possibilities of being able to share a common software interface from an input device like a gamepad to a storage device is not easy without having to show all the possibilities that this kind of thing offers.
 
 ## idea, c'mon pick one (or more!)
+
+make oneliner like nbdcopy nbd://.../cmd/poweroff available like a bus.
+mem/spu2 ... mc/1/filename.
 
 custom build (like nbdtty ...)
 
