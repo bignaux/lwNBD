@@ -20,14 +20,15 @@
  */
 uint8_t nbd_buffer[NBD_BUFFER_LEN] __attribute__((aligned(16)));
 
-err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
+err_t transmission_phase(struct nbd_client *client)
 {
     // TODO: fix bug on non 512 blocksize context
-    register int error, retry = MAX_RETRIES, sendflag = 0;
-    register uint32_t r, blocksize, blkremains = 0, byteread = 0, bufblksz = 0;
+    register int r, error, retry = MAX_RETRIES, sendflag = 0;
+    register uint32_t blocksize, blkremains = 0, byteread = 0, bufblksz = 0;
     register uint64_t offset = 0;
     struct nbd_simple_reply reply;
     struct nbd_request request;
+    struct lwnbd_context *ctx = client->ctx;
 
     if (ctx == NULL) {
         LOG("No context provided.\n");
@@ -42,7 +43,7 @@ err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
 
         // TODO : blocking here if no proper NBD_CMD_DISC, bad threading design ?
         DEBUGLOG("Wait NBD_CMD ...\n");
-        r = nbd_recv(client_socket, &request, sizeof(struct nbd_request), 0);
+        r = nbd_recv(client->sock, &request, sizeof(struct nbd_request), 0);
         if (r < sizeof(struct nbd_request)) {
             LOG("sizeof nbd_request waited %ld receveid %d\n", sizeof(struct nbd_request), r);
             return -1;
@@ -93,7 +94,7 @@ err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
                 }
 
                 reply.error = ntohl(error);
-                r = send(client_socket, &reply, sizeof(struct nbd_simple_reply),
+                r = send(client->sock, &reply, sizeof(struct nbd_simple_reply),
                          sendflag);
                 if (r != sizeof(struct nbd_simple_reply)) {
                     LOG("send nbd_simple_reply failed\n");
@@ -114,7 +115,7 @@ err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
 
                     if (r == 0) {
                         DEBUGLOG("send \n");
-                        r = send(client_socket, nbd_buffer, byteread, sendflag);
+                        r = send(client->sock, nbd_buffer, byteread, sendflag);
                         if (r != byteread) {
                             LOG("NBD_CMD_READ : send failed r=%d byteread=%d\n", r, byteread);
                             break;
@@ -160,7 +161,7 @@ err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
                     if (blkremains <= bufblksz)
                         sendflag = 0;
 
-                    r = nbd_recv(client_socket, nbd_buffer, byteread, 0);
+                    r = nbd_recv(client->sock, nbd_buffer, byteread, 0);
 
                     if (r == byteread) {
                         r = plugin_pwrite(ctx, nbd_buffer, bufblksz, offset, 0);
@@ -180,18 +181,19 @@ err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
                 }
 
                 reply.error = ntohl(error);
-                r = send(client_socket, &reply, sizeof(struct nbd_simple_reply),
+                r = send(client->sock, &reply, sizeof(struct nbd_simple_reply),
                          0);
                 break;
 
             case NBD_CMD_DISC:
                 // There is no reply to an NBD_CMD_DISC.
+                client->state = ABORT;
                 return 0;
 
             case NBD_CMD_FLUSH:
                 error = (plugin_flush(ctx, 0) == 0) ? NBD_SUCCESS : NBD_EIO;
                 reply.error = ntohl(error);
-                r = send(client_socket, &reply, sizeof(struct nbd_simple_reply),
+                r = send(client->sock, &reply, sizeof(struct nbd_simple_reply),
                          0);
                 break;
 
@@ -202,7 +204,7 @@ err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx)
             default:
                 /* The server SHOULD return NBD_EINVAL if it receives an unknown command. */
                 reply.error = ntohl(NBD_EINVAL);
-                r = send(client_socket, &reply, sizeof(struct nbd_simple_reply),
+                r = send(client->sock, &reply, sizeof(struct nbd_simple_reply),
                          0);
                 break;
         }

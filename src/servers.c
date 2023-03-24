@@ -59,7 +59,7 @@ lwnbd_server_t lwnbd_server_init(server_init init)
     si->s = s;
 
     servers_status[i] = SRV_STOPPED;
-    DEBUGLOG("server %s init\n", s->name);
+    DEBUGLOG("server %s init id=%d\n", s->name, i);
     return i;
 }
 
@@ -132,24 +132,27 @@ int lwnbd_server_dump(lwnbd_server_t const handle)
 }
 
 /* SRV_STOPPED -> SRV_STARTED */
-int lwnbd_server_start(lwnbd_server_t const handle)
+void lwnbd_server_start(lwnbd_server_t const handle)
 {
     struct server_instance *si = &servers[handle];
     struct lwnbd_server *s = si->s;
     server_state_t st = servers_status[handle];
 
     if (st != SRV_STOPPED)
-        return -1;
+        return;
 
     st = SRV_STARTED;
     s->start(si->handle);
-    return 0;
 }
 
 int lwnbd_server_stop(lwnbd_server_t const handle)
 {
-    // TODO
-    servers_status[handle] = SRV_STOPPED;
+    // TODO SRV_STOPPED
+    struct server_instance *si = &servers[handle];
+    struct lwnbd_server *s = si->s;
+    s->stop(si->handle);
+
+    servers_status[handle] = SRV_FREE;
     return 0;
 }
 

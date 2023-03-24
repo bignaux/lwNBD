@@ -64,4 +64,5 @@ endif
 
 %exports.o: %exports.c
 	$(CC) $(CFLAGS) $(IETABLE_CFLAGS) -c $< -o $@
-	
+
+.PHONY: all clean test

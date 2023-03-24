@@ -36,11 +36,30 @@ struct nbd_server
      * and skip protocol handshake. (nbd-client -preinit -size <bytes> )
      */
     uint8_t preinit;
+
+    /* private */
+    int socket;
+};
+
+/* see https://rwmj.wordpress.com/2019/05/19/nbds-state-machine/ */
+enum client_states {
+    HANDSHAKE,
+    TRANSMISSION,
+    ABORT,
+};
+
+struct nbd_client
+{
+    int sock;
+    int state;
+    struct lwnbd_context *ctx;
 };
 
 /* tcp.c */
-uint32_t nbd_recv(int s, void *mem, size_t len, int flags);
-int tcp_loop(void *handle);
+int32_t nbd_recv(int s, void *mem, size_t len, int flags);
+void listener(struct nbd_server *s);
+int nbd_close(struct nbd_server *server);
+int nbd_server_create(struct nbd_server *server);
 
 /* nbd.c */
 uint32_t nbd_server_get_gflags(struct nbd_server *h);
@@ -49,10 +68,11 @@ uint16_t nbd_server_get_port(struct nbd_server *h);
 int nbd_server_get_preinit(struct nbd_server *h);
 
 /* protocol-handshake.c */
-err_t protocol_handshake(struct nbd_server *server, const int client_socket, struct lwnbd_context **ctx);
+err_t protocol_handshake(struct nbd_server *server, struct nbd_client *client);
 
 /* protocol.c */
-err_t transmission_phase(const int client_socket, struct lwnbd_context *ctx);
+err_t transmission_phase(struct nbd_client *client);
+
 
 #ifdef __cplusplus
 }

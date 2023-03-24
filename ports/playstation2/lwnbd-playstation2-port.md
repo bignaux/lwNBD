@@ -36,9 +36,13 @@ EE : uint32_t => long unsigned int _> %ld
     
 ## IOP debug
 
+### udptty
+
   udptty.irx send stdout to udp broadcast.
   
-    Open log : nc -ukl 18194
+  Open log
+  
+     nc -ukl 18194
     with promiscous : tshark -o data.show_as_text:TRUE -f "dst port 18194" -Tfields -e data.text
     #issue is filtering on dst only make cmd send to same port
     
@@ -50,7 +54,8 @@ EE : uint32_t => long unsigned int _> %ld
     (todo: add filter from ps2, alias ps2listen )
     snffing : sudo tcpdump udp port 18194 -vv -A
   
-  
+### iopdebug
+
   iopdebug library to manage breakpoint. see in action : https://github.com/asmblur/pshell
   
   ps2rd https://github.com/mlafeldt/ps2rd/blob/master/Documentation/user-manual.txt
@@ -112,6 +117,8 @@ BDM is another tentative to make a common interface for PS2 block device, acting
 
 make oneliner like nbdcopy nbd://.../cmd/poweroff available like a bus.
 mem/spu2 ... mc/1/filename.
+close Remotely Launch games https://github.com/ps2homebrew/Open-PS2-Loader/issues/418
+
 
 custom build (like nbdtty ...)
 

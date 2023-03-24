@@ -19,6 +19,7 @@ stdenv.mkDerivation rec{
     eclipses.eclipse-cpp
     libnbd
     clang-tools
+    checkmake
     #curl
     gdb
     gdbgui
@@ -27,5 +28,6 @@ stdenv.mkDerivation rec{
     wrk
     bridge-utils
     hdparm
+    shellcheck
   ];
 }

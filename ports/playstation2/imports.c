@@ -53,6 +53,7 @@ I_lwip_close
 I_lwip_listen
 I_lwip_recv
 I_lwip_send
+I_lwip_setsockopt
 I_lwip_socket
 ps2ip_IMPORTS_end
 #endif
@@ -62,6 +63,7 @@ I_CreateThread
 I_DeleteThread
 I_GetThreadId
 I_StartThread
+I_TerminateThread
 thbase_IMPORTS_end
 
 thevent_IMPORTS_start
@@ -101,7 +103,16 @@ I_FreeSysMemory
 I_QueryMemSize
 sysmem_IMPORTS_end
 
+stdio_IMPORTS_start
+//#ifndef LWNBD_DEBUG
+I_printf
+//#endif
+stdio_IMPORTS_end
+
 sysclib_IMPORTS_start
+//#ifdef LWNBD_DEBUG
+//I_printf
+//#endif
 I_memcpy
 I_memset
 I_sprintf
@@ -111,10 +122,6 @@ I_strncmp
 I_strncpy
 I_strcmp
 sysclib_IMPORTS_end
-
-stdio_IMPORTS_start
-I_printf
-stdio_IMPORTS_end
 
 #ifdef PLUGIN_MCMAN
 xmcman_IMPORTS_start

@@ -14,24 +14,26 @@
 #include <lwnbd.h>
 #include "irx_imports.h"
 #include "ioplib.h"
+#include <config.h>
 
 IRX_ID(APP_NAME, 1, 1);
-static int nbd_tid;
 extern struct irx_export_table _exp_lwnbd;
 
 static SifRpcDataQueue_t SifQueueData;
 static SifRpcServerData_t SifServerData;
-static int RpcThreadID;
+static int RpcThreadID, nbdThreadID;
 static unsigned char SifServerRxBuffer[64];
 static unsigned char SifServerTxBuffer[32];
 
-lwnbd_server_t nbdsrv;
+static lwnbd_server_t nbdsrv;
 
 enum LWNBD_SERVER_CMD {
     LWNBD_SERVER_CMD_START,
     LWNBD_SERVER_CMD_STOP,
 };
 static int sid = 0x2A39;
+
+static int enable = 0;
 
 struct lwnbd_config
 {
@@ -41,7 +43,7 @@ struct lwnbd_config
 
 static int config(struct lwnbd_config *config)
 {
-    nbdsrv = lwnbd_server_init(nbd_server_init);
+
 
     lwnbd_server_config(nbdsrv, "default-export", config->defaultexport);
     if (config->readonly)
@@ -107,7 +109,19 @@ static void *SifRpc_handler(int fno, void *buffer, int nbytes)
 
     switch (fno) {
         case LWNBD_SERVER_CMD_START:
-            config((struct lwnbd_config *)buffer);
+
+            LOG("LWNBD_SERVER_CMD_START.\n");
+            nbdsrv = lwnbd_server_init(nbd_server_init);
+            if (nbdsrv < 0) {
+                LOG("LWNBD_SERVER_CMD_START failed init server.\n");
+                break;
+            }
+
+            if (enable == 0) {
+                config((struct lwnbd_config *)buffer);
+                enable = 1;
+            }
+            LOG("LWNBD_SERVER_CMD_START 2.\n");
 
             nbd_thread.attr = TH_C;
             nbd_thread.option = 0;
@@ -115,14 +129,22 @@ static void *SifRpc_handler(int fno, void *buffer, int nbytes)
             nbd_thread.stacksize = 0x800;
             nbd_thread.priority = 0x10;
 
-            nbd_tid = CreateThread(&nbd_thread);
+            nbdThreadID = CreateThread(&nbd_thread);
+            if (nbdThreadID > 0) {
+                LOG("LWNBD_SERVER_CMD_START StartThread.\n");
+                *(int *)SifServerTxBuffer = StartThread(nbdThreadID, (struct lwnbd_server_t *)nbdsrv);
+            } else {
+                LOG("LWNBD_SERVER_CMD_START FAILED CreateThread.\n");
+                *(int *)SifServerTxBuffer = nbdThreadID;
+            }
 
-            *(int *)SifServerTxBuffer = StartThread(nbd_tid, (struct lwnbd_server_t *)nbdsrv);
             break;
         case LWNBD_SERVER_CMD_STOP:
+            LOG("LWNBD_SERVER_CMD_STOP.\n");
             // TODO
-//            TerminateThread(nbd_tid);
-            DeleteThread(nbd_tid);
+            TerminateThread(nbdThreadID);
+            DeleteThread(nbdThreadID);
+            lwnbd_server_stop(nbdsrv);
             break;
         default:
             *(int *)SifServerTxBuffer = -ENXIO;
@@ -130,6 +152,7 @@ static void *SifRpc_handler(int fno, void *buffer, int nbytes)
     return SifServerTxBuffer;
 }
 
+/*  */
 static void RpcThread(void *arg)
 {
     sceSifSetRpcQueue(&SifQueueData, GetThreadId());
@@ -162,11 +185,14 @@ int _start(int argc, char **argv)
     return (result == 0 ? MODULE_RESIDENT_END : MODULE_NO_RESIDENT_END);
 }
 
+// in don't think we go there with current module handling.
 // TODO complete with nbd_server_stop
+// int SifStopModule(int id, int arg_len, const char *args, int *mod_res);
+// int SifUnloadModule(int id);
 int _shutdown(void)
 {
     ReleaseLibraryEntries(&_exp_lwnbd);
-//    TerminateThread(RpcThreadID);
+    TerminateThread(RpcThreadID);
     DeleteThread(RpcThreadID);
     return MODULE_NO_RESIDENT_END;
 }

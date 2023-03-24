@@ -13,7 +13,7 @@
 /* ... so we shared the big buffer */
 extern uint8_t nbd_buffer[];
 
-err_t protocol_handshake(struct nbd_server *server, const int client_socket, struct lwnbd_context **ctx)
+err_t protocol_handshake(struct nbd_server *server, struct nbd_client *client)
 {
     register int size;
     uint32_t cflags;
@@ -25,12 +25,12 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
     new_hs.version = htonll(NBD_NEW_VERSION);
     new_hs.gflags = htons(server->gflags);
 
-    size = send(client_socket, &new_hs, sizeof(struct nbd_new_handshake),
+    size = send(client->sock, &new_hs, sizeof(struct nbd_new_handshake),
                 0);
     if (size < sizeof(struct nbd_new_handshake))
         return -1;
 
-    size = nbd_recv(client_socket, &cflags, sizeof(cflags), 0);
+    size = nbd_recv(client->sock, &cflags, sizeof(cflags), 0);
     if (size < sizeof(cflags))
         return -1;
     cflags = htonl(cflags);
@@ -45,7 +45,7 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
 
         /*** options haggling ***/
 
-        size = nbd_recv(client_socket, &new_opt, sizeof(struct nbd_new_option),
+        size = nbd_recv(client->sock, &new_opt, sizeof(struct nbd_new_option),
                         0);
         if (size < sizeof(struct nbd_new_option))
             return -1;
@@ -78,7 +78,7 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
         }
 
         if (new_opt.optlen > 0) {
-            size = nbd_recv(client_socket, &nbd_buffer, new_opt.optlen, 0);
+            size = nbd_recv(client->sock, &nbd_buffer, new_opt.optlen, 0);
             if (size < new_opt.optlen)
                 return -1;
             nbd_buffer[new_opt.optlen] = '\0';
@@ -91,37 +91,38 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
                 struct nbd_export_name_option_reply handshake_finish;
 
                 if (new_opt.optlen > 0) {
-                    *ctx = lwnbd_get_context((const char *)&nbd_buffer);
+                    client->ctx = lwnbd_get_context((const char *)&nbd_buffer);
 
-                    //                    if (*ctx == NULL) {
-                    //                        *ctx = lwnbd_get_context_uri((const char *)&nbd_buffer);
+                    //                    if (client->ctx == NULL) {
+                    //                        client->ctx = lwnbd_get_context_uri((const char *)&nbd_buffer);
                     //                    }
 
                 } else
-                    *ctx = lwnbd_get_context(server->defaultexport);
+                    client->ctx = lwnbd_get_context(server->defaultexport);
 
                 /* proto.md: If the server is unwilling to allow the export, it MUST terminate the session. */
-                if (*ctx == NULL) {
+                if (client->ctx == NULL) {
                     DEBUGLOG("find nothing to export.\n");
                     return -1;
                 }
 
-                handshake_finish.exportsize = htonll((*ctx)->exportsize);
+                memset(&handshake_finish, 0, sizeof handshake_finish);
+                handshake_finish.exportsize = htonll((client->ctx)->exportsize);
 
                 /* could be hardened, here we trust client */
                 if (server->readonly)
-                    handshake_finish.eflags = htons((*ctx)->eflags | NBD_FLAG_READ_ONLY);
+                    handshake_finish.eflags = htons((client->ctx)->eflags | NBD_FLAG_READ_ONLY);
                 else
-                    handshake_finish.eflags = htons((*ctx)->eflags);
+                    handshake_finish.eflags = htons((client->ctx)->eflags);
 
-                memset(handshake_finish.zeroes, 0, sizeof(handshake_finish.zeroes));
                 // NBD_FLAG_C_NO_ZEROES not defined by nbd-protocol.h, another useless term from proto.md
-                size = send(client_socket, &handshake_finish,
+                size = send(client->sock, &handshake_finish,
                             (cflags & NBD_FLAG_NO_ZEROES) ? offsetof(struct nbd_export_name_option_reply, zeroes) : sizeof handshake_finish, 0);
                 if (size < ((cflags & NBD_FLAG_NO_ZEROES) ? offsetof(struct nbd_export_name_option_reply, zeroes) : sizeof handshake_finish))
                     return -1;
 
-                return NBD_OPT_EXPORT_NAME;
+                client->state = TRANSMISSION;
+                return 0;
             }
 
             case NBD_OPT_ABORT:
@@ -129,12 +130,13 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
                 fixed_new_option_reply.option = htonl(new_opt.option);
                 fixed_new_option_reply.reply = htonl(NBD_REP_ACK);
                 fixed_new_option_reply.replylen = 0;
-                size = send(client_socket, &fixed_new_option_reply,
+                size = send(client->sock, &fixed_new_option_reply,
                             sizeof(struct nbd_fixed_new_option_reply), 0);
                 if (size < sizeof(struct nbd_fixed_new_option_reply))
                     return -1;
 
-                return NBD_OPT_ABORT;
+                client->state = ABORT;
+                return 0;
 
             case NBD_OPT_LIST: {
 
@@ -154,25 +156,25 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
                     fixed_new_option_reply.replylen = htonl(
                         name_len + sizeof(len) + desc_len);
 
-                    size = send(client_socket, &fixed_new_option_reply,
+                    size = send(client->sock, &fixed_new_option_reply,
                                 sizeof(struct nbd_fixed_new_option_reply), MSG_MORE);
                     if (size < (sizeof(struct nbd_fixed_new_option_reply)))
                         return -1;
-                    size = send(client_socket, &len, sizeof len, MSG_MORE);
+                    size = send(client->sock, &len, sizeof len, MSG_MORE);
                     if (size < (sizeof len))
                         return -1;
-                    size = send(client_socket, context->name, name_len,
+                    size = send(client->sock, context->name, name_len,
                                 MSG_MORE);
                     if (size < name_len)
                         return -1;
-                    size = send(client_socket, context->description, desc_len,
+                    size = send(client->sock, context->description, desc_len,
                                 MSG_MORE);
                     if (size < desc_len)
                         return -1;
                 }
                 fixed_new_option_reply.reply = htonl(NBD_REP_ACK);
                 fixed_new_option_reply.replylen = 0;
-                size = send(client_socket, &fixed_new_option_reply,
+                size = send(client->sock, &fixed_new_option_reply,
                             sizeof(struct nbd_fixed_new_option_reply), 0);
                 if (size < sizeof(struct nbd_fixed_new_option_reply))
                     return -1;
@@ -190,7 +192,7 @@ err_t protocol_handshake(struct nbd_server *server, const int client_socket, str
                 fixed_new_option_reply.option = htonl(new_opt.option);
                 fixed_new_option_reply.reply = htonl(NBD_REP_ERR_UNSUP);
                 fixed_new_option_reply.replylen = 0;
-                size = send(client_socket, &fixed_new_option_reply,
+                size = send(client->sock, &fixed_new_option_reply,
                             sizeof(struct nbd_fixed_new_option_reply), 0);
                 if (size < sizeof(struct nbd_fixed_new_option_reply))
                     return -1;

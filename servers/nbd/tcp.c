@@ -1,5 +1,6 @@
 #include <sys/socket.h>
 #include "nbd.h"
+#include <errno.h>
 
 /*
  * This could later be independent of protocol implementation
@@ -12,7 +13,7 @@
  * https://lwip.fandom.com/wiki/Receiving_data_with_LWIP
  * pread() eq for nbd server.
  */
-uint32_t nbd_recv(int s, void *mem, size_t len, int flags)
+int32_t nbd_recv(int s, void *mem, size_t len, int flags)
 {
     uint32_t left = len;
     uint32_t totalRead = 0;
@@ -20,8 +21,8 @@ uint32_t nbd_recv(int s, void *mem, size_t len, int flags)
     do {
         ssize_t bytesRead = recv(s, (void *)((uint8_t *)mem + totalRead), left, flags);
         DEBUGLOG("bytesRead = %u\n", bytesRead);
-        if (bytesRead <= 0) // if (bytesRead == -1) failed for nbdfuse, seems it not send NBD_CMD_DISC
-            return -1;
+        if (bytesRead <= 0)
+            return bytesRead;
 
         left -= bytesRead;
         totalRead += bytesRead;
@@ -30,73 +31,113 @@ uint32_t nbd_recv(int s, void *mem, size_t len, int flags)
     return totalRead;
 }
 
-int tcp_loop(void *handle)
+int nbd_close(struct nbd_server *server)
 {
-    int tcp_socket, client_socket = -1;
+    DEBUGLOG("close server socket\n");
+    return close(server->socket);
+}
+
+int nbd_server_create(struct nbd_server *server)
+{
     struct sockaddr_in peer;
-    socklen_t addrlen;
     register err_t r;
-    struct lwnbd_context *nego_ctx = NULL;
-    struct nbd_server *server = handle;
+
 
     peer.sin_family = AF_INET;
-    peer.sin_port = htons(nbd_server_get_port(handle));
+    peer.sin_port = htons(nbd_server_get_port(server));
     peer.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    server->socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (server->socket < 0) {
+        DEBUGLOG("socket failed\n");
+        goto error_trap;
+    }
+
+    //        if (setsockopt(server->tcp_socket, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
+    //        {
+    //        	DEBUGLOG("setsockopt(SO_REUSEADDR) failed\n");
+    //            goto error_trap;
+    //        }
+
+    r = bind(server->socket, (struct sockaddr *)&peer, sizeof(peer));
+    if (r < 0) {
+        DEBUGLOG("bind failed\n");
+        goto error_trap;
+    }
+
+    r = listen(server->socket, MAX_NUM_SERVERS);
+    if (r < 0) {
+        DEBUGLOG("listen failed\n");
+        goto error_trap;
+    }
+
+    LOG("nbd server created.\n");
+    return 0;
+
+error_trap:
+    LOG("failed to init nbd server.\n");
+    close(server->socket);
+    return -1;
+}
+
+int client_init(struct nbd_server *s, struct nbd_client *c)
+{
+    if (c->sock < 0)
+        return -1;
+
+    if (!s->preinit) {
+        c->state = HANDSHAKE;
+    } else {
+        c->ctx = lwnbd_get_context(s->defaultexport);
+        if (c->ctx != NULL) {
+            c->state = TRANSMISSION;
+            DEBUGLOG("export context %s.\n", c->ctx->name);
+        } else {
+            LOG("You need to provide a default export to use preinit.\n");
+            return -1;
+        }
+    }
+    return 0;
+}
+
+void listener(struct nbd_server *s)
+{
+    register err_t r;
+    struct nbd_client c;
+    struct sockaddr peer;
+    socklen_t addrlen = sizeof(struct sockaddr);
 
     while (1) {
 
-        tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
-        if (tcp_socket < 0)
-            goto error;
+        // blocking
+        c.sock = accept(s->socket, &peer, &addrlen);
+        r = client_init(s, &c);
+        if (r)
+            break;
 
-        r = bind(tcp_socket, (struct sockaddr *)&peer, sizeof(peer));
-        if (r < 0)
-            goto error;
+        LOG("a client connected.\n");
 
-        r = listen(tcp_socket, MAX_NUM_SERVERS);
-        if (r < 0)
-            goto error;
-
-        while (1) {
-
-            addrlen = sizeof(peer);
-
-            // blocking
-            client_socket = accept(tcp_socket, (struct sockaddr *)&peer,
-                                   &addrlen);
-            if (client_socket < 0)
-                goto error;
-
-            LOG("a client connected.\n");
-
-            if (!nbd_server_get_preinit(handle)) {
-                r = protocol_handshake(handle, client_socket, &nego_ctx);
-                if (r == -1) {
-                    LOG("an error occured during negotiation_phase phase.\n");
-                }
-            } else {
-                nego_ctx = lwnbd_get_context(server->defaultexport);
-                if (nego_ctx != NULL) {
-                    r = NBD_OPT_EXPORT_NAME;
-                    DEBUGLOG("export context %s.\n", nego_ctx->name);
-                } else {
-                    LOG("You need to provide a default export to use preinit.\n");
+        while (r == 0) {
+            switch (c.state) {
+                case HANDSHAKE:
+                    r = protocol_handshake(s, &c);
+                    if (r == -1) {
+                        LOG("an error occured during negotiation_phase phase.\n");
+                    }
+                    break;
+                case TRANSMISSION:
+                    r = transmission_phase(&c);
+                    if (r == -1)
+                        LOG("an error occured during transmission phase.\n");
+                    break;
+                case ABORT:
                     r = -1;
-                }
+                    break;
+                default:
+                    break;
             }
-
-            if (r == NBD_OPT_EXPORT_NAME) {
-                // TODO : make other ctx available for other connection
-                r = transmission_phase(client_socket, nego_ctx);
-                if (r == -1)
-                    LOG("an error occured during transmission phase.\n");
-            } else
-                close(client_socket);
-            LOG("a client disconnected.\n\n\n");
         }
+        close(c.sock);
+        LOG("a client disconnected.\n\n\n");
     }
-error:
-    LOG("failed to init server.\n");
-    close(tcp_socket);
-    return 0;
 }

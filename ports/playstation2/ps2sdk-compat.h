@@ -10,11 +10,5 @@
 
 #endif /* _IOP */
 
-// missing in <unistd.h>
+// missing in <unistd.h> (in fact for iop, this file is empty at ps2dev/ps2sdk/iop/include/sys/unistd.h
 typedef int ssize_t;
-
-// Missing in <stddef.h>
-#ifndef offsetof
-#define offsetof(st, m) \
-    ((size_t)((char *)&((st *)0)->m - (char *)0))
-#endif

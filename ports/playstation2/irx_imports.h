@@ -4,11 +4,11 @@
 #include <irx.h>
 
 #define PLUGIN_ATAD   1
-#define PLUGIN_BDM    1
+//#define PLUGIN_BDM    1
 #define PLUGIN_MCMAN  1
 #define PLUGIN_MEMORY 1
 #define PLUGIN_NBD    1
-#define PLUGIN_TTY    1
+//#define PLUGIN_TTY    1
 
 #ifdef PLUGIN_ATAD
 #include <atad.h>

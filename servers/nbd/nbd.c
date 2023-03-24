@@ -62,7 +62,16 @@ static int nbd_config(void *handle, const char *key, const char *value)
 
 static int nbd_start(void *handle)
 {
-    return tcp_loop(handle);
+    struct nbd_server *h = handle;
+    nbd_server_create(h);
+    listener(h);
+    return 0;
+}
+
+static int nbd_stop(void *handle)
+{
+    struct nbd_server *h = handle;
+    return nbd_close(h);
 }
 
 static void *nbd_new(void)
@@ -74,6 +83,7 @@ static struct lwnbd_server server = {
     .name = "nbd",
     .new = nbd_new,
     .start = nbd_start,
+    .stop = nbd_stop,
     .config = nbd_config,
 };
 

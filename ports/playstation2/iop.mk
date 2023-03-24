@@ -4,8 +4,8 @@ include servers/nbd/Makefile
 include plugins/atad/Makefile
 include plugins/memory/Makefile
 include plugins/mcman/Makefile
-include plugins/tty/Makefile
-include plugins/bdm/Makefile
+#include plugins/tty/Makefile
+#include plugins/bdm/Makefile
 #include plugins/file/Makefile
 
 CC = $(IOP_CC)
@@ -44,3 +44,5 @@ softdev2:
 	umount opl
 	sleep 5
 	sudo nbd-client -d $(DEV)
+
+.PHONY: all clean test

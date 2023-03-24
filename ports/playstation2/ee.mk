@@ -15,3 +15,5 @@ all: $(EE_LIB)
 
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.eeglobal
+
+.PHONY: all clean test

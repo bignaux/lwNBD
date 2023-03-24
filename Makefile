@@ -52,4 +52,4 @@ check:
 format:
 	@python3 $(cfla)/run-clang-format.py --clang-format-executable $(cfla)/clang-format/clang-format14 -r . -i true
 
-.PHONY: all clean
+.PHONY: all clean test
