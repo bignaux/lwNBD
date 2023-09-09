@@ -51,10 +51,11 @@ struct lwnbd_server
     /* public */
     const char *name;
 
-    void *(*new)(void); /* need since we could run many servers where we run only one instance of a plugin */
+    void *(*new)(void); /* need since we could run many servers where we run only one instance of a plugin, anyway, why not (*open) ? */
     int (*start)(void *handle);
     int (*stop)(void *handle);
     int (*config)(void *handle, const char *key, const char *value);
+    int (*ctor)(void *handle, const void *pconfig); /* config with custom structure */
 };
 
 #define SERVERINIT(x)  x##_##server_init

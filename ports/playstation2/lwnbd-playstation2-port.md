@@ -34,6 +34,12 @@ EE : uint32_t => long unsigned int _> %ld
 
     make -C modules/network/lwNBD/ TARGET=iop clean && make LWNBD_DEBUG=1
     
+    
+   commit on OPL
+   
+    dont forget to update lwNBD sha in download_lwNBD.sh and remove experimentale plugins.
+    
+    
 ## IOP debug
 
 ### udptty
@@ -135,6 +141,7 @@ HDL plugin to provide easy drop of iso, copy entire device (ftp or http)
 
 PADMAN plugin for TAS/HID... :
 
+* https://github.com/Snugggles/PCSX2-AHK-TAS-Tools/tree/v1.0
 * https://github.com/nmelihsensoy/virtual-hid-tcp
 * https://dzone.com/articles/build-your-own-usb-hid-joystick-device-and-game-co
 * https://www.youtube.com/watch?v=QpP6gfQVXgs

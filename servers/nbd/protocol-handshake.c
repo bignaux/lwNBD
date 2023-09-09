@@ -1,8 +1,8 @@
 #include <endian.h>
 #include <stddef.h>
 #include <string.h>
+
 #include "nbd.h"
-#include <sys/socket.h>
 
 /*
  * nbdkit alloc this size ...
@@ -12,6 +12,24 @@
 
 /* ... so we shared the big buffer */
 extern uint8_t nbd_buffer[];
+
+const char *nbd_option_to_string(uint32_t f)
+{
+    static const char *const nbd_options[] = {
+        NULL,
+        "NBD_OPT_EXPORT_NAME",
+        "NBD_OPT_ABORT",
+        "NBD_OPT_LIST",
+        "NBD_OPT_STARTTLS",
+        "NBD_OPT_INFO",
+        "NBD_OPT_GO",
+        "NBD_OPT_STRUCTURED_REPLY",
+        "NBD_OPT_LIST_META_CONTEXT",
+        "NBD_OPT_SET_META_CONTEXT",
+    };
+
+    return nbd_options[f];
+}
 
 err_t protocol_handshake(struct nbd_server *server, struct nbd_client *client)
 {
@@ -55,21 +73,8 @@ err_t protocol_handshake(struct nbd_server *server, struct nbd_client *client)
             return -1;
 
         new_opt.option = htonl(new_opt.option);
-#ifdef LWNBD_DEBUG
-        static const char *NBD_OPTIONS[] = {
-            NULL,
-            "NBD_OPT_EXPORT_NAME",
-            "NBD_OPT_ABORT",
-            "NBD_OPT_LIST",
-            "NBD_OPT_STARTTLS",
-            "NBD_OPT_INFO",
-            "NBD_OPT_GO",
-            "NBD_OPT_STRUCTURED_REPLY",
-            "NBD_OPT_LIST_META_CONTEXT",
-            "NBD_OPT_SET_META_CONTEXT",
-        };
-        DEBUGLOG("%s\n", NBD_OPTIONS[new_opt.option]);
-#endif
+        DEBUGLOG("%s\n", nbd_option_to_string(new_opt.option));
+
         new_opt.optlen = htonl(new_opt.optlen);
 
         if (new_opt.optlen > MAX_REQUEST_SIZE) {

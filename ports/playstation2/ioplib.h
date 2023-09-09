@@ -2,7 +2,10 @@
 #define IOPLIB_H
 
 #include "irx_imports.h"
+
+/* why did i do that here ? */
 #include "../../plugins/memory/memory.h"
+#include "../../plugins/pcmstream/pcmstream.h"
 
 int GetSizeFromDelay(int device);
 void print_memorymap();

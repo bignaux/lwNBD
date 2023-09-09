@@ -4,11 +4,11 @@
  *
  */
 
+#include "nbd.h"
 #include <endian.h>
 #include <stddef.h>
 #include <string.h>
-#include "nbd.h"
-#include <sys/socket.h>
+
 
 /*
  * IOP :
@@ -19,6 +19,23 @@
  * TODO : check alignment and move per-plateform if specific define ALIGMENT
  */
 uint8_t nbd_buffer[NBD_BUFFER_LEN] __attribute__((aligned(16)));
+
+const char *nbd_commands_to_string(uint16_t f)
+{
+
+    static const char *const nbd_commands[] = {
+        "NBD_CMD_READ",
+        "NBD_CMD_WRITE",
+        "NBD_CMD_DISC",
+        "NBD_CMD_FLUSH",
+        "NBD_CMD_TRIM",
+        "NBD_CMD_CACHE",
+        "NBD_CMD_WRITE_ZEROES",
+        "NBD_CMD_BLOCK_STATUS",
+    };
+
+    return nbd_commands[f];
+}
 
 err_t transmission_phase(struct nbd_client *client)
 {
@@ -63,19 +80,7 @@ err_t transmission_phase(struct nbd_client *client)
         reply.magic = htonl(NBD_SIMPLE_REPLY_MAGIC);
         reply.handle = request.handle;
 
-#ifdef LWNBD_DEBUG
-        static const char *NBD_CMD[] = {
-            "NBD_CMD_READ",
-            "NBD_CMD_WRITE",
-            "NBD_CMD_DISC",
-            "NBD_CMD_FLUSH",
-            "NBD_CMD_TRIM",
-            "NBD_CMD_CACHE",
-            "NBD_CMD_WRITE_ZEROES",
-            "NBD_CMD_BLOCK_STATUS",
-        };
-        LOG("%s\n", NBD_CMD[request.type]);
-#endif
+        DEBUGLOG("%s\n", nbd_commands_to_string(request.type));
 
         switch (request.type) {
 

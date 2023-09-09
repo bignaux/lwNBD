@@ -1,6 +1,9 @@
-#include <sys/socket.h>
 #include "nbd.h"
 #include <errno.h>
+
+#ifdef __PS2SDK_SYS_SOCKET_H__
+#define close(x) lwip_close(x)
+#endif
 
 /*
  * This could later be independent of protocol implementation

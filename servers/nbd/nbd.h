@@ -6,10 +6,11 @@
 #include <nbd-protocol.h>
 #include "config.h"
 
-#ifdef __linux__
 #include <netinet/in.h>
 #include <unistd.h>
+#include <sys/socket.h>
 
+#ifdef __linux__
 // TODO : manage endianess
 #define htonll(x) htobe64(x)
 #define ntohll(x) be64toh(x)
@@ -17,7 +18,7 @@
 
 #ifndef err_t
 typedef signed char err_t;
-#endif
+#endif /* __linux__ */
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,3 +1,8 @@
+#        _  _  _ __   _ ______  ______
+# |      |  |  | | \  | |_____] |     \
+# |_____ |__|__| |  \_| |_____] |_____/
+#
+
 CC ?= gcc
 CFLAGS = -Wfatal-errors -Wall -Iinclude
 OBJ = src/servers.o src/plugins.o src/contexts.o
@@ -31,11 +36,18 @@ ifeq ($(LWNBD_DEBUG),1)
 	CFLAGS += -DLWNBD_DEBUG
 endif
 
-$(BIN): $(OBJ)
+$(BIN): banner $(OBJ)
 	$(CC) $(CFLAGS) -o $(BIN) $(OBJ) $(LDFLAGS) $(LIBS)
 
 $(MANPAGE): README.md
 	$(RONN) -r --pipe $< > $@
+
+banner:
+	@echo "       _  _  _ __   _ ______  ______"
+	@echo "|      |  |  | | \\  | |_____] |     \\"
+	@echo "|_____ |__|__| |  \\_| |_____] |_____/"
+	@echo
+	@echo -e "library version $(APP_VERSION) - BSD 2-Clause License\n"
 
 clean:
 	rm -f $(BIN) $(MANPAGE) $(OBJ) *~ core 

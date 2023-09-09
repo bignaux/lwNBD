@@ -4,7 +4,7 @@
 
 TARGETS : all
 
-STATUS : WIP, need even loop.
+STATUS : WIP, need an event loop.
 
 ## PS2 note : 
 

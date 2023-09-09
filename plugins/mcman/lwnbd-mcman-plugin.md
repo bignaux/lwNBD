@@ -19,7 +19,13 @@ connect with your favorite nbd client :
 
 Eventually, use [ps2mcfs](https://github.com/FranciscoDA/ps2mcfs) to mount your memory card : 
 
-    $ ./fuseps2mc /dev/nbd2 test/
+    $ mkdir -p ps2/mc0
+    $ fuseps2mc /dev/nbd2 ps2/mc0
+    $ fusermount3 -u ps2/mc0
+    $ nbd-client -d /dev/nbd2
+
+Note : ps2mcfs has no write feature at the moment.
+    
 
 one-liner backup :
 
@@ -31,5 +37,6 @@ one-liner backup :
 * [PlayStation 2 Memory Card File System](http://www.csclub.uwaterloo.ca:11068/mymc/ps2mcfs.html)
 * [windows mymc_2.6.g2.dist.7z](http://sourceforge.net/projects/mymc-opl/files/mymc_2.6.g2.dist.7z/download)
 * [ps3-memorycard-adapter](https://github.com/vpelletier/ps3-memorycard-adapter/tree/master/nbd)
-* [ps3mca-tool](https://github.com/jimmikaelkael/ps3mca-tool)
+* [ps3mca-tool](https://github.com/jimmikaelkael/ps3mca-tool) repository closed by Sony.
 * [Card_Adapter on psdevwiki](https://www.psdevwiki.com/ps3/Card_Adapter)
+* Memory Card Annihilator (can backup/restore image, no ECC), produce similar dump as this plugin.

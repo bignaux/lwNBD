@@ -27,7 +27,7 @@
  * */
 
 extern struct lwnbd_plugin *memory_plugin_init(void);
-extern struct lwnbd_plugin *file_plugin_init(void); // https://blog.the-pans.com/gnu-visibility-attribute/
+extern struct lwnbd_plugin *file_plugin_init(void);
 // plugin_init plugins_table[] = {
 //		file_plugin_init,
 //		NULL
@@ -44,7 +44,7 @@ void coucou()
     printf("exit\n");
 }
 
-int gEnableWrite = 0;
+int gEnableWrite = 1;
 int gHDDStartMode;
 
 int main(int argc, char **argv)

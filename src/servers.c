@@ -80,6 +80,13 @@ int lwnbd_server_config(lwnbd_server_t const handle, const char *key, const char
     return (s->config(si->handle, key, value));
 }
 
+int lwnbd_server_new(lwnbd_server_t const handle, const void *pconfig)
+{
+    struct server_instance *si = &servers[handle];
+    struct lwnbd_server *s = si->s;
+
+    return (s->ctor(si->handle, pconfig));
+}
 
 /* on nbdkit, this is done in main */
 // int lwnbd_server_plugin_config(lwnbd_server_t const handle, const char *name, const char *key, const char *value)

@@ -2,6 +2,12 @@
 #include <config.h>
 #include <lwnbd-plugin.h>
 
+/*
+ * TODO
+ * - enable/disable booting from MBR ( see https://github.com/parrado/SoftDev2/blob/main/installer/install.c#L52 )
+ * - nbdcopy MBR.XIN nbd://192.168.1.45/hdd0/mbr
+ */
+
 struct handle
 {
     int device;
@@ -18,6 +24,7 @@ static inline int atad_pread(void *handle, void *buf, uint32_t count,
 {
     struct handle *h = handle;
     //    printf("atad_pread d = %d, off = %u count %d \n", h->device,(uint32_t)offset,count);
+    // ata_device_sector_io64
     return ata_device_sector_io(h->device, buf, (uint32_t)offset, count, ATA_DIR_READ);
 }
 

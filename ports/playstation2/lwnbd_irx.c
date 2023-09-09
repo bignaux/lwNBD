@@ -9,6 +9,8 @@
  *
  *
  *
+ *
+ *
  */
 
 #include <lwnbd.h>
@@ -19,19 +21,13 @@
 IRX_ID(APP_NAME, 1, 1);
 extern struct irx_export_table _exp_lwnbd;
 
-static SifRpcDataQueue_t SifQueueData;
-static SifRpcServerData_t SifServerData;
-static int RpcThreadID, nbdThreadID;
-static unsigned char SifServerRxBuffer[64];
-static unsigned char SifServerTxBuffer[32];
-
-static lwnbd_server_t nbdsrv;
+static lwnbd_server_t sifrpcsrv, nbdsrv;
+static int nbdThreadID;
 
 enum LWNBD_SERVER_CMD {
     LWNBD_SERVER_CMD_START,
     LWNBD_SERVER_CMD_STOP,
 };
-static int sid = 0x2A39;
 
 static int enable = 0;
 
@@ -41,10 +37,11 @@ struct lwnbd_config
     uint8_t readonly;
 };
 
+
+// TODO : move config in OPL, EE/apps side
+// new bug : issue when config already done, write permission can't be enable back.
 static int config(struct lwnbd_config *config)
 {
-
-
     lwnbd_server_config(nbdsrv, "default-export", config->defaultexport);
     if (config->readonly)
         lwnbd_server_config(nbdsrv, "readonly", NULL);
@@ -100,45 +97,71 @@ static int config(struct lwnbd_config *config)
     lwnbd_plugin_new(bdmplg, NULL);
 #endif
 
+#ifdef PLUGIN_PCMSTREAM
+    lwnbd_plugin pcmplg = lwnbd_plugin_init(pcmstream_plugin_init);
+    struct pcmstream_config pcmc = {
+        .name = "speakers",
+        .desc = "stereo speaker",
+        //        .format = "s16le",
+        .bits = 16,
+        .rate = 44100,
+        .channels = 2,
+        .volume = 70,
+    };
+
+    lwnbd_plugin_new(pcmplg, &pcmc);
+#endif
+
     return 0;
 }
 
-static void *SifRpc_handler(int fno, void *buffer, int nbytes)
+static int *lwnbd_server_cmd_start(struct lwnbd_config *conf, int length, int *ret)
 {
     iop_thread_t nbd_thread;
 
+    LOG("LWNBD_SERVER_CMD_START.\n");
+    nbdsrv = lwnbd_server_init(nbd_server_init);
+    if (nbdsrv < 0) {
+        LOG("LWNBD_SERVER_CMD_START failed init server.\n");
+        *ret = -1;
+        return ret;
+    }
+
+    if (enable == 0) {
+        config(conf);
+        enable = 1;
+    }
+    LOG("LWNBD_SERVER_CMD_START 2.\n");
+
+    nbd_thread.attr = TH_C;
+    nbd_thread.option = 0;
+    nbd_thread.thread = (void *)lwnbd_server_start;
+    nbd_thread.stacksize = 0x800;
+    nbd_thread.priority = 0x10;
+
+    nbdThreadID = CreateThread(&nbd_thread);
+    if (nbdThreadID > 0) {
+        LOG("LWNBD_SERVER_CMD_START StartThread.\n");
+        *ret = StartThread(nbdThreadID, (struct lwnbd_server_t *)nbdsrv);
+    } else {
+        LOG("LWNBD_SERVER_CMD_START FAILED CreateThread.\n");
+        *ret = nbdThreadID;
+    }
+    return ret;
+}
+
+/* sifrpc server custom app handler
+ *
+ * ideally <lwnbd.h> completed so we can remove config() hack
+ *
+ * typedef void * (*SifRpcFunc_t)(int fno, void *buffer, int length);
+ * */
+static int *lwnbd_rpc_handler(int fno, void *buffer, int length)
+{
+
     switch (fno) {
         case LWNBD_SERVER_CMD_START:
-
-            LOG("LWNBD_SERVER_CMD_START.\n");
-            nbdsrv = lwnbd_server_init(nbd_server_init);
-            if (nbdsrv < 0) {
-                LOG("LWNBD_SERVER_CMD_START failed init server.\n");
-                break;
-            }
-
-            if (enable == 0) {
-                config((struct lwnbd_config *)buffer);
-                enable = 1;
-            }
-            LOG("LWNBD_SERVER_CMD_START 2.\n");
-
-            nbd_thread.attr = TH_C;
-            nbd_thread.option = 0;
-            nbd_thread.thread = (void *)lwnbd_server_start;
-            nbd_thread.stacksize = 0x800;
-            nbd_thread.priority = 0x10;
-
-            nbdThreadID = CreateThread(&nbd_thread);
-            if (nbdThreadID > 0) {
-                LOG("LWNBD_SERVER_CMD_START StartThread.\n");
-                *(int *)SifServerTxBuffer = StartThread(nbdThreadID, (struct lwnbd_server_t *)nbdsrv);
-            } else {
-                LOG("LWNBD_SERVER_CMD_START FAILED CreateThread.\n");
-                *(int *)SifServerTxBuffer = nbdThreadID;
-            }
-
-            break;
+            return lwnbd_server_cmd_start(buffer, length, &ret);
         case LWNBD_SERVER_CMD_STOP:
             LOG("LWNBD_SERVER_CMD_STOP.\n");
             // TODO
@@ -147,52 +170,41 @@ static void *SifRpc_handler(int fno, void *buffer, int nbytes)
             lwnbd_server_stop(nbdsrv);
             break;
         default:
-            *(int *)SifServerTxBuffer = -ENXIO;
+            ret = -ENXIO;
     }
-    return SifServerTxBuffer;
-}
-
-/*  */
-static void RpcThread(void *arg)
-{
-    sceSifSetRpcQueue(&SifQueueData, GetThreadId());
-    sceSifRegisterRpc(&SifServerData, sid, &SifRpc_handler, SifServerRxBuffer, NULL, NULL, &SifQueueData);
-    sceSifRpcLoop(&SifQueueData);
+    return ret;
 }
 
 int _start(int argc, char **argv)
 {
-    int result;
-    iop_thread_t thread;
+    struct sifrpc_handler conf = {
+        .sid = 0x2A39,
+        .sifrpc_handler = (void *)&lwnbd_rpc_handler,
+    };
 
-    if (RegisterLibraryEntries(&_exp_lwnbd) == 0) {
-        thread.attr = TH_C;
-        thread.option = sid;
-        thread.thread = &RpcThread;
-        thread.priority = 0x20;
-        thread.stacksize = 0x800;
-        if ((RpcThreadID = CreateThread(&thread)) > 0) {
-            StartThread(RpcThreadID, NULL);
-            result = 0;
-        } else {
-            result = RpcThreadID;
-            ReleaseLibraryEntries(&_exp_lwnbd);
-        }
-    } else {
-        result = -1;
+    sifrpcsrv = lwnbd_server_init(sifrpc_server_init);
+    if (sifrpcsrv < 0) {
+        LOG("failed init sifrpc server.\n");
+        return MODULE_NO_RESIDENT_END;
     }
 
-    return (result == 0 ? MODULE_RESIDENT_END : MODULE_NO_RESIDENT_END);
+    lwnbd_server_new(sifrpcsrv, &conf);
+
+    if (!RegisterLibraryEntries(&_exp_lwnbd)) {
+        return MODULE_NO_RESIDENT_END;
+    }
+
+    lwnbd_server_start(sifrpcsrv);
+
+    return MODULE_RESIDENT_END;
 }
 
 // in don't think we go there with current module handling.
-// TODO complete with nbd_server_stop
 // int SifStopModule(int id, int arg_len, const char *args, int *mod_res);
 // int SifUnloadModule(int id);
 int _shutdown(void)
 {
+    lwnbd_server_stop(sifrpcsrv);
     ReleaseLibraryEntries(&_exp_lwnbd);
-    TerminateThread(RpcThreadID);
-    DeleteThread(RpcThreadID);
     return MODULE_NO_RESIDENT_END;
 }

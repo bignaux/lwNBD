@@ -3,12 +3,14 @@
 
 #include <irx.h>
 
-#define PLUGIN_ATAD   1
+#define PLUGIN_ATAD      1
 //#define PLUGIN_BDM    1
-#define PLUGIN_MCMAN  1
-#define PLUGIN_MEMORY 1
-#define PLUGIN_NBD    1
+#define PLUGIN_MCMAN     1
+#define PLUGIN_MEMORY    1
+#define PLUGIN_NBD       1
 //#define PLUGIN_TTY    1
+#define PLUGIN_PCMSTREAM 1
+#define PLUGIN_SIFRPC    1
 
 #ifdef PLUGIN_ATAD
 #include <atad.h>
@@ -40,11 +42,20 @@ extern struct lwnbd_server *nbd_server_init(void);
 extern struct lwnbd_plugin *tty_plugin_init(void);
 #endif
 
+#ifdef PLUGIN_PCMSTREAM
+extern struct lwnbd_plugin *pcmstream_plugin_init(void);
+#endif
+
+#ifdef PLUGIN_SIFRPC
+#include <sifcmd.h>
+#include <sifman.h>
+#include "../../servers/sifrpc/sifrpc.h"
+extern struct lwnbd_server *sifrpc_server_init(void);
+#endif
+
 #include <errno.h>
 #include <intrman.h>
 #include <loadcore.h>
-#include <sifcmd.h>
-#include <sifman.h>
 #include <stdio.h>
 #include <sysclib.h>
 #include <sysmem.h>

@@ -1,9 +1,11 @@
 
 #PLUGINS
 include servers/nbd/Makefile
+include servers/sifrpc/Makefile
 include plugins/atad/Makefile
 include plugins/memory/Makefile
 include plugins/mcman/Makefile
+include plugins/pcmstream/Makefile
 #include plugins/tty/Makefile
 #include plugins/bdm/Makefile
 #include plugins/file/Makefile

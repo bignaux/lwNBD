@@ -8,7 +8,7 @@
 #define UINT64_MAX  0xffffffffffffffff
 #define UINT64_C(x) ((x) + (UINT64_MAX - UINT64_MAX))
 
-#endif /* _IOP */
 
-// missing in <unistd.h> (in fact for iop, this file is empty at ps2dev/ps2sdk/iop/include/sys/unistd.h
 typedef int ssize_t;
+
+#endif /* _IOP */

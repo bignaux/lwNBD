@@ -20,6 +20,7 @@ lwnbd_plugin_t lwnbd_plugin_init(plugin_init init);
 typedef uint32_t lwnbd_server_t;
 typedef struct lwnbd_server *(*server_init)(void);
 int lwnbd_server_config(lwnbd_server_t const handle, const char *key, const char *value);
+int lwnbd_server_new(lwnbd_server_t const handle, const void *pconfig);
 void lwnbd_server_start(lwnbd_server_t const handle);
 int lwnbd_server_stop(lwnbd_server_t const handle);
 int lwnbd_server_dump(lwnbd_server_t const handle);

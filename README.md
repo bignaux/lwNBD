@@ -23,7 +23,7 @@ code standards, including :
 
 It has 3 API :
 
-* an API to manage server and content to be embbed in apps. The idea is to be able to manage servers as an xinetd would.
+* an API to manage server and content to be embbed in apps. The idea is to be able to manage servers as xinetd would.
 
 * a server API to create protocol and transport plugins. Currently, only support NBD protocol, but could extend to Zmodem, AoE ... You then benefit from the mechanisms put in place for NBD such as content and management plugins.
 
