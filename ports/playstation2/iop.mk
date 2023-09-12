@@ -31,7 +31,7 @@ all: $(BIN)
 include $(PS2SDK)/Defs.make
 include $(PORT_DIR)/iopglobal.mk
 
-DEST ?= ~/devel/Open-PS2-Loader
+DEST ?= $(PS2_WORKSPACE)/Open-PS2-Loader
 TARGET_IP ?= 192.168.1.45
 DEV ?= /dev/nbd2
 

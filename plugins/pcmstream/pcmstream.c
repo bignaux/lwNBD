@@ -59,7 +59,8 @@ static int pcmstream_ctor(const void *pconfig, struct lwnbd_export *e)
     strcpy(e->description, h->desc);
 
     if (audsrv_init() != 0) {
-        LOG("Failed to initialize audsrv: %s\n", audsrv_get_error_string());
+//        LOG("Failed to initialize audsrv: %s\n", audsrv_get_error_string());
+    	LOG("Failed to initialize audsrv\n");
         return -1;
     }
 

@@ -11,35 +11,30 @@ EE : uint32_t => long unsigned int _> %ld
 
 ## workflow (see helloworld - wip)
 
+TODO : auto from the lwnbd build system.
 
-    rm -fr download_lwNBD.sh modules/network/lwNBD/ 
-    ln -rs ../lwNBD modules/network/lwNBD
+    PS2_WORKSPACE=~/devel/ps2
+    cd $PS2_WORKSPACE
 
-    docker pull ghcr.io/ps2dev/ps2dev:latest
+    rm -fr Open-PS2-Loader/modules/network/lwNBD/
+    ln -rs lwNBD Open-PS2-Loader/modules/network/lwNBD
+
+    docker pull ghcr.io/ps2homebrew/ps2homebrew:main 
+    docker run -it -w /app -v "$(pwd)":/app ghcr.io/ps2homebrew/ps2homebrew:main
     
-   go in $PS2_WORKSPACE !
-    
-    docker run -it -w /app -v "$(pwd)":/app ps2dev/ps2dev:latest
     export PS2_WORKSPACE=/app (should be in a docker script)
     cd Open-PS2-Loader
     
-    apk add build-base git zip gawk python3 py3-pip bash
-    pip3 install -r requirements.txt
     #git config --global --add safe.directory /app
     git config --system --add safe.directory "*"
     
-    
-    
     rm -f ./modules/network/lwNBD/lwnbdsvr.irx 
-
-    make -C modules/network/lwNBD/ TARGET=iop clean && make LWNBD_DEBUG=1
+    make -C modules/network/lwNBD/ TARGET=iop clean && make LWNBD_DEBUG=1    
     
-    
-   commit on OPL
+### commit on OPL
    
     dont forget to update lwNBD sha in download_lwNBD.sh and remove experimentale plugins.
-    
-    
+
 ## IOP debug
 
 ### udptty

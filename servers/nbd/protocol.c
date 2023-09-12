@@ -5,10 +5,6 @@
  */
 
 #include "nbd.h"
-#include <endian.h>
-#include <stddef.h>
-#include <string.h>
-
 
 /*
  * IOP :

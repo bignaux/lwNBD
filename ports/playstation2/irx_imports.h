@@ -43,6 +43,7 @@ extern struct lwnbd_plugin *tty_plugin_init(void);
 #endif
 
 #ifdef PLUGIN_PCMSTREAM
+#include <audsrv.h>
 extern struct lwnbd_plugin *pcmstream_plugin_init(void);
 #endif
 

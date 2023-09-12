@@ -9,6 +9,9 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <endian.h>
+#include <stddef.h>
+#include <string.h>
 
 #ifdef __linux__
 // TODO : manage endianess

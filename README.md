@@ -19,9 +19,9 @@ code standards, including :
 
 * no dynamically allocate memory
 * static-linking
-* C standard library usage
+* written in C99 (using -std=c99 compile-time flag), use standard library usage
 
-It has 3 API :
+The lwNBD API is broken down into 3:
 
 * an API to manage server and content to be embbed in apps. The idea is to be able to manage servers as xinetd would.
 

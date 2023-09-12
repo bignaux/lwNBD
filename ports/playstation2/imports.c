@@ -89,7 +89,6 @@ ssbusc_IMPORTS_end
 
 #ifdef PLUGIN_PCMSTREAM
 audsrv_IMPORTS_start
-I_audsrv_get_error_string
 I_audsrv_init
 I_audsrv_play_audio
 I_audsrv_set_format

@@ -50,10 +50,13 @@ pacat --record or parecord . it looks like a lot of possibilities here , see
 
 ## PS2 note:
 
-It seems to be code support for USB audio class, so no microphone support (eyetoy, Singstar microphone).
-Optical output would be interessting to test, i've not the hardware yet. 
+It seems to be no code support for USB audio class in PS2SDK, so no microphone support (eyetoy, Singstar or headset microphone).
+No Sony secret here, just generic USB Audio PCM stream, Sony SDK gave example of USB out (usbspkr sample).
 
-Adpcm ? 
+Optical output (S/PDIF) would be interesting too, i've not the hardware yet. There are possibilities to bypass (passthrough) the data for both
+Optical and analog output. Sony SDK provide some stuff about that too, and at the time, a complete library was available to ease usage of the SPU2 : Multistream by [Jason Page](https://www.lemonamiga.com/interviews/jason_page/). 
+
+PCM vs Adpcm ? 
 
 encoding ? https://github.com/vgmstream/vgmstream/blob/master/doc/FORMATS.md
 vgmstream-cli -m boot.raw (look at extention, should be .raw . seems not working anyway)

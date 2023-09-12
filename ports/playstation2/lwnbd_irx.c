@@ -98,7 +98,7 @@ static int config(struct lwnbd_config *config)
 #endif
 
 #ifdef PLUGIN_PCMSTREAM
-    lwnbd_plugin pcmplg = lwnbd_plugin_init(pcmstream_plugin_init);
+    lwnbd_plugin_t pcmplg = lwnbd_plugin_init(pcmstream_plugin_init);
     struct pcmstream_config pcmc = {
         .name = "speakers",
         .desc = "stereo speaker",
@@ -159,6 +159,7 @@ static int *lwnbd_server_cmd_start(struct lwnbd_config *conf, int length, int *r
 static int *lwnbd_rpc_handler(int fno, void *buffer, int length)
 {
 
+	int ret;
     switch (fno) {
         case LWNBD_SERVER_CMD_START:
             return lwnbd_server_cmd_start(buffer, length, &ret);
@@ -172,9 +173,11 @@ static int *lwnbd_rpc_handler(int fno, void *buffer, int length)
         default:
             ret = -ENXIO;
     }
-    return ret;
+    return &ret;
 }
 
+
+/* create a classic RPC listener thread *again* */
 int _start(int argc, char **argv)
 {
     struct sifrpc_handler conf = {

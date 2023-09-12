@@ -4,7 +4,8 @@
 #
 
 CC ?= gcc
-CFLAGS = -Wfatal-errors -Wall -Iinclude
+# TODO: can't use -pedantic-errors yet due to LOG macros
+CFLAGS = -std=c99 -Wall -Iinclude -Wfatal-errors
 OBJ = src/servers.o src/plugins.o src/contexts.o
 DEBUG ?= 0
 

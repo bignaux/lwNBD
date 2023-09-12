@@ -1,5 +1,5 @@
 BIN = lwnbd-server
-CFLAGS += -DAPP_NAME=\"lwNBD\"
+CFLAGS += -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L -DAPP_NAME=\"lwNBD\"
 OBJ += ports/unix/lwnbd-server.o
 
 #PLUGINS
