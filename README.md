@@ -20,6 +20,7 @@ code standards, including :
 * no dynamically allocate memory
 * static-linking
 * written in C99 (using -std=c99 compile-time flag), use standard library usage
+* thread-safe synchronous NBD protocol implementation
 
 The lwNBD API is broken down into 3:
 

@@ -1,7 +1,7 @@
 lwNBD-mcman-plugin(1) -- Playstation 2 MemoryCard plugin
 =============================================
 
-TARGETS : PlayStation 2
+TARGETS : PlayStation 2 IOP
 
 STATUS : WIP
 

@@ -5,8 +5,8 @@
 
 CC ?= gcc
 # TODO: can't use -pedantic-errors yet due to LOG macros
-CFLAGS = -std=c99 -Wall -Iinclude -Wfatal-errors
-OBJ = src/servers.o src/plugins.o src/contexts.o
+# 
+CFLAGS = -Iinclude -std=c99 -Wall -Wfatal-errors
 DEBUG ?= 0
 
 APP_VERSION := $(shell git describe --always --tags)
@@ -15,6 +15,7 @@ RONN = ronn
 MANPAGE = lwnbd.3
 
 include .env
+include src/Makefile
 
 ifeq ($(TARGET),unix)
 include ports/unix/Makefile

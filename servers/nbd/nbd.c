@@ -1,16 +1,62 @@
 #include "nbd.h"
 #include <string.h>
+#include <errno.h>
 
-#define NAME nbd
+#define NAME                   nbd
+#define NBD_SERVER_MAX_DEVICES 1
 
-/* for now, only one server */
-static struct nbd_server nbd_servers = {
-    .port = 10809,
-    .max_retry = MAX_RETRIES,
-    .gflags = (NBD_FLAG_FIXED_NEWSTYLE | NBD_FLAG_NO_ZEROES),
-    .preinit = 0,
-    .readonly = 0,
-};
+typedef enum {
+    HANDLE_FREE,
+    HANDLE_CREATED,
+    //	HANDLE_INUSE,
+} handle_state_t;
+
+/* specific plugin private data */
+static struct nbd_server handles[NBD_SERVER_MAX_DEVICES];
+static int handle_in_use[NBD_SERVER_MAX_DEVICES];
+
+/*
+ * https://lwip.fandom.com/wiki/Receiving_data_with_LWIP
+ * pread() eq for nbd server.
+ */
+int32_t nbd_recv(int s, void *mem, size_t len, int flags)
+{
+    uint32_t left = len;
+    uint32_t totalRead = 0;
+
+    do {
+        ssize_t bytesRead = recv(s, (void *)((uint8_t *)mem + totalRead), left, flags);
+        DEBUGLOG("bytesRead = %zd/%u\n", bytesRead, left); // %u
+        if (bytesRead <= 0) {
+            perror("nbd_recv:");
+            return bytesRead;
+        }
+        left -= bytesRead;
+        totalRead += bytesRead;
+
+    } while (left);
+    return totalRead;
+}
+
+int client_init(struct nbd_server *s, struct nbd_client *c)
+{
+    if (c->sock < 0)
+        return -1;
+
+    if (!s->preinit) {
+        c->state = HANDSHAKE;
+    } else {
+        c->ctx = lwnbd_get_context(s->defaultexport);
+        if (c->ctx != NULL) {
+            c->state = TRANSMISSION;
+            DEBUGLOG("export context %s.\n", c->ctx->name);
+        } else {
+            LOG("You need to provide a default export to use preinit.\n");
+            return -1;
+        }
+    }
+    return 0;
+}
 
 void nbd_server_set_preinit(struct nbd_server *h, int preinit)
 {
@@ -60,31 +106,33 @@ static int nbd_config(void *handle, const char *key, const char *value)
     return 0;
 }
 
-static int nbd_start(void *handle)
+static int nbd_ctor(void *handle, const void *pconfig)
 {
     struct nbd_server *h = handle;
-    nbd_server_create(h);
-    listener(h);
+    memcpy(h, pconfig, sizeof(struct nbd_server));
     return 0;
 }
 
-static int nbd_stop(void *handle)
-{
-    struct nbd_server *h = handle;
-    return nbd_close(h);
-}
-
+/* to have some default setting ? */
 static void *nbd_new(void)
 {
-    return &nbd_servers;
+    uint32_t i;
+
+    for (i = 0; i < NBD_SERVER_MAX_DEVICES; i++) {
+        if (handle_in_use[i] == HANDLE_FREE) {
+            handle_in_use[i] = HANDLE_CREATED;
+            break;
+        }
+    }
+
+    return &handles[i];
 }
 
 static struct lwnbd_server server = {
     .name = "nbd",
     .new = nbd_new,
-    .start = nbd_start,
-    .stop = nbd_stop,
     .config = nbd_config,
+    .ctor = nbd_ctor,
 };
 
 NBDKIT_REGISTER_SERVER(server)

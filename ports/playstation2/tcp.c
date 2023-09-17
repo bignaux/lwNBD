@@ -11,28 +11,16 @@
  *
  */
 
-
 /*
- * https://lwip.fandom.com/wiki/Receiving_data_with_LWIP
- * pread() eq for nbd server.
+ * IOP :
+ *
+ * The IRX loader can only handle max alignment of 16 bytes.
+ * Future updates to the toolchain will make this a hard requirement.
+ *
+ * TODO : check alignment and move per-plateform if specific define ALIGMENT
  */
-int32_t nbd_recv(int s, void *mem, size_t len, int flags)
-{
-    uint32_t left = len;
-    uint32_t totalRead = 0;
+// uint8_t nbd_buffer[NBD_BUFFER_LEN] __attribute__((aligned(16)));
 
-    do {
-        ssize_t bytesRead = recv(s, (void *)((uint8_t *)mem + totalRead), left, flags);
-        DEBUGLOG("bytesRead = %u\n", bytesRead);
-        if (bytesRead <= 0)
-            return bytesRead;
-
-        left -= bytesRead;
-        totalRead += bytesRead;
-
-    } while (left);
-    return totalRead;
-}
 
 int nbd_close(struct nbd_server *server)
 {
@@ -83,26 +71,6 @@ error_trap:
     return -1;
 }
 
-int client_init(struct nbd_server *s, struct nbd_client *c)
-{
-    if (c->sock < 0)
-        return -1;
-
-    if (!s->preinit) {
-        c->state = HANDSHAKE;
-    } else {
-        c->ctx = lwnbd_get_context(s->defaultexport);
-        if (c->ctx != NULL) {
-            c->state = TRANSMISSION;
-            DEBUGLOG("export context %s.\n", c->ctx->name);
-        } else {
-            LOG("You need to provide a default export to use preinit.\n");
-            return -1;
-        }
-    }
-    return 0;
-}
-
 void listener(struct nbd_server *s)
 {
     register err_t r;
@@ -144,3 +112,19 @@ void listener(struct nbd_server *s)
         LOG("a client disconnected.\n\n\n");
     }
 }
+
+/*
+static int nbd_start(void *handle)
+{
+    struct nbd_server *h = handle;
+    nbd_server_create(h);
+    listener(h);
+    return 0;
+}
+
+static int nbd_stop(void *handle)
+{
+    struct nbd_server *h = handle;
+    return nbd_close(h);
+}
+*/

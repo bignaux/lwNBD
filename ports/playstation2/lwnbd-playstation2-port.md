@@ -1,3 +1,8 @@
+## Asynchronous API ?
+
+
+ https://eli.thegreenplace.net/2017/concurrent-servers-part-1-introduction/
+
 ## PS2SDK Toolchain
 
 EE => [gcc 11.3.0](https://github.com/ps2dev/ps2toolchain-ee/blob/main/scripts/002-gcc-stage1.sh), newlib

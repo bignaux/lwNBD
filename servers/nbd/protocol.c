@@ -6,16 +6,6 @@
 
 #include "nbd.h"
 
-/*
- * IOP :
- *
- * The IRX loader can only handle max alignment of 16 bytes.
- * Future updates to the toolchain will make this a hard requirement.
- *
- * TODO : check alignment and move per-plateform if specific define ALIGMENT
- */
-uint8_t nbd_buffer[NBD_BUFFER_LEN] __attribute__((aligned(16)));
-
 const char *nbd_commands_to_string(uint16_t f)
 {
 
@@ -42,6 +32,7 @@ err_t transmission_phase(struct nbd_client *client)
     struct nbd_simple_reply reply;
     struct nbd_request request;
     struct lwnbd_context *ctx = client->ctx;
+    uint8_t *nbd_buffer = client->nbd_buffer;
 
     if (ctx == NULL) {
         LOG("No context provided.\n");

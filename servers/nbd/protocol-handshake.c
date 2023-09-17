@@ -6,9 +6,6 @@
  */
 #define MAX_REQUEST_SIZE NBD_BUFFER_LEN
 
-/* ... so we shared the big buffer */
-extern uint8_t nbd_buffer[];
-
 const char *nbd_option_to_string(uint32_t f)
 {
     static const char *const nbd_options[] = {
@@ -34,11 +31,13 @@ err_t protocol_handshake(struct nbd_server *server, struct nbd_client *client)
     struct nbd_new_option new_opt;
     struct nbd_fixed_new_option_reply fixed_new_option_reply;
     struct nbd_new_handshake new_hs;
+    uint8_t *nbd_buffer = client->nbd_buffer;
 
     new_hs.nbdmagic = htonll(NBD_MAGIC);
     new_hs.version = htonll(NBD_NEW_VERSION);
     new_hs.gflags = htons(server->gflags);
 
+    LOG("sock = %u\n", client->sock);
     size = send(client->sock, &new_hs, sizeof(struct nbd_new_handshake),
                 0);
     if (size < sizeof(struct nbd_new_handshake))
@@ -79,7 +78,7 @@ err_t protocol_handshake(struct nbd_server *server, struct nbd_client *client)
         }
 
         if (new_opt.optlen > 0) {
-            size = nbd_recv(client->sock, &nbd_buffer, new_opt.optlen, 0);
+            size = nbd_recv(client->sock, nbd_buffer, new_opt.optlen, 0);
             if (size < new_opt.optlen)
                 return -1;
             nbd_buffer[new_opt.optlen] = '\0';
@@ -92,7 +91,7 @@ err_t protocol_handshake(struct nbd_server *server, struct nbd_client *client)
                 struct nbd_export_name_option_reply handshake_finish;
 
                 if (new_opt.optlen > 0) {
-                    client->ctx = lwnbd_get_context((const char *)&nbd_buffer);
+                    client->ctx = lwnbd_get_context((const char *)nbd_buffer);
 
                     //                    if (client->ctx == NULL) {
                     //                        client->ctx = lwnbd_get_context_uri((const char *)&nbd_buffer);

@@ -11,6 +11,7 @@ stdenv.mkDerivation rec{
       python3Packages.docopt
       autoreconfHook
       ronn
+      libuv
       #wolfssl
     ] ++ checkInputs;
 

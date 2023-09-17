@@ -159,7 +159,7 @@ static int *lwnbd_server_cmd_start(struct lwnbd_config *conf, int length, int *r
 static int *lwnbd_rpc_handler(int fno, void *buffer, int length)
 {
 
-	int ret;
+    int ret;
     switch (fno) {
         case LWNBD_SERVER_CMD_START:
             return lwnbd_server_cmd_start(buffer, length, &ret);

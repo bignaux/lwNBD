@@ -29,6 +29,7 @@ lwnbd_server_t lwnbd_server_init(server_init init)
     }
 
     if (i == MAX_NUM_SERVERS) {
+        DEBUGLOG("MAX_NUM_SERVERS limit\n");
         return -1;
     }
 
@@ -37,20 +38,20 @@ lwnbd_server_t lwnbd_server_init(server_init init)
      */
     s = init();
     if (!s) {
-        // DEBUGLOG(stderr, "server registration function failed\n");
+        DEBUGLOG("server registration function failed\n");
         return -1;
     }
 
     /* Check for the minimum fields which must exist in the
      * server struct.
      */
-    if (s->start == NULL) {
-        // DEBUGLOG(stderr, "server must have a .start callback\n");
-        return -1;
-    }
+    //    if (s->start == NULL) {
+    //        // DEBUGLOG(stderr, "server must have a .start callback\n");
+    //        return -1;
+    //    }
 
     if (s->new == NULL) {
-        // DEBUGLOG(stderr, "server must have a .new callback\n");
+        DEBUGLOG("server must have a .new callback\n");
         return -1;
     }
 

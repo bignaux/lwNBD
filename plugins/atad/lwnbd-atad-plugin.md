@@ -1,7 +1,7 @@
 lwNBD-atad-plugin(1) -- Playstation 2 HDD plugin
 =============================================
 
-TARGETS : PlayStation 2
+TARGETS : PlayStation 2 IOP
 
 STATUS : DONE
 

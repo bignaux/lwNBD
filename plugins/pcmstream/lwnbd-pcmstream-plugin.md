@@ -2,7 +2,7 @@
 
 ## Usage : access PCM stream
 
-TARGETS : PlayStation 2
+TARGETS : PlayStation 2 IOP
 
 STATUS : WIP (speaker only)
 
@@ -23,8 +23,7 @@ pacmd load-module module-null-sink sink_name=playstation2 \
 pacmd update-sink-proplist playstation2 device.icon_name="audio-speakers"
 ```
 
-You can now set this new sink to stream you want to bridge or set as default sink in pavucontrol,
-(pavucontrol-qt label default as fallback, fix that) or use cli :
+You can now set this new sink to stream you want to bridge or set as default sink in your favorite pulseaudio ui (pavucontrol ...), here pacmd cli :
 
 ```shell
 pacmd set-default-sink playstation2
@@ -33,7 +32,7 @@ pacmd set-default-sink playstation2
 then pipe it to nbd
 
 ```shell
-parec -d playstation2.monitor | nbdcopy nbd://192.168.1.45/pcmstream
+parec -d playstation2.monitor | nbdcopy - nbd://192.168.1.45/pcmstream
 ```
 
 when finished, you can unload module.
