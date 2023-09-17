@@ -1,0 +1,1 @@
+OBJ += src/servers.o src/plugins.o src/contexts.o
