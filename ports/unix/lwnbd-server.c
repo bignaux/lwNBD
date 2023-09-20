@@ -29,8 +29,8 @@
  *
  * */
 
-extern struct lwnbd_plugin *memory_plugin_init(void);
-extern struct lwnbd_plugin *file_plugin_init(void);
+extern lwnbd_plugin_t *memory_plugin_init(void);
+extern lwnbd_plugin_t *file_plugin_init(void);
 // plugin_init plugins_table[] = {
 //		file_plugin_init,
 //		NULL
@@ -78,13 +78,13 @@ void on_work(uv_work_t *req)
     if (r)
         return;
 
+    // TODO : move to uv_buf_t
     mybat->c->nbd_buffer = (uint8_t *)calloc(NBD_BUFFER_LEN, sizeof(uint8_t));
+
     if (mybat->c->nbd_buffer == NULL) {
         perror("calloc:");
         return;
     }
-
-    LOG("a client connected.\n");
 
     while (r == 0) {
         switch (mybat->c->state) {
@@ -114,7 +114,6 @@ void on_work(uv_work_t *req)
 
 void on_new_connection(uv_stream_t *server, int status)
 {
-
     struct nbd_baton *mybat = (struct nbd_baton *)malloc(sizeof(struct nbd_baton));
     mybat->req.data = (void *)mybat;
     mybat->s = server->data;
@@ -125,32 +124,13 @@ void on_new_connection(uv_stream_t *server, int status)
         // error!
         return;
     }
-    fprintf(stderr, "New connection\n");
 
     mybat->client = (uv_tcp_t *)malloc(sizeof(uv_tcp_t));
     uv_tcp_init(uv_default_loop(), mybat->client);
     if (uv_accept(server, (uv_stream_t *)mybat->client) == 0) {
-        uv_os_fd_t fd;
-        uv_fileno((const uv_handle_t *)mybat->client, &fd);
-
-        fprintf(stderr, "Worker %d: Accepted fd %d\n", getpid(), fd);
-        mybat->c->sock = fd;
-
-        // Save the existing flags
-
-        int saved_flags = fcntl(fd, F_GETFL);
-
-        // Set the new flags with O_NONBLOCK masked out
-
-        fcntl(fd, F_SETFL, saved_flags & ~O_NONBLOCK);
-
-        /*
-         * Currently, NBD protocol implementation is synchronous :
-         * we need to create a client serving thread on client connection to deal with.
-         * We'd need proper finite state machine to go async.
-         * Then, we still need thread-safe operation. Check shared data.
-         *
-         */
+        uv_fileno((const uv_handle_t *)mybat->client, &mybat->c->sock);
+        LOG("Worker %d: Accepted fd %d\n", getpid(), mybat->c->sock);
+        uv_stream_set_blocking((uv_stream_t *)mybat->client, 1);
         uv_queue_work(uv_default_loop(), &mybat->req, on_work, on_after_work);
 
     } else {
@@ -161,15 +141,7 @@ void on_new_connection(uv_stream_t *server, int status)
 int main(int argc, const char **argv)
 {
     lwnbd_server_t nbdsrv;
-    lwnbd_plugin_t fileplg, memplg;
-
-    char data[512] = "some data to be read\n";
-    struct memory_config memh = {
-        .base = (uint64_t)&data,
-        .name = "data",
-        .size = 512,
-        .desc = "data buffer",
-    };
+    lwnbd_plugin_h fileplg, memplg;
 
     int i = atexit(coucou);
     if (i != 0) {
@@ -185,10 +157,25 @@ int main(int argc, const char **argv)
     //    signal(SIGINT, signal_callback_handler);
 
     /*
-     * Register a content plugin and configure it
-     * plugins can be share between different servers so they live autonomously.
+     * Register and configure some content plugins ...
+     * Plugins can be shared between different servers so they live autonomously.
      *
      */
+
+    /* NBD has no standard to get remote information about the server ?
+     * let's use memory plugin to create an export 'motd' with some useful infos.
+     */
+
+    char *data = calloc(1, 512);
+    sprintf(data, "%s version %s\n compiled on: %s", APP_NAME, APP_VERSION, CC_VERSION);
+    struct memory_config memh = {
+        .base = (uint64_t)data,
+        .name = "motd",
+        .size = 512, /* nbdcopy 'nbd://127.0.0.1/motd' - | tr -d '\000' */
+        .desc = "plain-text server information",
+    };
+    memplg = lwnbd_plugin_init(memory_plugin_init);
+    lwnbd_plugin_new(memplg, &memh);
 
     fileplg = lwnbd_plugin_init(file_plugin_init);
 
@@ -196,9 +183,6 @@ int main(int argc, const char **argv)
     for (int i = 1; i < argc; i++) {
         lwnbd_plugin_new(fileplg, argv[i]);
     }
-
-    memplg = lwnbd_plugin_init(memory_plugin_init);
-    lwnbd_plugin_new(memplg, &memh);
 
     /*
      * create a NBD server, and eventually configure it.

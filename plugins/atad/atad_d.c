@@ -42,7 +42,7 @@ static inline int atad_flush(void *handle, uint32_t flags)
     return ata_device_flush_cache(h->device);
 }
 
-static int atad_ctor(const void *pconfig, struct lwnbd_export *e)
+static int atad_ctor(const void *pconfig, lwnbd_export_t *e)
 {
     int device = *(int *)pconfig;
     ata_devinfo_t *dev_info = ata_get_devinfo(device);
@@ -99,7 +99,7 @@ static int atad_block_size(void *handle,
     return 0;
 }
 
-static struct lwnbd_plugin plugin = {
+static lwnbd_plugin_t plugin = {
     .name = "atad",
     .longname = "PlayStation 2 HDD via ATAD",
     .version = PACKAGE_VERSION,

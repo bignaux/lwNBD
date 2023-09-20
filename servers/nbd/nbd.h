@@ -56,14 +56,9 @@ struct nbd_client
 {
     int sock;
     int state;
-    struct lwnbd_context *ctx;
+    lwnbd_context_t *ctx;
     uint8_t *nbd_buffer;
 };
-
-/* tcp.c */
-// void listener(struct nbd_server *s);
-// int nbd_close(struct nbd_server *server);
-// int nbd_server_create(struct nbd_server *server);
 
 /* nbd.c */
 uint32_t nbd_server_get_gflags(struct nbd_server *h);

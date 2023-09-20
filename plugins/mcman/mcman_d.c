@@ -194,7 +194,7 @@ static int mcman_flush(void *handle, uint32_t flags)
     return 0;
 }
 
-static int mcman_ctor(const void *pconfig, struct lwnbd_export *e)
+static int mcman_ctor(const void *pconfig, lwnbd_export_t *e)
 {
     uint8_t device = *(uint8_t *)pconfig;
 
@@ -249,7 +249,7 @@ static int mcman_block_size(void *handle,
     return 0;
 }
 
-static struct lwnbd_plugin plugin = {
+static lwnbd_plugin_t plugin = {
     .name = "mcman",
     .longname = "PlayStation 2 MemoryCard via MCMAN",
     .version = PACKAGE_VERSION,

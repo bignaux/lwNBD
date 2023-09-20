@@ -10,6 +10,8 @@ generally, a RTP (or icecast and so) is used. Let's try NBD as alternative.
 
 ### need more explanation ...
 
+ffmpeg/ffplay
+
 ### Pulseaudio
 
 1/ A solution can be create a sink with [module-null-sink](https://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/User/Modules/#module-null-sink), then relay it

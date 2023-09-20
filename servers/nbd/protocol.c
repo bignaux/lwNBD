@@ -31,7 +31,7 @@ err_t transmission_phase(struct nbd_client *client)
     register uint64_t offset = 0;
     struct nbd_simple_reply reply;
     struct nbd_request request;
-    struct lwnbd_context *ctx = client->ctx;
+    lwnbd_context_t *ctx = client->ctx;
     uint8_t *nbd_buffer = client->nbd_buffer;
 
     if (ctx == NULL) {
@@ -106,13 +106,12 @@ err_t transmission_phase(struct nbd_client *client)
                     //                    DEBUGLOG("offset=%d bufblksz=%d sendflag=%d\n", offset, bufblksz, sendflag);
 
                     if (r == 0) {
-                        DEBUGLOG("send \n");
                         r = send(client->sock, nbd_buffer, byteread, sendflag);
                         if (r != byteread) {
                             LOG("NBD_CMD_READ : send failed r=%d byteread=%d\n", r, byteread);
                             break;
                         } else
-                            LOG("NBD_CMD_READ : send OK \n");
+                            DEBUGLOG("NBD_CMD_READ : send OK \n");
                         offset += bufblksz;
                         blkremains -= bufblksz;
                         retry = MAX_RETRIES;

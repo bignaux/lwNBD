@@ -10,6 +10,7 @@ CFLAGS = -Iinclude -std=c99 -Wall -Wfatal-errors
 DEBUG ?= 0
 
 APP_VERSION := $(shell git describe --always --tags)
+CC_VERSION := "$(CC) $(shell $(CC) -dumpversion)"
 TARGET ?= unix
 RONN = ronn
 MANPAGE = lwnbd.3

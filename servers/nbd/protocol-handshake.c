@@ -37,7 +37,6 @@ err_t protocol_handshake(struct nbd_server *server, struct nbd_client *client)
     new_hs.version = htonll(NBD_NEW_VERSION);
     new_hs.gflags = htons(server->gflags);
 
-    LOG("sock = %u\n", client->sock);
     size = send(client->sock, &new_hs, sizeof(struct nbd_new_handshake),
                 0);
     if (size < sizeof(struct nbd_new_handshake))
@@ -91,18 +90,13 @@ err_t protocol_handshake(struct nbd_server *server, struct nbd_client *client)
                 struct nbd_export_name_option_reply handshake_finish;
 
                 if (new_opt.optlen > 0) {
-                    client->ctx = lwnbd_get_context((const char *)nbd_buffer);
-
-                    //                    if (client->ctx == NULL) {
-                    //                        client->ctx = lwnbd_get_context_uri((const char *)&nbd_buffer);
-                    //                    }
-
+                    client->ctx = lwnbd_get_context_uri((const char *)nbd_buffer);
                 } else
                     client->ctx = lwnbd_get_context(server->defaultexport);
 
                 /* proto.md: If the server is unwilling to allow the export, it MUST terminate the session. */
                 if (client->ctx == NULL) {
-                    DEBUGLOG("find nothing to export.\n");
+                    LOG("find nothing to export.\n");
                     return -1;
                 }
 
@@ -145,7 +139,7 @@ err_t protocol_handshake(struct nbd_server *server, struct nbd_client *client)
                 fixed_new_option_reply.reply = htonl(NBD_REP_SERVER);
 
                 for (size_t i = 0; i < lwnbd_contexts_count(); i++) {
-                    struct lwnbd_context *context = lwnbd_get_context_i(i);
+                    lwnbd_context_t *context = lwnbd_get_context_i(i);
                     size_t name_len = strlen(context->name);
                     size_t desc_len = strlen(context->description);
                     uint32_t len;

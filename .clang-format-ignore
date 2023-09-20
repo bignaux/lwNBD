@@ -1,1 +1,3 @@
 ./include/nbd-protocol.h
+./src/yuarel.c
+./src/yuarel.h

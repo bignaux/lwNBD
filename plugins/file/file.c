@@ -102,7 +102,7 @@ static void file_open(void *handle, int readonly)
     //    return 0;
 }
 
-static int file_ctor(const void *pconfig, struct lwnbd_export *e)
+static int file_ctor(const void *pconfig, lwnbd_export_t *e)
 {
     struct handle *h;
     char *bname;
@@ -158,7 +158,7 @@ static int file_block_size(void *handle,
     return 0;
 }
 
-static struct lwnbd_plugin plugin = {
+static lwnbd_plugin_t plugin = {
     .name = "file",
     .longname =
         "lwnbd file plugin",

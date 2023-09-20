@@ -24,7 +24,7 @@ static int command_block_size(void *handle,
     return 0;
 }
 
-static struct lwnbd_plugin plugin = {
+static lwnbd_plugin_t plugin = {
     .name = "command",
     .version = PACKAGE_VERSION,
     .pread = command_pread,

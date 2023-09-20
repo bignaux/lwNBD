@@ -1,7 +1,8 @@
 ## Asynchronous API ?
 
 
- https://eli.thegreenplace.net/2017/concurrent-servers-part-1-introduction/
+* https://eli.thegreenplace.net/2017/concurrent-servers-part-1-introduction/
+* https://github.com/codepr/ev/tree/master
 
 ## PS2SDK Toolchain
 
@@ -17,6 +18,9 @@ EE : uint32_t => long unsigned int _> %ld
 ## workflow (see helloworld - wip)
 
 TODO : auto from the lwnbd build system.
+could add echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing/" >> /etc/apk/repositories && apk update
+
+
 
     PS2_WORKSPACE=~/devel/ps2
     cd $PS2_WORKSPACE
@@ -35,7 +39,7 @@ TODO : auto from the lwnbd build system.
     
     rm -f ./modules/network/lwNBD/lwnbdsvr.irx 
     make -C modules/network/lwNBD/ TARGET=iop clean && make LWNBD_DEBUG=1    
-    
+   
 ### commit on OPL
    
     dont forget to update lwNBD sha in download_lwNBD.sh and remove experimentale plugins.
@@ -121,10 +125,9 @@ BDM is another tentative to make a common interface for PS2 block device, acting
 
 ## idea, c'mon pick one (or more!)
 
-make oneliner like nbdcopy nbd://.../cmd/poweroff available like a bus.
+make oneliner like nbdcopy nbd://.../cmd/poweroff available like a bus , see @vates/nbd-client node stuff for bundle apps on phone ?
 mem/spu2 ... mc/1/filename.
 close Remotely Launch games https://github.com/ps2homebrew/Open-PS2-Loader/issues/418
-
 
 custom build (like nbdtty ...)
 

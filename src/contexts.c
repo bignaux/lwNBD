@@ -1,16 +1,15 @@
-#include "config.h"
 
 #include <lwnbd-context.h>
 #include <nbd-protocol.h>
 //#include <stdlib.h>
 #include <string.h>
 
-static struct lwnbd_context contexts[MAX_CONTEXTS];
+static lwnbd_context_t contexts[MAX_CONTEXTS];
 static context_state_t contexts_status[MAX_CONTEXTS];
 
-int lwnbd_add_context(struct lwnbd_plugin *p, struct lwnbd_export *e)
+int lwnbd_add_context(lwnbd_plugin_t *p, lwnbd_export_t *e)
 {
-    struct lwnbd_context *c;
+    lwnbd_context_t *c;
     uint32_t i;
     uint16_t eflags = NBD_FLAG_HAS_FLAGS;
     uint32_t minimum, preferred, maximum;
@@ -65,7 +64,7 @@ int lwnbd_add_context(struct lwnbd_plugin *p, struct lwnbd_export *e)
 }
 
 // TODO: workaround
-// struct lwnbd_context *lwnbd_contexts_return()
+// lwnbd_context_t *lwnbd_contexts_return()
 //{
 //	return contexts;
 //}
@@ -76,11 +75,10 @@ void lwnbd_dump_contexts()
 
     for (i = 0; i < MAX_CONTEXTS; i++) {
         if (contexts_status[i] != CONTEXT_FREE) {
-            printf("%s : %s\n", contexts[i].name, contexts[i].description);
+            LOG("%-32s: %s\n", contexts[i].name, contexts[i].description);
         }
     }
 }
-
 
 size_t lwnbd_contexts_count()
 {
@@ -94,7 +92,7 @@ size_t lwnbd_contexts_count()
     return i;
 }
 
-struct lwnbd_context *lwnbd_get_context_i(size_t i)
+lwnbd_context_t *lwnbd_get_context_i(size_t i)
 {
     return &contexts[i];
 }
@@ -102,22 +100,20 @@ struct lwnbd_context *lwnbd_get_context_i(size_t i)
 /* search for context by name
  * return NULL if not found any.
  */
-struct lwnbd_context *lwnbd_get_context(const char *contextname)
+lwnbd_context_t *lwnbd_get_context(const char *contextname)
 {
 
     //    if ( strlen(contextname) == 0)
     //    	return NULL;
-
+    DEBUGLOG("searched for \"%s\".\n", contextname);
     /*  a bit noob but since we don't have hole ... */
     for (uint8_t i = 0; i < lwnbd_contexts_count(); i++) {
-        struct lwnbd_context *ptr_ctx = lwnbd_get_context_i(i);
+        lwnbd_context_t *ptr_ctx = lwnbd_get_context_i(i);
         if (strncmp((ptr_ctx)->name, contextname, 32) == 0) {
-            //            DEBUGLOG("searched for \"%s\" ... found.\n", contextname);
+            DEBUGLOG("searched for \"%s\" ... found.\n", contextname);
             return ptr_ctx;
         }
     }
     //    DEBUGLOG("searched for \"%s\" ... not found.\n", contextname);
     return NULL;
 }
-
-// const struct nbdkit_context context = nbdkit_get_context (exps, i);

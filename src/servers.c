@@ -92,7 +92,7 @@ int lwnbd_server_new(lwnbd_server_t const handle, const void *pconfig)
 /* on nbdkit, this is done in main */
 // int lwnbd_server_plugin_config(lwnbd_server_t const handle, const char *name, const char *key, const char *value)
 //{
-//	struct lwnbd_plugin *p = nbd_server_get_plugin_by_name(handle, name);
+//	lwnbd_plugin_t *p = nbd_server_get_plugin_by_name(handle, name);
 //
 //	if (!p)
 //	{

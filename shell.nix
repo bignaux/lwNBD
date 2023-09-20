@@ -4,7 +4,7 @@ with import <nixpkgs> { };
 stdenv.mkDerivation rec{
   name = "lwNBD";
 
-  nativeBuildInputs = [ pkgconfig doxygen ];
+  nativeBuildInputs = [ pkg-config doxygen ];
 
   buildInputs =
     [
@@ -30,5 +30,6 @@ stdenv.mkDerivation rec{
     bridge-utils
     hdparm
     shellcheck
+   # libguestfs-with-appliance
   ];
 }

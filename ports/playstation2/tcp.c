@@ -5,6 +5,11 @@
 #define close(x) lwip_close(x)
 #endif
 
+/* tcp.c */
+// void listener(struct nbd_server *s);
+// int nbd_close(struct nbd_server *server);
+// int nbd_server_create(struct nbd_server *server);
+
 /*
  * This could later be independent of protocol implementation
  * to be shared between all TCP servers.

@@ -153,7 +153,7 @@ static inline int nbdtty_pread(void *handle, void *buf, uint32_t count,
 /*
  * pconfig could be the .buffer + .size, a path ...
  */
-static int nbdtty_ctor(const void *pconfig, struct lwnbd_export *e)
+static int nbdtty_ctor(const void *pconfig, lwnbd_export_t *e)
 {
     // TODO : move to right place
     iop_event_t event;
@@ -185,15 +185,6 @@ static int nbdtty_ctor(const void *pconfig, struct lwnbd_export *e)
     return 0;
 }
 
-static int64_t nbdtty_get_size(void *handle)
-{
-    /**
-     * since NBD doesn't support stream, we need to lie about size
-     * to have enough for our session
-     */
-    return 0x7FFFFFFFFFFFE00; // %512 = 0 for nbd-client compat
-}
-
 static int nbdtty_block_size(void *handle,
                              uint32_t *minimum, uint32_t *preferred, uint32_t *maximum)
 {
@@ -203,7 +194,7 @@ static int nbdtty_block_size(void *handle,
 
 // DeleteEventFlag(ev);
 
-static struct lwnbd_plugin plugin = {
+static lwnbd_plugin_t plugin = {
     .name = "tty",
     .longname = "lwnbd generic tty plugin",
     .version = PACKAGE_VERSION,
@@ -211,7 +202,7 @@ static struct lwnbd_plugin plugin = {
     .pread = nbdtty_pread,
     //    .pwrite = tty_pwrite,
     //    .flush = tty_flush,
-    .get_size = nbdtty_get_size,
+    .get_size = stream_get_size,
     .block_size = nbdtty_block_size,
 };
 

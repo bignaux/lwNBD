@@ -3,36 +3,36 @@
 
 #include <stdint.h>
 #include <lwnbd-context.h>
-// extern struct lwnbd_context contexts;
+// extern lwnbd_context_t contexts;
 #include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-static inline int plugin_pread(struct lwnbd_context const *const me, void *buf, uint32_t count, uint64_t offset,
+static inline int plugin_pread(lwnbd_context_t const *const me, void *buf, uint32_t count, uint64_t offset,
                                uint32_t flags)
 {
     return (*me->p->pread)(me->handle, buf, count, offset, flags);
 }
 
-static inline int plugin_pwrite(struct lwnbd_context const *const me, const void *buf, uint32_t count,
+static inline int plugin_pwrite(lwnbd_context_t const *const me, const void *buf, uint32_t count,
                                 uint64_t offset, uint32_t flags)
 {
     return (*me->p->pwrite)(me->handle, buf, count, offset, flags);
 }
 
-static inline int plugin_flush(struct lwnbd_context const *const me, uint32_t flags)
+static inline int plugin_flush(lwnbd_context_t const *const me, uint32_t flags)
 {
     return (*me->p->flush)(me->handle, flags);
 }
 
-static inline int plugin_trim(struct lwnbd_context const *const me, uint32_t count, uint64_t offset, uint32_t flags)
+static inline int plugin_trim(lwnbd_context_t const *const me, uint32_t count, uint64_t offset, uint32_t flags)
 {
     return (*me->p->trim)(me->handle, count, offset, flags);
 }
 
-static inline int plugin_zero(struct lwnbd_context const *const me, uint32_t count, uint64_t offset, uint32_t flags)
+static inline int plugin_zero(lwnbd_context_t const *const me, uint32_t count, uint64_t offset, uint32_t flags)
 {
     return (*me->p->zero)(me->handle, count, offset, flags);
 }

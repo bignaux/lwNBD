@@ -9,14 +9,14 @@
 extern "C" {
 #endif
 
-struct lwnbd_export
+typedef struct
 {
     char name[32];
     char description[64]; /* optional */
 
     /* lwnbd specific */
     void *handle; /* Plugin handle. */
-};
+} lwnbd_export_t;
 
 /* experimental */
 struct lwnbd_command
@@ -28,7 +28,14 @@ struct lwnbd_command
     int64_t size; /* size of result */
 };
 
-struct lwnbd_plugin
+/* A struct to hold the query string parameter values. */
+struct query_param
+{
+    char *key;
+    char *val;
+};
+
+typedef struct
 {
     /* private */
     uint64_t _struct_size;
@@ -64,19 +71,31 @@ struct lwnbd_plugin
 
     /* lwnbd specific after nbdkit compat */
 
-    int (*ctor)(const void *pconfig, struct lwnbd_export *e);      /* create new export from custom config */
+    int (*ctor)(const void *pconfig, lwnbd_export_t *e);           /* create new export from custom config */
     int (*ctrl)(void *handle, char *cmd, struct lwnbd_command *c); /* experimental */
-};
+    int (*query)(void *handle, struct query_param *params,
+                 int nb_params); /* experimental */
+
+} lwnbd_plugin_t;
 
 #define M1(x)       x##_##plugin_init
 #define FUNCINIT(x) M1(x)
 #define NBDKIT_REGISTER_PLUGIN(plugin)          \
-    struct lwnbd_plugin *                       \
+    lwnbd_plugin_t *                            \
     FUNCINIT(PLUGIN_NAME)(void)                 \
     {                                           \
         (plugin)._struct_size = sizeof(plugin); \
         return &(plugin);                       \
     }
+
+static inline int64_t stream_get_size(void *handle)
+{
+    /**
+     * since NBD doesn't support stream, we need to lie about size
+     * to have enough for our session
+     */
+    return 0x7FFFFFFFFFFFE00; // %512 = 0 for nbd-client compat
+}
 
 #ifdef __cplusplus
 }

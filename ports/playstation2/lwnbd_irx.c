@@ -53,21 +53,21 @@ static int config(struct lwnbd_config *config)
         //    print_memorymap();
 
 #ifdef PLUGIN_ATAD
-    lwnbd_plugin_t atadplg = lwnbd_plugin_init(atad_plugin_init);
+    lwnbd_plugin_h atadplg = lwnbd_plugin_init(atad_plugin_init);
     for (int i = 0; i < 2; i++) {
         lwnbd_plugin_new(atadplg, &i);
     }
 #endif
 
 #ifdef PLUGIN_MCMAN
-    lwnbd_plugin_t mcmanplg = lwnbd_plugin_init(mcman_plugin_init);
+    lwnbd_plugin_h mcmanplg = lwnbd_plugin_init(mcman_plugin_init);
     for (int i = 0; i < 2; i++) {
         lwnbd_plugin_new(mcmanplg, &i);
     }
 #endif
 
 #ifdef PLUGIN_MEMORY
-    lwnbd_plugin_t memplg = lwnbd_plugin_init(memory_plugin_init);
+    lwnbd_plugin_h memplg = lwnbd_plugin_init(memory_plugin_init);
     struct memory_config bios = {
         .base = 0x1FC00000,
         .size = 0x400000, // GetSizeFromDelay(SSBUSC_DEV_BOOTROM)
@@ -93,12 +93,12 @@ static int config(struct lwnbd_config *config)
     //#endif
 
 #ifdef PLUGIN_BDM
-    lwnbd_plugin_t bdmplg = lwnbd_plugin_init(bdm_plugin_init);
+    lwnbd_plugin_h bdmplg = lwnbd_plugin_init(bdm_plugin_init);
     lwnbd_plugin_new(bdmplg, NULL);
 #endif
 
 #ifdef PLUGIN_PCMSTREAM
-    lwnbd_plugin_t pcmplg = lwnbd_plugin_init(pcmstream_plugin_init);
+    lwnbd_plugin_h pcmplg = lwnbd_plugin_init(pcmstream_plugin_init);
     struct pcmstream_config pcmc = {
         .name = "speakers",
         .desc = "stereo speaker",

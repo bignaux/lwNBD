@@ -24,7 +24,7 @@
 #define PLUGIN_NAME libhdd
 #define MAX_DEVICES 2
 static unsigned char IOBuffer[1024] __attribute__((aligned(64)));
-static struct lwnbd_plugin plugin;
+static lwnbd_plugin_t plugin;
 
 struct handle
 {
@@ -80,7 +80,7 @@ void hdd_load(void)
     }
 }
 
-static struct lwnbd_plugin plugin = {
+static lwnbd_plugin_t plugin = {
     .name = "libhdd",
     .longname = "PlayStation 2 HDD via libhdd",
     .version = PACKAGE_VERSION,

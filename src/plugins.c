@@ -14,13 +14,13 @@ typedef enum {
     //	PLUGIN_INUSE,
 } plugin_state_t;
 
-static struct lwnbd_plugin *plugins[MAX_NUM_PLUGINS];
+static lwnbd_plugin_t *plugins[MAX_NUM_PLUGINS];
 static plugin_state_t plugins_status[MAX_NUM_PLUGINS];
 
-int lwnbd_plugin_new(lwnbd_plugin_t const plugin, const void *pconfig)
+int lwnbd_plugin_new(lwnbd_plugin_h const plugin, const void *pconfig)
 {
-    struct lwnbd_plugin *p = plugins[plugin];
-    struct lwnbd_export e;
+    lwnbd_plugin_t *p = plugins[plugin];
+    lwnbd_export_t e;
 
     if (p->ctor == NULL) {
         return -1;
@@ -36,9 +36,9 @@ int lwnbd_plugin_new(lwnbd_plugin_t const plugin, const void *pconfig)
     return 0;
 }
 
-int lwnbd_plugin_config(lwnbd_plugin_t const plugin, const char *key, const char *value)
+int lwnbd_plugin_config(lwnbd_plugin_h const plugin, const char *key, const char *value)
 {
-    struct lwnbd_plugin *p = plugins[plugin];
+    lwnbd_plugin_t *p = plugins[plugin];
     const char *lkey;
 
     if (p->config == NULL) {
@@ -68,9 +68,9 @@ int lwnbd_plugin_config(lwnbd_plugin_t const plugin, const char *key, const char
  * TODO : fix return err !!
  *
  * */
-lwnbd_plugin_t lwnbd_plugin_init(plugin_init init)
+lwnbd_plugin_h lwnbd_plugin_init(plugin_init init)
 {
-    struct lwnbd_plugin *p;
+    lwnbd_plugin_t *p;
     uint32_t i;
 
     for (i = 0; i < MAX_NUM_PLUGINS; i++) {
@@ -84,7 +84,7 @@ lwnbd_plugin_t lwnbd_plugin_init(plugin_init init)
     }
 
     /* Call the initialization function which returns the address of the
-     * plugin's own 'struct lwnbd_plugin'.
+     * plugin's own 'lwnbd_plugin_t'.
      */
     p = init();
     if (!p) {
@@ -114,7 +114,7 @@ lwnbd_plugin_t lwnbd_plugin_init(plugin_init init)
     return i;
 }
 
-/*struct lwnbd_plugin *get_plugin_by_name(lwnbd_server_t const handle, const char *name)
+/*lwnbd_plugin_t *get_plugin_by_name(lwnbd_server_t const handle, const char *name)
 {
     for (uint32_t i = 0; i < MAX_NUM_PLUGINS; i++) {
         if (plugins_status[i] == PLUGIN_CREATED) {

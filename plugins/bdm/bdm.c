@@ -32,7 +32,7 @@ static inline int bdm_flush(void *handle, uint32_t flags)
     return 0;
 }
 
-static int bdm_ctor(const void *pconfig, struct lwnbd_export *e)
+static int bdm_ctor(const void *pconfig, lwnbd_export_t *e)
 {
     struct block_device **pbd;
     struct handle *h = &handles[0];
@@ -77,7 +77,7 @@ static int64_t bdm_get_size(void *handle)
     return (int64_t)d->sectorSize * d->sectorCount;
 }
 
-static struct lwnbd_plugin plugin = {
+static lwnbd_plugin_t plugin = {
     .name = "bdm",
     .longname = "PlayStation 2 BDM plugin",
     .version = PACKAGE_VERSION,

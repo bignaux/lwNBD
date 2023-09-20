@@ -17,6 +17,14 @@ typedef enum {
 static struct pcmstream_config handles[PCM_DRIVER_MAX_DEVICES];
 static int handle_in_use[PCM_DRIVER_MAX_DEVICES];
 
+static inline int pcmstream_set_volume(void *handle, char volume)
+{
+    struct pcmstream_config *h = handle;
+    h->volume = volume;
+    audsrv_set_volume(h->volume);
+    return 0;
+}
+
 static inline int pcmstream_pread(void *handle, void *buf, uint32_t count,
                                   uint64_t offset, uint32_t flags)
 {
@@ -39,7 +47,7 @@ static inline int pcmstream_flush(void *handle, uint32_t flags)
     return 0;
 }
 
-static int pcmstream_ctor(const void *pconfig, struct lwnbd_export *e)
+static int pcmstream_ctor(const void *pconfig, lwnbd_export_t *e)
 {
     uint32_t i;
     struct pcmstream_config *h;
@@ -70,15 +78,6 @@ static int pcmstream_ctor(const void *pconfig, struct lwnbd_export *e)
     return 0;
 }
 
-static int64_t pcmstream_get_size(void *handle)
-{
-    /**
-     * since NBD doesn't support stream, we need to lie about size
-     * to have enough for our session
-     */
-    return 0x7FFFFFFFFFFFE00; // %512 = 0 for nbd-client compat
-}
-
 static int pcmstream_block_size(void *handle,
                                 uint32_t *minimum, uint32_t *preferred, uint32_t *maximum)
 {
@@ -86,7 +85,7 @@ static int pcmstream_block_size(void *handle,
     return 0;
 }
 
-static struct lwnbd_plugin plugin = {
+static lwnbd_plugin_t plugin = {
     .name = "pcmstream",
     .longname = "lwnbd generic pcmstream plugin",
     .version = PACKAGE_VERSION,
@@ -94,7 +93,7 @@ static struct lwnbd_plugin plugin = {
     .pread = pcmstream_pread,
     .pwrite = pcmstream_pwrite,
     .flush = pcmstream_flush,
-    .get_size = pcmstream_get_size,
+    .get_size = stream_get_size,
     .block_size = pcmstream_block_size,
 };
 

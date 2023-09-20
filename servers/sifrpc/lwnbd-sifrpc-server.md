@@ -5,6 +5,12 @@ TARGETS : PlayStation 2
 
 STATUS : experimental
 
+```mermaid
+sequenceDiagram
+EE->>IOP: SifCallRPC()
+IOP->>IOP: Process
+IOP-->>EE: 
+```
 
 # The Library Hierarchy 
 

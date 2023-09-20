@@ -9,11 +9,14 @@ extern "C" {
 
 /* content plugins */
 
-typedef uint32_t lwnbd_plugin_t;
-typedef struct lwnbd_plugin *(*plugin_init)(void);
-int lwnbd_plugin_config(lwnbd_plugin_t const plugin, const char *key, const char *value);
-int lwnbd_plugin_new(lwnbd_plugin_t const plugin, const void *pconfig);
-lwnbd_plugin_t lwnbd_plugin_init(plugin_init init);
+
+#include "lwnbd-plugin.h" // temporary, fix with some lwnbd_handler_t stuff ...
+
+typedef uint32_t lwnbd_plugin_h;
+typedef lwnbd_plugin_t *(*plugin_init)(void);
+int lwnbd_plugin_config(lwnbd_plugin_h const plugin, const char *key, const char *value);
+int lwnbd_plugin_new(lwnbd_plugin_h const plugin, const void *pconfig);
+lwnbd_plugin_h lwnbd_plugin_init(plugin_init init);
 
 /* server plugins */
 

@@ -38,7 +38,7 @@ static inline int memory_flush(void *handle, uint32_t flags)
     return 0;
 }
 
-static int memory_ctor(const void *pconfig, struct lwnbd_export *e)
+static int memory_ctor(const void *pconfig, lwnbd_export_t *e)
 {
     uint32_t i;
     struct memory_config *h;
@@ -73,7 +73,31 @@ static int memory_block_size(void *handle,
     return 0;
 }
 
-static struct lwnbd_plugin plugin = {
+#include <ctype.h>
+static char *strupr(char s[])
+{
+    char *p;
+
+    for (p = s; *p; ++p)
+        *p = toupper(*p);
+
+    return (s);
+}
+
+static int memory_query(void *handle, struct query_param *params, int nb_params)
+{
+    struct memory_config *h = handle;
+    while (nb_params-- > 0) {
+        LOG("%s\n", params[nb_params].key);
+        if (0 == strcmp(params[nb_params].key, "strupr")) {
+            LOG("strupr \n");
+            strupr((char *)h->base);
+        }
+    }
+    return 0;
+}
+
+static lwnbd_plugin_t plugin = {
     .name = "memory",
     .longname = "lwnbd generic memory plugin",
     .version = PACKAGE_VERSION,
@@ -83,6 +107,7 @@ static struct lwnbd_plugin plugin = {
     .flush = memory_flush,
     .get_size = memory_get_size,
     .block_size = memory_block_size,
+    .query = memory_query,
 };
 
 NBDKIT_REGISTER_PLUGIN(plugin)

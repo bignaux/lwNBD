@@ -1,6 +1,8 @@
 #ifndef LWNBD_CONTEXT_H
 #define LWNBD_CONTEXT_H
 
+#include "config.h"
+
 #include <lwnbd.h>
 #include <lwnbd-plugin.h>
 //#include <stdlib.h>
@@ -16,10 +18,10 @@ typedef enum {
     //	CONTEXT_INUSE,
 } context_state_t;
 
-struct lwnbd_context
+typedef struct
 {
-    void *handle;           /* Plugin handle. */
-    struct lwnbd_plugin *p; /* Plugin that provided handle. */
+    void *handle;      /* Plugin handle. */
+    lwnbd_plugin_t *p; /* Plugin that provided handle. */
     char name[32];
     char description[64];
     int64_t exportsize;
@@ -27,15 +29,24 @@ struct lwnbd_context
     uint32_t minimum_block_size;
     uint32_t preferred_block_size;
     uint32_t maximum_block_size;
-};
+} lwnbd_context_t;
 
 /* contexts.c */
 size_t lwnbd_contexts_count();
-int lwnbd_add_context(struct lwnbd_plugin *p, struct lwnbd_export *e);
-struct lwnbd_context *lwnbd_get_context(const char *contextname);
-struct lwnbd_context *lwnbd_get_context_uri(const char *uri, struct lwnbd_context *ctx);
-struct lwnbd_context *lwnbd_get_context_i(size_t i);
+int lwnbd_add_context(lwnbd_plugin_t *p, lwnbd_export_t *e);
+lwnbd_context_t *lwnbd_get_context(const char *contextname);
+
+lwnbd_context_t *lwnbd_get_context_i(size_t i);
 void lwnbd_dump_contexts();
+
+#ifndef NBD_URI
+lwnbd_context_t *lwnbd_get_context_uri(const char *uri);
+#else
+static inline lwnbd_context_t *lwnbd_get_context_uri(const char *uri)
+{
+    return lwnbd_get_context(uri);
+};
+#endif
 
 #ifdef __cplusplus
 }
