@@ -28,7 +28,7 @@ int32_t nbd_recv(int s, void *mem, size_t len, int flags)
         ssize_t bytesRead = recv(s, (void *)((uint8_t *)mem + totalRead), left, flags);
         DEBUGLOG("bytesRead = %zd/%u\n", bytesRead, left); // %u
         if (bytesRead <= 0) {
-            perror("nbd_recv:");
+            //            perror("nbd_recv:");
             return bytesRead;
         }
         left -= bytesRead;
@@ -38,7 +38,7 @@ int32_t nbd_recv(int s, void *mem, size_t len, int flags)
     return totalRead;
 }
 
-int client_init(struct nbd_server *s, struct nbd_client *c)
+static int client_init(struct nbd_server *s, struct nbd_client *c)
 {
     if (c->sock < 0)
         return -1;
@@ -56,6 +56,39 @@ int client_init(struct nbd_server *s, struct nbd_client *c)
         }
     }
     return 0;
+}
+
+/* Transitional workaround */
+static int nbd_synchronous_client_thread_cb(void *handle, void *client)
+{
+    struct nbd_server *s = handle;
+    struct nbd_client *c = client;
+
+    register err_t r = client_init(s, c);
+    if (r)
+        return -1;
+
+    while (r == 0) {
+        switch (c->state) {
+            case HANDSHAKE:
+                r = protocol_handshake(s, c);
+                if (r == -1) {
+                    LOG("an error occured during negotiation phase.\n");
+                }
+                break;
+            case TRANSMISSION:
+                r = transmission_phase(c);
+                if (r == -1)
+                    LOG("an error occured during transmission phase.\n");
+                break;
+            case ABORT:
+                r = -1;
+                break;
+            default:
+                break;
+        }
+    }
+    return r;
 }
 
 void nbd_server_set_preinit(struct nbd_server *h, int preinit)
@@ -133,6 +166,7 @@ static struct lwnbd_server server = {
     .new = nbd_new,
     .config = nbd_config,
     .ctor = nbd_ctor,
+    .run = nbd_synchronous_client_thread_cb,
 };
 
 NBDKIT_REGISTER_SERVER(server)

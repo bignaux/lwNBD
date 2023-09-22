@@ -9,6 +9,7 @@ struct memory_config
     intptr_t size;
     char name[32];
     char desc[64]; /* export description */
+    /* TODO readonly ? */
 };
 
 #endif /* PLUGINS_MEMORY_H_ */

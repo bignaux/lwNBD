@@ -21,11 +21,11 @@ Eventually, use [ps2mcfs](https://github.com/FranciscoDA/ps2mcfs) to mount your 
 
     $ mkdir -p ps2/mc0
     $ fuseps2mc /dev/nbd2 ps2/mc0
+
+When finished, umount & disconnect :
+
     $ fusermount3 -u ps2/mc0
     $ nbd-client -d /dev/nbd2
-
-Note : ps2mcfs has no write feature at the moment.
-    
 
 one-liner backup :
 

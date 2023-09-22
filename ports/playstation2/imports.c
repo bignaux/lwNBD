@@ -126,11 +126,13 @@ sysclib_IMPORTS_start
 I_memcpy
 I_memset
 I_sprintf
+I_strchr
+I_strcmp
 I_strcpy
 I_strlen
 I_strncmp
 I_strncpy
-I_strcmp
+I_toupper
 sysclib_IMPORTS_end
 
 #ifdef PLUGIN_MCMAN

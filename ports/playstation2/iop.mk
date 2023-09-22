@@ -14,9 +14,10 @@ CC = $(IOP_CC)
 
 BIN = lwnbdsvr.irx
 PORT_DIR = ports/playstation2
-OBJ += $(PORT_DIR)/lwnbd_irx.o $(PORT_DIR)/exports.o $(PORT_DIR)/imports.o $(PORT_DIR)/ioplib.o
+OBJ += $(PORT_DIR)/lwnbd_irx.o $(PORT_DIR)/exports.o $(PORT_DIR)/imports.o $(PORT_DIR)/ioplib.o $(PORT_DIR)/tcp.o
 INCS += -I$(PORT_DIR)/include -include $(PORT_DIR)/ps2sdk-compat.h -DAPP_NAME=\"lwnbdsvr\"
 
+.SILENT: $(OBJ)
 all: $(BIN)
 
 # only suitable for https://github.com/ps2dev/ps2sdk-ports/

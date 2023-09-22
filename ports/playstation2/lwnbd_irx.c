@@ -13,10 +13,15 @@
  *
  */
 
-#include <lwnbd.h>
-#include "irx_imports.h"
 #include "ioplib.h"
+#include "irx_imports.h"
 #include <config.h>
+#include <lwnbd.h>
+
+/* tcp.c */
+extern void listener(struct nbd_server *s);
+extern int nbd_close(int socket);
+extern int nbd_server_create(struct nbd_server *server);
 
 IRX_ID(APP_NAME, 1, 1);
 extern struct irx_export_table _exp_lwnbd;
@@ -29,7 +34,7 @@ enum LWNBD_SERVER_CMD {
     LWNBD_SERVER_CMD_STOP,
 };
 
-static int enable = 0;
+static int configured = 0;
 
 struct lwnbd_config
 {
@@ -42,7 +47,24 @@ struct lwnbd_config
 // new bug : issue when config already done, write permission can't be enable back.
 static int config(struct lwnbd_config *config)
 {
+    /*
+     * create a NBD server, and eventually configure it.
+     *
+     */
+    nbdsrv = lwnbd_server_init(nbd_server_init);
+
+    struct nbd_server mynbd = {
+        .port = 10809,
+        .max_retry = MAX_RETRIES,
+        .gflags = (NBD_FLAG_FIXED_NEWSTYLE | NBD_FLAG_NO_ZEROES),
+        .preinit = 0,
+        //		.readonly = config->readonly ? ,
+    };
+    lwnbd_server_new(nbdsrv, &mynbd);
     lwnbd_server_config(nbdsrv, "default-export", config->defaultexport);
+
+    nbd_server_create(&mynbd);
+
     if (config->readonly)
         lwnbd_server_config(nbdsrv, "readonly", NULL);
 
@@ -119,23 +141,16 @@ static int *lwnbd_server_cmd_start(struct lwnbd_config *conf, int length, int *r
 {
     iop_thread_t nbd_thread;
 
-    LOG("LWNBD_SERVER_CMD_START.\n");
-    nbdsrv = lwnbd_server_init(nbd_server_init);
-    if (nbdsrv < 0) {
-        LOG("LWNBD_SERVER_CMD_START failed init server.\n");
-        *ret = -1;
-        return ret;
+    if (configured == 0) {
+        config(conf);
+        configured = 1;
     }
 
-    if (enable == 0) {
-        config(conf);
-        enable = 1;
-    }
-    LOG("LWNBD_SERVER_CMD_START 2.\n");
+    DEBUGLOG("LWNBD_SERVER_CMD_START 2.\n");
 
     nbd_thread.attr = TH_C;
     nbd_thread.option = 0;
-    nbd_thread.thread = (void *)lwnbd_server_start;
+    nbd_thread.thread = (void *)listener;
     nbd_thread.stacksize = 0x800;
     nbd_thread.priority = 0x10;
 
@@ -158,7 +173,6 @@ static int *lwnbd_server_cmd_start(struct lwnbd_config *conf, int length, int *r
  * */
 static int *lwnbd_rpc_handler(int fno, void *buffer, int length)
 {
-
     int ret;
     switch (fno) {
         case LWNBD_SERVER_CMD_START:
@@ -168,7 +182,9 @@ static int *lwnbd_rpc_handler(int fno, void *buffer, int length)
             // TODO
             TerminateThread(nbdThreadID);
             DeleteThread(nbdThreadID);
-            lwnbd_server_stop(nbdsrv);
+            //            nbd_close(int socket)
+            //            lwnbd_server_stop(nbdsrv);
+
             break;
         default:
             ret = -ENXIO;

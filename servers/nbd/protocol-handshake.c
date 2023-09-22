@@ -90,7 +90,7 @@ err_t protocol_handshake(struct nbd_server *server, struct nbd_client *client)
                 struct nbd_export_name_option_reply handshake_finish;
 
                 if (new_opt.optlen > 0) {
-                    client->ctx = lwnbd_get_context_uri((const char *)nbd_buffer);
+                    client->ctx = lwnbd_get_context_uri((char *)nbd_buffer);
                 } else
                     client->ctx = lwnbd_get_context(server->defaultexport);
 

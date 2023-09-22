@@ -139,6 +139,19 @@ int lwnbd_server_dump(lwnbd_server_t const handle)
     return 0;
 }
 
+void lwnbd_server_run(lwnbd_server_t const handle, void *client)
+{
+    struct server_instance *si = &servers[handle];
+    struct lwnbd_server *s = si->s;
+    server_state_t st = servers_status[handle];
+
+    if (st != SRV_STOPPED)
+        return;
+
+    st = SRV_STARTED;
+    s->run(si->handle, client);
+}
+
 /* SRV_STOPPED -> SRV_STARTED */
 void lwnbd_server_start(lwnbd_server_t const handle)
 {

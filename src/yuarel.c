@@ -19,69 +19,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include <stdlib.h>
+
+/*
+ * Stripped for lwNBD use (server) by Ronan Bignaux
+ */
+
+//#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "yuarel.h"
-
-/**
- * Parse a non null terminated string into an integer.
- *
- * str: the string containing the number.
- * len: Number of characters to parse.
- */
-static inline int
-natoi(const char *str, size_t len)
-{
-	int i, r = 0;
-	for (i = 0; i < len; i++) {
-		r *= 10;
-		r += str[i] - '0';
-	}
-
-	return r;
-}
-
-/**
- * Check if a URL is relative (no scheme and hostname).
- *
- * url: the string containing the URL to check.
- *
- * Returns 1 if relative, otherwise 0.
- */
-static inline int
-is_relative(const char *url)
-{
-	return (*url == '/') ? 1 : 0;
-}
-
-/**
- * Parse the scheme of a URL by inserting a null terminator after the scheme.
- *
- * str: the string containing the URL to parse. Will be modified.
- *
- * Returns a pointer to the hostname on success, otherwise NULL.
- */
-static inline char *
-parse_scheme(char *str)
-{
-	char *s;
-
-	/* If not found or first in string, return error */
-	s = strchr(str, ':');
-	if (s == NULL || s == str) {
-		return NULL;
-	}
-
-	/* If not followed by two slashes, return error */
-	if (s[1] == '\0' || s[1] != '/' || s[2] == '\0' || s[2] != '/') {
-		return NULL;
-	}
-
-	*s = '\0'; // Replace ':' with NULL
-
-	return s + 3;
-}
 
 /**
  * Find a character in a string, replace it with '\0' and return the next
@@ -123,7 +69,8 @@ find_query(char *str)
 static inline char *
 find_path(char *str)
 {
-	return find_and_terminate(str, '/');
+	char *strt = find_and_terminate(str, '/');
+	return (strt == NULL) ? str : strt;
 }
 
 /**
@@ -149,74 +96,9 @@ yuarel_parse(struct yuarel *url, char *u)
 	/* (Query) */
 	url->query = find_query(u);
 
-	/* Relative URL? Parse scheme and hostname */
-	if (!is_relative(u)) {
-		/* Scheme */
-		url->scheme = u;
-		u = parse_scheme(u);
-		if (u == NULL) {
-			return -1;
-		}
 
-		/* Host */
-		if ('\0' == *u) {
-			return -1;
-		}
-		url->host = u;
-
-		/* (Path) */
-		url->path = find_path(u);
-
-		/* (Credentials) */
-		u = strchr(url->host, '@');
-		if (NULL != u) {
-			/* Missing credentials? */
-			if (u == url->host) {
-				return -1;
-			}
-
-			url->username = url->host;
-			url->host = u + 1;
-			*u = '\0';
-
-			u = strchr(url->username, ':');
-			if (NULL == u) {
-				return -1;
-			}
-
-			url->password = u + 1;
-			*u = '\0';
-		}
-
-		/* Missing hostname? */
-		if ('\0' == *url->host) {
-			return -1;
-		}
-
-		/* (Port) */
-		u = strchr(url->host, ':');
-		if (NULL != u && (NULL == url->path || u < url->path)) {
-			*(u++) = '\0';
-			if ('\0' == *u) {
-				return -1;
-			}
-
-			if (url->path) {
-				url->port = natoi(u, url->path - u - 1);
-			} else {
-				url->port = atoi(u);
-			}
-		}
-
-		/* Missing hostname? */
-		if ('\0' == *url->host) {
-			return -1;
-		}
-	} else {
-		/* (Path) */
-		url->path = find_path(u);
-	}
-
+	/* (Path) */
+	url->path = find_path(u);
 	return 0;
 }
 

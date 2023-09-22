@@ -6,6 +6,7 @@
 /* why did i do that here ? */
 #include "../../plugins/memory/memory.h"
 #include "../../plugins/pcmstream/pcmstream.h"
+#include "../../servers/nbd/nbd.h"
 
 int GetSizeFromDelay(int device);
 void print_memorymap();

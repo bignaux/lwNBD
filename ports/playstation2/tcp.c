@@ -1,14 +1,9 @@
-#include "nbd.h"
+#include "../../servers/nbd/nbd.h"
 #include <errno.h>
 
 #ifdef __PS2SDK_SYS_SOCKET_H__
 #define close(x) lwip_close(x)
 #endif
-
-/* tcp.c */
-// void listener(struct nbd_server *s);
-// int nbd_close(struct nbd_server *server);
-// int nbd_server_create(struct nbd_server *server);
 
 /*
  * This could later be independent of protocol implementation
@@ -24,20 +19,19 @@
  *
  * TODO : check alignment and move per-plateform if specific define ALIGMENT
  */
-// uint8_t nbd_buffer[NBD_BUFFER_LEN] __attribute__((aligned(16)));
+uint8_t nbd_buffer[NBD_BUFFER_LEN] __attribute__((aligned(16)));
 
 
-int nbd_close(struct nbd_server *server)
+int nbd_close(int socket)
 {
     DEBUGLOG("close server socket\n");
-    return close(server->socket);
+    return close(socket);
 }
 
 int nbd_server_create(struct nbd_server *server)
 {
     struct sockaddr_in peer;
     register err_t r;
-
 
     peer.sin_family = AF_INET;
     peer.sin_port = htons(nbd_server_get_port(server));
@@ -76,60 +70,27 @@ error_trap:
     return -1;
 }
 
-void listener(struct nbd_server *s)
+void listener(lwnbd_server_t const *handle)
 {
     register err_t r;
     struct nbd_client c;
     struct sockaddr peer;
     socklen_t addrlen = sizeof(struct sockaddr);
 
+    c.nbd_buffer = nbd_buffer;
+
     while (1) {
 
         // blocking
         c.sock = accept(s->socket, &peer, &addrlen);
-        r = client_init(s, &c);
-        if (r)
-            break;
 
         LOG("a client connected.\n");
 
-        while (r == 0) {
-            switch (c.state) {
-                case HANDSHAKE:
-                    r = protocol_handshake(s, &c);
-                    if (r == -1) {
-                        LOG("an error occured during negotiation_phase phase.\n");
-                    }
-                    break;
-                case TRANSMISSION:
-                    r = transmission_phase(&c);
-                    if (r == -1)
-                        LOG("an error occured during transmission phase.\n");
-                    break;
-                case ABORT:
-                    r = -1;
-                    break;
-                default:
-                    break;
-            }
-        }
+
+        // the abstracted blocking loop
+        lwnbd_server_run(*s, &c);
+
         close(c.sock);
         LOG("a client disconnected.\n\n\n");
     }
 }
-
-/*
-static int nbd_start(void *handle)
-{
-    struct nbd_server *h = handle;
-    nbd_server_create(h);
-    listener(h);
-    return 0;
-}
-
-static int nbd_stop(void *handle)
-{
-    struct nbd_server *h = handle;
-    return nbd_close(h);
-}
-*/

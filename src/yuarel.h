@@ -19,6 +19,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+/*
+ * Stripped for lwNBD use (server) by Ronan Bignaux
+ */
+
 #ifndef INC_YUAREL_H
 #define INC_YUAREL_H
 
@@ -36,11 +41,6 @@ extern "C" {
  */
 struct yuarel
 {
-    char *scheme;   /* scheme, without ":" and "//" */
-    char *username; /* username, default: NULL */
-    char *password; /* password, default: NULL */
-    char *host;     /* hostname or IP address */
-    int port;       /* port, default: 0 */
     char *path;     /* path, without leading "/", default: NULL */
     char *query;    /* query, default: NULL */
     char *fragment; /* fragment, default: NULL */

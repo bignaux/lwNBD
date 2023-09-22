@@ -9,6 +9,7 @@
  *
  *
  *   A simple example of lwnbd library usage.
+ *
  */
 
 #include <assert.h>
@@ -55,87 +56,63 @@ void on_close(uv_handle_t *handle)
     free(handle);
 }
 
-/* see http://docs.libuv.org/en/v1.x/guide/utilities.html#baton */
-struct nbd_baton
-{
-    uv_work_t req;
-    uv_tcp_t *client;
-    struct nbd_server *s;
-    struct nbd_client *c;
-};
-
 void on_after_work(uv_work_t *req, int status)
 {
     free(req);
 }
 
+/*
+ *  client thread
+ *
+ */
 void on_work(uv_work_t *req)
 {
-    struct nbd_baton *mybat = (struct nbd_baton *)req->data;
-    register err_t r;
+    /* a bit of headache but avoid a baton */
+    uv_stream_t *server = (uv_stream_t *)req->data;
+    lwnbd_server_t *s = (lwnbd_server_t *)server->data;
 
-    r = client_init(mybat->s, mybat->c);
-    if (r)
+    uv_tcp_t *client = (uv_tcp_t *)malloc(sizeof(uv_tcp_t));
+    uv_tcp_init(uv_default_loop(), client);
+
+    if (uv_accept(server, (uv_stream_t *)client) == 0) {
+        uv_stream_set_blocking((uv_stream_t *)client, 1);
+    } else {
+        uv_close((uv_handle_t *)client, on_close);
         return;
+    }
+
+    struct nbd_client *c = (struct nbd_client *)malloc(sizeof(struct nbd_client));
+    uv_fileno((const uv_handle_t *)client, &c->sock);
+    LOG("Worker %d: Accepted fd %d\n", getpid(), c->sock);
 
     // TODO : move to uv_buf_t
-    mybat->c->nbd_buffer = (uint8_t *)calloc(NBD_BUFFER_LEN, sizeof(uint8_t));
+    c->nbd_buffer = (uint8_t *)calloc(NBD_BUFFER_LEN, sizeof(uint8_t));
 
-    if (mybat->c->nbd_buffer == NULL) {
+    if (c->nbd_buffer == NULL) {
         perror("calloc:");
+        free(c);
         return;
     }
 
-    while (r == 0) {
-        switch (mybat->c->state) {
-            case HANDSHAKE:
-                r = protocol_handshake(mybat->s, mybat->c);
-                if (r == -1) {
-                    LOG("an error occured during negotiation phase.\n");
-                }
-                break;
-            case TRANSMISSION:
-                r = transmission_phase(mybat->c);
-                if (r == -1)
-                    LOG("an error occured during transmission phase.\n");
-                break;
-            case ABORT:
-                r = -1;
-                break;
-            default:
-                break;
-        }
-    }
-
-    uv_close((uv_handle_t *)mybat->client, on_close);
-    free(mybat->c->nbd_buffer);
-    free(mybat->c);
+    // the abstracted blocking loop
+    lwnbd_server_run(*s, c);
+    uv_close((uv_handle_t *)client, on_close);
+    free(c->nbd_buffer);
+    free(c);
 }
 
 void on_new_connection(uv_stream_t *server, int status)
 {
-    struct nbd_baton *mybat = (struct nbd_baton *)malloc(sizeof(struct nbd_baton));
-    mybat->req.data = (void *)mybat;
-    mybat->s = server->data;
-    mybat->c = (struct nbd_client *)malloc(sizeof(struct nbd_client));
+    uv_work_t *req = (uv_work_t *)malloc(sizeof(uv_work_t));
 
     if (status < 0) {
-        fprintf(stderr, "New connection error %s\n", uv_strerror(status));
+        LOG("New connection error %s\n", uv_strerror(status));
         // error!
         return;
     }
 
-    mybat->client = (uv_tcp_t *)malloc(sizeof(uv_tcp_t));
-    uv_tcp_init(uv_default_loop(), mybat->client);
-    if (uv_accept(server, (uv_stream_t *)mybat->client) == 0) {
-        uv_fileno((const uv_handle_t *)mybat->client, &mybat->c->sock);
-        LOG("Worker %d: Accepted fd %d\n", getpid(), mybat->c->sock);
-        uv_stream_set_blocking((uv_stream_t *)mybat->client, 1);
-        uv_queue_work(uv_default_loop(), &mybat->req, on_work, on_after_work);
-
-    } else {
-        uv_close((uv_handle_t *)mybat->client, on_close);
-    }
+    req->data = server;
+    uv_queue_work(uv_default_loop(), req, on_work, on_after_work);
 }
 
 int main(int argc, const char **argv)
@@ -155,6 +132,7 @@ int main(int argc, const char **argv)
     //    }
 
     //    signal(SIGINT, signal_callback_handler);
+    //    see libuv/docs/code/queue-cancel/main.c
 
     /*
      * Register and configure some content plugins ...
@@ -216,7 +194,7 @@ int main(int argc, const char **argv)
 
     uv_ip4_addr("0.0.0.0", mynbd.port, &addr);
 
-    server.data = &mynbd;
+    server.data = &nbdsrv;
 
     uv_tcp_bind(&server, (const struct sockaddr *)&addr, 0);
     int r = uv_listen((uv_stream_t *)&server, 128, on_new_connection);
@@ -224,5 +202,6 @@ int main(int argc, const char **argv)
         fprintf(stderr, "Listen error %s\n", uv_strerror(r));
         return 1;
     }
+
     return uv_run(loop, UV_RUN_DEFAULT);
 }

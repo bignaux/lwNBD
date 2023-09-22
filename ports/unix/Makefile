@@ -15,4 +15,6 @@ include servers/nbd/Makefile
 include plugins/file/Makefile
 include plugins/memory/Makefile
 
+.SILENT: $(OBJ)
+
 all: $(BIN)

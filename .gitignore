@@ -1,3 +1,4 @@
+*.irx
 *.o
 *.a
 lwNBD

@@ -73,25 +73,17 @@ static int memory_block_size(void *handle,
     return 0;
 }
 
-#include <ctype.h>
-static char *strupr(char s[])
-{
-    char *p;
-
-    for (p = s; *p; ++p)
-        *p = toupper(*p);
-
-    return (s);
-}
-
 static int memory_query(void *handle, struct query_param *params, int nb_params)
 {
     struct memory_config *h = handle;
     while (nb_params-- > 0) {
-        LOG("%s\n", params[nb_params].key);
-        if (0 == strcmp(params[nb_params].key, "strupr")) {
-            LOG("strupr \n");
-            strupr((char *)h->base);
+        if (0 == strcmp(params[nb_params].key, "bzero")) {
+            bzero((char *)h->base, h->size);
+        } else if (0 == strcmp(params[nb_params].key, "memset")) {
+            if (params[nb_params].val != NULL) {
+                LOG("val = %s\n", params[nb_params].val);
+                memset((char *)h->base, 75, h->size);
+            }
         }
     }
     return 0;

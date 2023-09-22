@@ -40,9 +40,9 @@ lwnbd_context_t *lwnbd_get_context_i(size_t i);
 void lwnbd_dump_contexts();
 
 #ifndef NBD_URI
-lwnbd_context_t *lwnbd_get_context_uri(const char *uri);
+lwnbd_context_t *lwnbd_get_context_uri(char *uri);
 #else
-static inline lwnbd_context_t *lwnbd_get_context_uri(const char *uri)
+static inline lwnbd_context_t *lwnbd_get_context_uri(char *uri)
 {
     return lwnbd_get_context(uri);
 };

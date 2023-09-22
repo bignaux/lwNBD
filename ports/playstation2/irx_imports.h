@@ -14,22 +14,22 @@
 
 #ifdef PLUGIN_ATAD
 #include <atad.h>
-extern lwnbd_plugin_t *atad_plugin_init(void);
+extern struct lwnbd_plugin_t *atad_plugin_init(void);
 #endif
 
 #ifdef PLUGIN_BDM
 #include <bdm.h>
-extern lwnbd_plugin_t *bdm_plugin_init(void);
+extern struct lwnbd_plugin_t *bdm_plugin_init(void);
 #endif
 
 #ifdef PLUGIN_MCMAN
 #include <mcman.h>
-extern lwnbd_plugin_t *mcman_plugin_init(void);
+extern struct lwnbd_plugin_t *mcman_plugin_init(void);
 #endif
 
 #ifdef PLUGIN_MEMORY
 #include <ssbusc.h>
-extern lwnbd_plugin_t *memory_plugin_init(void);
+extern struct lwnbd_plugin_t *memory_plugin_init(void);
 #endif
 
 #ifdef PLUGIN_NBD
@@ -39,12 +39,12 @@ extern struct lwnbd_server *nbd_server_init(void);
 
 #ifdef PLUGIN_TTY
 #include <iomanX.h>
-extern lwnbd_plugin_t *tty_plugin_init(void);
+extern struct lwnbd_plugin_t *tty_plugin_init(void);
 #endif
 
 #ifdef PLUGIN_PCMSTREAM
 #include <audsrv.h>
-extern lwnbd_plugin_t *pcmstream_plugin_init(void);
+extern struct lwnbd_plugin_t *pcmstream_plugin_init(void);
 #endif
 
 #ifdef PLUGIN_SIFRPC

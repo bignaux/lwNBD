@@ -38,7 +38,7 @@ There are 2 targets supported :
   purpose of the support is to facilitate development. It uses libuv as event loop, and can serve multiple client.
 
 * Playstation 2 IOP via an IRX module for [Open-PS2-Loader](https://github.com/ps2homebrew/Open-PS2-Loader).
-  It can export hdd drive (*atad* plugin), MemoryCard (*mcman* plugin), rom0 and IOP ram (*memory* plugin). PS2SDK use lwip [v2.0.3](https://github.com/ps2dev/lwip/tree/ps2-v2.0.3). Read more about this on [Playstation 2 port](./ports/playstation2/lwnbd-playstation2-port.md)
+  It can export [hdd drive (atad plugin)](./plugins/atad/lwnbd-atad-plugin.md), [MemoryCard (mcman plugin)](./plugins/mcman/lwnbd-mcman-plugin.md), rom0 and IOP ram (*memory* plugin). Read more about this on [my Playstation 2 port notes](./ports/playstation2/lwnbd-playstation2-port.md).
 
 ## HISTORY
 

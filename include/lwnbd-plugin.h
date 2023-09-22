@@ -35,7 +35,7 @@ struct query_param
     char *val;
 };
 
-typedef struct
+typedef struct lwnbd_plugin_t
 {
     /* private */
     uint64_t _struct_size;

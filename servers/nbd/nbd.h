@@ -65,7 +65,8 @@ uint32_t nbd_server_get_gflags(struct nbd_server *h);
 char *nbd_server_get_defaultexport(struct nbd_server *h);
 uint16_t nbd_server_get_port(struct nbd_server *h);
 int nbd_server_get_preinit(struct nbd_server *h);
-int client_init(struct nbd_server *s, struct nbd_client *c);
+
+
 int32_t nbd_recv(int s, void *mem, size_t len, int flags);
 
 /* protocol-handshake.c */

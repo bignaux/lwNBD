@@ -18,12 +18,14 @@ stdenv.mkDerivation rec{
   checkInputs = [
     #todo : filecompare
     eclipses.eclipse-cpp
-    libnbd
+    libsForQt5.kdevelop
+	libnbd
     clang-tools
     checkmake
     #curl
+    #gcov
     gdb
-    gdbgui
+    #gdbgui
     iaito
     iperf2
     wrk
