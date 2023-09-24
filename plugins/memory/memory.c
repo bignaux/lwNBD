@@ -82,7 +82,7 @@ static int memory_query(void *handle, struct query_param *params, int nb_params)
         } else if (0 == strcmp(params[nb_params].key, "memset")) {
             if (params[nb_params].val != NULL) {
                 LOG("val = %s\n", params[nb_params].val);
-                memset((char *)h->base, 75, h->size);
+                memset((char *)h->base, params[nb_params].val[0], h->size);
             }
         }
     }
