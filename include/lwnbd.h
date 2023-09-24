@@ -1,6 +1,7 @@
 #ifndef LWNBD_H
 #define LWNBD_H
 
+#include <lwnbd-plugin.h> // temporary, fix with some lwnbd_handler_t stuff ...
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -8,9 +9,6 @@ extern "C" {
 #endif
 
 /* content plugins */
-
-
-#include "lwnbd-plugin.h" // temporary, fix with some lwnbd_handler_t stuff ...
 
 typedef uint32_t lwnbd_plugin_h;
 typedef lwnbd_plugin_t *(*plugin_init)(void);

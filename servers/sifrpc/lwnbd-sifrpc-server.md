@@ -9,7 +9,7 @@ STATUS : experimental
 sequenceDiagram
 EE->>IOP: SifCallRPC()
 IOP->>IOP: Process
-IOP-->>EE: 
+IOP-->>EE
 ```
 
 # The Library Hierarchy 
@@ -21,6 +21,7 @@ The libraries that use the SIF to transfer data are arranged in a hierarchy :
 * DMA
 * [DMAC]
 
+I'd like to create a way to speak transparently from EE to IOP without using SIF wrappers, using lwnbd_plugin_t interface and other lwnbd mecanism.
 
 # TODO 
 

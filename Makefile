@@ -15,19 +15,22 @@ TARGET ?= unix
 RONN = ronn
 MANPAGE = lwnbd.3
 
+$(BIN): banner $(OBJ)
+	$(CC) $(CFLAGS) -o $(BIN) $(OBJ) $(LDFLAGS) $(LIBS)
+
 include .env
 include src/Makefile
 
 ifeq ($(TARGET),unix)
-include ports/unix/Makefile
+include ports/unix.mk
 endif
 
 ifeq ($(TARGET),iop)
-include ports/playstation2/iop.mk
+include ports/playstation2/iop/iop.mk
 endif
 
 ifeq ($(TARGET),ee)
-include ports/playstation2/ee.mk
+include ports/playstation2/ee/ee.mk
 endif
 
 ifeq ($(LWNBD_DEBUG),0)
@@ -39,8 +42,9 @@ ifeq ($(LWNBD_DEBUG),1)
 	CFLAGS += -DLWNBD_DEBUG
 endif
 
-$(BIN): banner $(OBJ)
-	$(CC) $(CFLAGS) -o $(BIN) $(OBJ) $(LDFLAGS) $(LIBS)
+ifeq ($(MAKE_SILENT),1)
+.SILENT: $(OBJ)
+endif
 
 $(MANPAGE): README.md
 	$(RONN) -r --pipe $< > $@

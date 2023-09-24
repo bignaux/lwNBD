@@ -85,6 +85,11 @@ static int pcmstream_block_size(void *handle,
     return 0;
 }
 
+static void pcmstream_close(void *handle)
+{
+    audsrv_quit();
+}
+
 static lwnbd_plugin_t plugin = {
     .name = "pcmstream",
     .longname = "lwnbd generic pcmstream plugin",
@@ -95,8 +100,7 @@ static lwnbd_plugin_t plugin = {
     .flush = pcmstream_flush,
     .get_size = stream_get_size,
     .block_size = pcmstream_block_size,
+    .close = pcmstream_close,
 };
-
-// audsrv_quit();
 
 NBDKIT_REGISTER_PLUGIN(plugin)

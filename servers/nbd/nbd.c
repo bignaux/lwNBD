@@ -1,9 +1,10 @@
 #include "nbd.h"
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h> // temporary
 
 #define NAME                   nbd
-#define NBD_SERVER_MAX_DEVICES 1
+#define NBD_SERVER_MAX_DEVICES 1 /* TODO handles are bugged, fix it */
 
 typedef enum {
     HANDLE_FREE,
@@ -59,25 +60,28 @@ static int client_init(struct nbd_server *s, struct nbd_client *c)
 }
 
 /* Transitional workaround */
-static int nbd_synchronous_client_thread_cb(void *handle, void *client)
+static int nbd_synchronous_client_thread_cb(void *handle, void *data)
 {
     struct nbd_server *s = handle;
-    struct nbd_client *c = client;
+    struct nbd_client c;
 
-    register err_t r = client_init(s, c);
+    c.sock = *(int *)data;
+    c.nbd_buffer = malloc(NBD_BUFFER_LEN); // __attribute__((aligned(16)));
+
+    register err_t r = client_init(s, &c);
     if (r)
         return -1;
 
     while (r == 0) {
-        switch (c->state) {
+        switch (c.state) {
             case HANDSHAKE:
-                r = protocol_handshake(s, c);
+                r = protocol_handshake(s, &c);
                 if (r == -1) {
                     LOG("an error occured during negotiation phase.\n");
                 }
                 break;
             case TRANSMISSION:
-                r = transmission_phase(c);
+                r = transmission_phase(&c);
                 if (r == -1)
                     LOG("an error occured during transmission phase.\n");
                 break;
@@ -88,6 +92,7 @@ static int nbd_synchronous_client_thread_cb(void *handle, void *client)
                 break;
         }
     }
+    free(c.nbd_buffer);
     return r;
 }
 

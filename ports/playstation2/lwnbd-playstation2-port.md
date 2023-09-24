@@ -20,8 +20,6 @@ EE : uint32_t => long unsigned int _> %ld
 TODO : auto from the lwnbd build system.
 could add echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing/" >> /etc/apk/repositories && apk update
 
-
-
     PS2_WORKSPACE=~/devel/ps2
     cd $PS2_WORKSPACE
 
@@ -38,11 +36,13 @@ could add echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing/" >> /etc/apk
     git config --system --add safe.directory "*"
     
     rm -f ./modules/network/lwNBD/lwnbdsvr.irx 
-    make -C modules/network/lwNBD/ TARGET=iop clean && make LWNBD_DEBUG=1    
-   
+    make -C modules/network/lwNBD/ TARGET=iop clean && make LWNBD_DEBUG=1
+     
 ### commit on OPL
    
-    dont forget to update lwNBD sha in download_lwNBD.sh and remove experimentale plugins.
+   * eventually remove experimental plugins from default build
+   * update lwNBD sha in download_lwNBD.sh 
+   * complete ports/playstation2/OPL_CHANGELOG
 
 ## IOP debug
 
@@ -141,6 +141,8 @@ GS plugin [see](https://github.com/F0bes/gs4ps2)
 OPL UI "service manager" to configure plugin/server start opl{x} in-game{x} 
 
 HDL plugin to provide easy drop of iso, copy entire device (ftp or http)
+
+VFX : https://github.com/projectM-visualizer/projectm <- libnbd ---> ps2 vfx client
 
 PADMAN plugin for TAS/HID... :
 

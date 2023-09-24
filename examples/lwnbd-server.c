@@ -22,8 +22,8 @@
 #include <string.h>
 #include <uv.h>
 
-#include "../../plugins/memory/memory.h"
-#include "../../servers/nbd/nbd.h"
+#include "../plugins/memory/memory.h"
+#include "../servers/nbd/nbd.h"
 
 /* static glue, could be generate :
  * #define LIST_ENTRY(x) x,
@@ -81,24 +81,11 @@ void on_work(uv_work_t *req)
         return;
     }
 
-    struct nbd_client *c = (struct nbd_client *)malloc(sizeof(struct nbd_client));
-    uv_fileno((const uv_handle_t *)client, &c->sock);
-    LOG("Worker %d: Accepted fd %d\n", getpid(), c->sock);
-
-    // TODO : move to uv_buf_t
-    c->nbd_buffer = (uint8_t *)calloc(NBD_BUFFER_LEN, sizeof(uint8_t));
-
-    if (c->nbd_buffer == NULL) {
-        perror("calloc:");
-        free(c);
-        return;
-    }
-
-    // the abstracted blocking loop
-    lwnbd_server_run(*s, c);
+    int sock;
+    uv_fileno((const uv_handle_t *)client, &sock);
+    DEBUGLOG("Worker %d: Accepted fd %d\n", getpid(), sock);
+    lwnbd_server_run(*s, &sock); // the abstracted blocking loop
     uv_close((uv_handle_t *)client, on_close);
-    free(c->nbd_buffer);
-    free(c);
 }
 
 void on_new_connection(uv_stream_t *server, int status)
@@ -107,7 +94,6 @@ void on_new_connection(uv_stream_t *server, int status)
 
     if (status < 0) {
         LOG("New connection error %s\n", uv_strerror(status));
-        // error!
         return;
     }
 
@@ -177,7 +163,7 @@ int main(int argc, const char **argv)
     nbdsrv = lwnbd_server_init(nbd_server_init);
     lwnbd_server_new(nbdsrv, &mynbd);
 
-    //    lwnbd_server_config(nbdsrv, "default-export", "README.md");
+    lwnbd_server_config(nbdsrv, "default-export", "motd");
 
     lwnbd_dump_contexts();
     lwnbd_server_dump(nbdsrv);

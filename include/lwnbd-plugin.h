@@ -54,10 +54,15 @@ typedef struct lwnbd_plugin_t
 
     int64_t (*get_size)(void *handle);
 
+    /*
+     * NOTE: unistd.h pread/pwrite return value read/written. Here, we follow compatibility with nbdkit
+     * ( not sure it's a gread idea, that could confound contributors )
+     */
     int (*pread)(void *handle, void *buf, uint32_t count, uint64_t offset,
                  uint32_t flags);
     int (*pwrite)(void *handle, const void *buf, uint32_t count,
                   uint64_t offset, uint32_t flags);
+
     int (*flush)(void *handle, uint32_t flags);
     int (*trim)(void *handle, uint32_t count, uint64_t offset, uint32_t flags); /* not implemented */
     int (*zero)(void *handle, uint32_t count, uint64_t offset, uint32_t flags); /* not implemented */

@@ -40,7 +40,7 @@ int file_pread(void *handle, void *buf, uint32_t count, uint64_t offset,
             //			nbdkit_error("pread: %m");
             return -1;
         }
-        if (r == 0) {
+        if (r == 0) { // end-of-file
             //			nbdkit_error("pread: unexpected end of file");
             return -1;
         }

@@ -19,7 +19,7 @@
  *
  * TODO : check alignment and move per-plateform if specific define ALIGMENT
  */
-uint8_t nbd_buffer[NBD_BUFFER_LEN] __attribute__((aligned(16)));
+// uint8_t nbd_buffer[NBD_BUFFER_LEN] __attribute__((aligned(16)));
 
 
 int nbd_close(int socket)
@@ -28,6 +28,7 @@ int nbd_close(int socket)
     return close(socket);
 }
 
+// get initialized socket
 int nbd_server_create(struct nbd_server *server)
 {
     struct sockaddr_in peer;
@@ -72,25 +73,18 @@ error_trap:
 
 void listener(lwnbd_server_t const *handle)
 {
-    register err_t r;
-    struct nbd_client c;
     struct sockaddr peer;
     socklen_t addrlen = sizeof(struct sockaddr);
-
-    c.nbd_buffer = nbd_buffer;
+    int sock;
+    struct nbd_server *s = handle; // poor man ...
 
     while (1) {
-
         // blocking
-        c.sock = accept(s->socket, &peer, &addrlen);
-
+        sock = accept(s->socket, &peer, &addrlen);
         LOG("a client connected.\n");
-
-
         // the abstracted blocking loop
-        lwnbd_server_run(*s, &c);
-
-        close(c.sock);
+        lwnbd_server_run(handle, &sock);
+        close(sock);
         LOG("a client disconnected.\n\n\n");
     }
 }

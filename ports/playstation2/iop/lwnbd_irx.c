@@ -60,10 +60,9 @@ static int config(struct lwnbd_config *config)
         .preinit = 0,
         //		.readonly = config->readonly ? ,
     };
-    lwnbd_server_new(nbdsrv, &mynbd);
+    nbd_server_create(&mynbd);        // get initialized server socket
+    lwnbd_server_new(nbdsrv, &mynbd); // now mynbd is copied, don't use it.
     lwnbd_server_config(nbdsrv, "default-export", config->defaultexport);
-
-    nbd_server_create(&mynbd);
 
     if (config->readonly)
         lwnbd_server_config(nbdsrv, "readonly", NULL);
@@ -146,7 +145,7 @@ static int *lwnbd_server_cmd_start(struct lwnbd_config *conf, int length, int *r
         configured = 1;
     }
 
-    DEBUGLOG("LWNBD_SERVER_CMD_START 2.\n");
+    DEBUGLOG("LWNBD_SERVER_CMD_START\n");
 
     nbd_thread.attr = TH_C;
     nbd_thread.option = 0;
