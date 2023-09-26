@@ -6,7 +6,7 @@
  * client support :
  *  NetworkBlockDevice/nbd pass the full URI
  *  libnbd need to URI encoding in query string ie :
- *  'nbd://127.0.0.1/some.pcm%3fvolume=70%231m30' AND compiled with libxml2 support (not the case in alpine for example)
+ *  'nbd://127.0.0.1/some.pcm%3fvolume=70%231m30' AND compiled with libxml2 support
  *  https://0mg.github.io/tools/uri/ doesn't validate this kind of mixed URI
  *
  * main interest passing "data" through URI query is that it doesn't need custom client to handle a
@@ -60,7 +60,7 @@ lwnbd_context_t *lwnbd_get_context_uri(char *uri)
      *
      */
     if (p->query) {
-        p->query(c->handle, (struct query_param *)params, pa2);
+        p->query(c->handle, (struct query_t *)params, pa2);
     }
 
     return c;

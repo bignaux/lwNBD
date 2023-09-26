@@ -26,12 +26,16 @@ int lwnbd_plugin_new(lwnbd_plugin_h const plugin, const void *pconfig)
         return -1;
     }
 
-    e.description[0] = '\0';
-
     if (p->ctor(pconfig, &e) != 0) {
         return -1;
     }
 
+    if (e.handle == NULL) /* case for command for example */
+    {
+        return 0;
+    }
+
+    e.description[0] = '\0';
     lwnbd_add_context(p, &e);
     return 0;
 }

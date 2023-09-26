@@ -73,7 +73,7 @@ static int memory_block_size(void *handle,
     return 0;
 }
 
-static int memory_query(void *handle, struct query_param *params, int nb_params)
+static int memory_query(void *handle, struct query_t *params, int nb_params)
 {
     struct memory_config *h = handle;
     while (nb_params-- > 0) {
@@ -83,6 +83,12 @@ static int memory_query(void *handle, struct query_param *params, int nb_params)
             if (params[nb_params].val != NULL) {
                 LOG("val = %s\n", params[nb_params].val);
                 memset((char *)h->base, params[nb_params].val[0], h->size);
+            }
+        } else if (0 == strcmp(params[nb_params].key, "memcpy")) {
+            if (params[nb_params].val != NULL) {
+                LOG("val = %s\n", params[nb_params].val);
+                bzero((char *)h->base, h->size);
+                memcpy((char *)h->base, params[nb_params].val, strlen(params[nb_params].val));
             }
         }
     }

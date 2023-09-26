@@ -1,5 +1,5 @@
 /*
- * gcc -I../include local-read.c   -o local-read ../lwnbd.a
+ * A demonstration of the methods currently available to access an export locally.
  */
 
 #include <lwnbd.h>
@@ -34,7 +34,7 @@ int main(int argc, const char **argv)
     ctx = lwnbd_get_context(argv[1]);
 
     //    while (r == 0) {
-    //        r = plugin_pread(ctx, buf, 1, offset++, 0); /* we are limited to wrapped func in server.c */
+    //        r = plugin_pread(ctx, buf, 1, offset++, 0); /* we are limited to wrapped func in server.h */
     //        printf("%c", *buf);
     //        fflush(stdout);
     //        usleep(1e4);

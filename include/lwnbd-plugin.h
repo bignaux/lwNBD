@@ -21,15 +21,12 @@ typedef struct
 /* experimental */
 struct lwnbd_command
 {
+    char *name;
     int (*cmd)(int argc, char **argv, void *result, int64_t *size);
-    int argc;
-    char **argv;
-    void *result; /* return of cmd() */
-    int64_t size; /* size of result */
 };
 
 /* A struct to hold the query string parameter values. */
-struct query_param
+struct query_t
 {
     char *key;
     char *val;
@@ -78,7 +75,7 @@ typedef struct lwnbd_plugin_t
 
     int (*ctor)(const void *pconfig, lwnbd_export_t *e);           /* create new export from custom config */
     int (*ctrl)(void *handle, char *cmd, struct lwnbd_command *c); /* experimental */
-    int (*query)(void *handle, struct query_param *params,
+    int (*query)(void *handle, struct query_t *params,
                  int nb_params); /* experimental */
 
 } lwnbd_plugin_t;

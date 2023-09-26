@@ -57,7 +57,8 @@ banner:
 	@echo -e "library version $(APP_VERSION) - BSD 2-Clause License\n"
 
 clean:
-	rm -f $(BIN) $(MANPAGE) $(OBJ) *~ core 
+	rm -f $(BIN) $(MANPAGE) $(OBJ) *~ core
+	find -iname "*.o" -or -iname "*.a" -exec rm {} \;
 
 nbdcleanup:
 	sudo lsof -t /dev/nbd* | sudo xargs -r kill -9

@@ -97,7 +97,9 @@ lwnbd_context_t *lwnbd_get_context_i(size_t i)
     return &contexts[i];
 }
 
-/* search for context by name
+/*
+ * like open() syscall
+ * search for context by name
  * return NULL if not found any.
  */
 lwnbd_context_t *lwnbd_get_context(const char *contextname)

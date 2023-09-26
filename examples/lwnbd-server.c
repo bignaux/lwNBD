@@ -30,22 +30,23 @@
  *
  * */
 
+extern lwnbd_plugin_t *command_plugin_init(void);
 extern lwnbd_plugin_t *memory_plugin_init(void);
 extern lwnbd_plugin_t *file_plugin_init(void);
+extern struct lwnbd_server *nbd_server_init(void);
+
 // plugin_init plugins_table[] = {
 //		file_plugin_init,
 //		NULL
 // };
 
-extern struct lwnbd_server *nbd_server_init(void);
-
 // void signal_callback_handler(int signum)
 //{
 //     exit(signum);
 // }
-void coucou()
+int greeter(int argc, char **argv, void *result, int64_t *size)
 {
-    printf("exit\n");
+    printf("greeter !!\n");
 }
 
 int gEnableWrite = 1;
@@ -104,13 +105,13 @@ void on_new_connection(uv_stream_t *server, int status)
 int main(int argc, const char **argv)
 {
     lwnbd_server_t nbdsrv;
-    lwnbd_plugin_h fileplg, memplg;
+    lwnbd_plugin_h fileplg, memplg, cmdplg;
 
-    int i = atexit(coucou);
-    if (i != 0) {
-        fprintf(stderr, "cannot set exit function\n");
-        exit(EXIT_FAILURE);
-    }
+    //    int i = atexit(coucou);
+    //    if (i != 0) {
+    //        fprintf(stderr, "cannot set exit function\n");
+    //        exit(EXIT_FAILURE);
+    //    }
 
     //    if (argc < 2) {
     //        fprintf(stderr, "Usage: %s <files>\n", argv[0]);
@@ -143,7 +144,20 @@ int main(int argc, const char **argv)
 
     fileplg = lwnbd_plugin_init(file_plugin_init);
 
+    /*
+     *
+     */
+    struct lwnbd_command mycmd = {
+        .name = "greeter",
+        .cmd = greeter,
+    };
+    cmdplg = lwnbd_plugin_init(command_plugin_init);
+    lwnbd_plugin_new(cmdplg, &mycmd);
+    DEBUGLOG("-------------\n");
+
+
     /* assuming no user input error */
+    /* todo : lwnbd_plugin_news() */
     for (int i = 1; i < argc; i++) {
         lwnbd_plugin_new(fileplg, argv[i]);
     }
