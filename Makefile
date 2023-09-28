@@ -39,7 +39,7 @@ else ifeq ($(DEBUG),1)
 endif
 
 ifeq ($(LWNBD_DEBUG),1)
-	CFLAGS += -DLWNBD_DEBUG
+	CFLAGS += -DLWNBD_DEBUG -g
 endif
 
 ifeq ($(MAKE_SILENT),1)

@@ -1,4 +1,3 @@
-#include "config.h"
 #include "sifrpc.h"
 #include <lwnbd.h>
 #include <lwnbd-server.h>

@@ -1,5 +1,4 @@
 #include "memory.h"
-#include <config.h>
 #include <string.h>
 
 #define PLUGIN_NAME            memory

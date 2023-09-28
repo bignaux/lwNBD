@@ -1,8 +1,7 @@
-#include <config.h>
-#include <sys/fcntl.h>
 #include <libgen.h> // TODO: remove basename() usage
 #include <lwnbd-plugin.h>
 #include <stdio.h>
+#include <sys/fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 

@@ -102,7 +102,7 @@ err_t transmission_phase(struct nbd_client *client)
                     if (blkremains <= bufblksz)
                         sendflag = 0;
 
-                    r = plugin_pread(ctx, nbd_buffer, bufblksz, offset, 0);
+                    r = lwnbd_pread(ctx, nbd_buffer, bufblksz, offset, 0);
                     //                    DEBUGLOG("offset=%d bufblksz=%d sendflag=%d\n", offset, bufblksz, sendflag);
 
                     if (r == 0) {
@@ -155,7 +155,7 @@ err_t transmission_phase(struct nbd_client *client)
                     r = nbd_recv(client->sock, nbd_buffer, byteread, 0);
 
                     if (r == byteread) {
-                        r = plugin_pwrite(ctx, nbd_buffer, bufblksz, offset, 0);
+                        r = lwnbd_pwrite(ctx, nbd_buffer, bufblksz, offset, 0);
                         if (r != 0) {
                             error = NBD_EIO;
                             sendflag = 0;
@@ -182,7 +182,7 @@ err_t transmission_phase(struct nbd_client *client)
                 return 0;
 
             case NBD_CMD_FLUSH:
-                error = (plugin_flush(ctx, 0) == 0) ? NBD_SUCCESS : NBD_EIO;
+                error = (lwnbd_flush(ctx, 0) == 0) ? NBD_SUCCESS : NBD_EIO;
                 reply.error = ntohl(error);
                 r = send(client->sock, &reply, sizeof(struct nbd_simple_reply),
                          0);

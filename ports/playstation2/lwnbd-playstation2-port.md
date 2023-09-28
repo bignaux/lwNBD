@@ -125,7 +125,7 @@ BDM is another tentative to make a common interface for PS2 block device, acting
 
 ## idea, c'mon pick one (or more!)
 
-Open-PS2-Loader/modules/network/httpclient to plugin content
+Open-PS2-Loader/modules/network/httpclient to plugin content, see also nbdkit/plugins/curl
 
 make oneliner like nbdcopy nbd://.../cmd/poweroff available like a bus , see @vates/nbd-client node stuff for bundle apps on phone ?
 mem/spu2 ... mc/1/filename.

@@ -1,5 +1,5 @@
-#include "config.h"
 #include <lwnbd-server.h>
+#include <lwnbd.h>
 //#include <stdlib.h>
 #include <stdio.h>
 // TODO: https://blog.mbedded.ninja/programming/general/control-methodology/a-function-pointer-based-state-machine/

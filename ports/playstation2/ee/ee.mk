@@ -1,5 +1,4 @@
 #PLUGINS
-#include plugins/libhdd/Makefile
 include plugins/memory/Makefile
 include servers/nbd/Makefile
 

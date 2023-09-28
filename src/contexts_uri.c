@@ -15,14 +15,16 @@
  *
  */
 
-#include <lwnbd-context.h>
+#include <lwnbd.h>
+#include <lwnbd-plugin.h>
 #include "yuarel.h"
 #define MAX_QUERY 3
 
-lwnbd_context_t *lwnbd_get_context_uri(char *uri)
+lwnbd_context_t *lwnbd_get_context(char *uri)
 {
     lwnbd_context_t *c;
     lwnbd_plugin_t *p;
+    int ret;
 
     DEBUGLOG("searched handler for %s.\n", uri);
 
@@ -47,8 +49,10 @@ lwnbd_context_t *lwnbd_get_context_uri(char *uri)
 
     /* we should rely on some kind of get_plugin_by_namespace()
      * plugin visibility without export ?
+     * scheme support ? file:// http:// rpc://
+     *
      */
-    c = lwnbd_get_context(url.path);
+    c = lwnbd_get_context_string(url.path);
 
     if (c == NULL)
         return NULL;
@@ -60,8 +64,18 @@ lwnbd_context_t *lwnbd_get_context_uri(char *uri)
      *
      */
     if (p->query) {
-        p->query(c->handle, (struct query_t *)params, pa2);
+        ret = p->query(c->handle, (struct query_t *)params, pa2);
+        if (ret) {
+            LOG("query failed\n");
+            return NULL;
+        }
     }
+
+    /*
+     * last minute lwnbd_update_size() allows to get size on freshly created context
+     * according request
+     */
+    lwnbd_update_size(c);
 
     return c;
 }

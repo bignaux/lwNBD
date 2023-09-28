@@ -1,6 +1,7 @@
 #ifndef LWNBD_PLUGIN_H
 #define LWNBD_PLUGIN_H
 
+#include "config.h"
 #include <stdint.h>
 //#include <unistd.h>
 #include <sys/types.h>
@@ -9,7 +10,7 @@
 extern "C" {
 #endif
 
-typedef struct
+typedef struct lwnbd_export_t
 {
     char name[32];
     char description[64]; /* optional */
@@ -17,11 +18,13 @@ typedef struct
     /* lwnbd specific */
     void *handle; /* Plugin handle. */
 } lwnbd_export_t;
+// int lwnbd_plugin_export(lwnbd_export_t *e);
 
 /* experimental */
 struct lwnbd_command
 {
     char *name;
+    char *desc;
     int (*cmd)(int argc, char **argv, void *result, int64_t *size);
 };
 
@@ -53,6 +56,7 @@ typedef struct lwnbd_plugin_t
 
     /*
      * NOTE: unistd.h pread/pwrite return value read/written. Here, we follow compatibility with nbdkit
+     * returning 0 on success
      * ( not sure it's a gread idea, that could confound contributors )
      */
     int (*pread)(void *handle, void *buf, uint32_t count, uint64_t offset,
@@ -77,6 +81,8 @@ typedef struct lwnbd_plugin_t
     int (*ctrl)(void *handle, char *cmd, struct lwnbd_command *c); /* experimental */
     int (*query)(void *handle, struct query_t *params,
                  int nb_params); /* experimental */
+
+    int export_without_handle; /* workaround */
 
 } lwnbd_plugin_t;
 

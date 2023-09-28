@@ -1,5 +1,4 @@
 #include <atad.h>
-#include <config.h>
 #include <lwnbd-plugin.h>
 
 /*

@@ -4,7 +4,6 @@
 // TODO : add slot to pconfig ?
 // TODO : format e->description according to Memory Card device types and port/slot
 
-#include <config.h>
 #include <intrman.h>
 #include <lwnbd-plugin.h>
 #include <mcman.h>

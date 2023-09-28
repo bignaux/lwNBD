@@ -2,11 +2,12 @@
  * Should not be aware of nbd protocol or transport layer
  */
 
-#include "config.h"
 #include <lwnbd.h>
 #include <lwnbd-plugin.h>
-#include <lwnbd-context.h>
-//#include <stdlib.h>
+#include <stdlib.h>
+
+// workaround
+extern int lwnbd_add_context(lwnbd_plugin_t *p, lwnbd_export_t *e);
 
 typedef enum {
     PLUGIN_FREE,
@@ -17,6 +18,13 @@ typedef enum {
 static lwnbd_plugin_t *plugins[MAX_NUM_PLUGINS];
 static plugin_state_t plugins_status[MAX_NUM_PLUGINS];
 
+
+// int lwnbd_plugin_export(lwnbd_export_t *e)
+//{
+//	lwnbd_plugin_t *p = plugins[plugin];
+//	return lwnbd_add_context(p, e);
+// }
+
 int lwnbd_plugin_new(lwnbd_plugin_h const plugin, const void *pconfig)
 {
     lwnbd_plugin_t *p = plugins[plugin];
@@ -26,6 +34,7 @@ int lwnbd_plugin_new(lwnbd_plugin_h const plugin, const void *pconfig)
         return -1;
     }
 
+    e.description[0] = '\0';
     if (p->ctor(pconfig, &e) != 0) {
         return -1;
     }
@@ -35,8 +44,17 @@ int lwnbd_plugin_new(lwnbd_plugin_h const plugin, const void *pconfig)
         return 0;
     }
 
-    e.description[0] = '\0';
+
     lwnbd_add_context(p, &e);
+    return 0;
+}
+
+int lwnbd_plugin_news(lwnbd_plugin_h const plugin, const void *pconfig[])
+{
+    int i = 0;
+    while (pconfig != NULL) {
+        lwnbd_plugin_new(plugin, pconfig[i++]);
+    }
     return 0;
 }
 
@@ -115,6 +133,19 @@ lwnbd_plugin_h lwnbd_plugin_init(plugin_init init)
     plugins[i] = p;
     plugins_status[i] = PLUGIN_CREATED;
     DEBUGLOG("plugin %s registered\n", p->name);
+
+    if (p->export_without_handle == 1) {
+
+        lwnbd_export_t *e = malloc(sizeof(lwnbd_export_t));
+        if (e == NULL)
+            LOG("malloc!\n");
+        e->handle = NULL;
+        //		strcpy(e->description , p->description);
+        strcpy(e->name, "shell");
+        lwnbd_add_context(p, e);
+        free(e);
+    }
+
     return i;
 }
 

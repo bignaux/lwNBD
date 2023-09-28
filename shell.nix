@@ -28,6 +28,7 @@ stdenv.mkDerivation rec{
     #gdbgui
     iaito
     iperf2
+    ncurses
     wrk
     bridge-utils
     hdparm

@@ -1,4 +1,3 @@
-#include <config.h>
 #include <errno.h>
 #include <iomanX.h>
 #include <lwnbd-plugin.h>

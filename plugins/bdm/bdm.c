@@ -1,5 +1,4 @@
 #include <bdm.h>
-#include <config.h>
 #include <lwnbd-plugin.h>
 
 #define PLUGIN_NAME     bdm
