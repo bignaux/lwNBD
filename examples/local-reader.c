@@ -7,8 +7,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-extern struct lwnbd_plugin_t *file_plugin_init(void);
-
 int main(int argc, const char **argv)
 {
     lwnbd_plugin_h fileplg;

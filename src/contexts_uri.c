@@ -24,8 +24,11 @@ lwnbd_context_t *lwnbd_get_context(char *uri)
 {
     lwnbd_context_t *c;
     lwnbd_plugin_t *p;
-    int ret;
 
+    // we don't have yet defaultexport mecanism in core
+    if (!uri) {
+        return NULL;
+    }
     DEBUGLOG("searched handler for %s.\n", uri);
 
     struct yuarel url;
@@ -54,7 +57,7 @@ lwnbd_context_t *lwnbd_get_context(char *uri)
      */
     c = lwnbd_get_context_string(url.path);
 
-    if (c == NULL)
+    if (!c)
         return NULL;
 
     p = c->p;
@@ -64,7 +67,7 @@ lwnbd_context_t *lwnbd_get_context(char *uri)
      *
      */
     if (p->query) {
-        ret = p->query(c->handle, (struct query_t *)params, pa2);
+        int ret = p->query(c->handle, (struct query_t *)params, pa2);
         if (ret) {
             LOG("query failed\n");
             return NULL;

@@ -36,7 +36,7 @@ extern "C" {
 
 /* plugins options - useless here ? */
 
-#define MAX_NUM_PLUGINS 5
+#define MAX_NUM_PLUGINS 10
 #define MAX_CONTEXTS    10
 
 #ifdef __cplusplus

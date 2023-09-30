@@ -4,7 +4,7 @@
  *
  */
 
-#include "nbd.h"
+#include <lwnbd/nbd.h>
 
 const char *nbd_commands_to_string(uint16_t f)
 {

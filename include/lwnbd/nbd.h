@@ -1,17 +1,16 @@
 #ifndef NBD_SERVER_H
 #define NBD_SERVER_H
 
-#include <lwnbd.h>
-#include <lwnbd-server.h>
-#include <nbd-protocol.h>
-#include "config.h"
 
-#include <netinet/in.h>
-#include <unistd.h>
-#include <sys/socket.h>
+#include <lwnbd.h> /* context stuff */
+#include <lwnbd-server.h>
+
 #include <endian.h>
+#include <nbd-protocol.h>
+#include <netinet/in.h>
 #include <stddef.h>
 #include <string.h>
+#include <unistd.h>
 
 #ifdef __linux__
 // TODO : manage endianess

@@ -1,5 +1,9 @@
-#include "../../servers/nbd/nbd.h"
+//#include "../../servers/nbd/nbd.h"
+
 #include <errno.h>
+#include <lwnbd-server.h>
+#include <lwnbd/nbd.h>
+#include <sys/socket.h>
 
 #ifdef __PS2SDK_SYS_SOCKET_H__
 #define close(x) lwip_close(x)

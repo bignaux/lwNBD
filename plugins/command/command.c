@@ -20,7 +20,6 @@ struct result_h
 
 static struct result_h pr;
 
-
 static inline int command_pread(void *handle, void *buf, uint32_t count,
                                 uint64_t offset, uint32_t flags)
 {
@@ -48,7 +47,7 @@ static int command_list(int argc, char **argv, void *result, int64_t *size)
     /* we could use size as result size*/
     *size = 0;
     while (cnt < commands_cnt) {
-        *size += sprintf(result + *size, "%-32s: %s\n", commands[cnt].name, commands[cnt].desc);
+        *size += sprintf((char *)result + *size, "%-32s: %s\n", commands[cnt].name, commands[cnt].desc);
         cnt++;
     }
     //    DEBUGLOG("%d : %s\n", *size, result);

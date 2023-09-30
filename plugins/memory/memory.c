@@ -1,5 +1,4 @@
-#include "memory.h"
-#include <string.h>
+#include <lwnbd-plugin.h>
 
 #define PLUGIN_NAME            memory
 #define MEM_DRIVER_MAX_DEVICES 10
@@ -32,11 +31,6 @@ static inline int memory_pwrite(void *handle, const void *buf, uint32_t count,
     return 0;
 }
 
-static inline int memory_flush(void *handle, uint32_t flags)
-{
-    return 0;
-}
-
 static int memory_ctor(const void *pconfig, lwnbd_export_t *e)
 {
     uint32_t i;
@@ -65,19 +59,16 @@ static int64_t memory_get_size(void *handle)
     return h->size;
 }
 
-static int memory_block_size(void *handle,
-                             uint32_t *minimum, uint32_t *preferred, uint32_t *maximum)
-{
-    *minimum = *preferred = *maximum = 1;
-    return 0;
-}
-
+/*
+ * Here, queries are used as filters.
+ * if query is unknown, it's just ignored.
+ */
 static int memory_query(void *handle, struct query_t *params, int nb_params)
 {
     struct memory_config *h = handle;
     while (nb_params-- > 0) {
         if (0 == strcmp(params[nb_params].key, "bzero")) {
-            bzero((char *)h->base, h->size);
+            memset((char *)h->base, '\0', h->size);
         } else if (0 == strcmp(params[nb_params].key, "memset")) {
             if (params[nb_params].val != NULL) {
                 LOG("val = %s\n", params[nb_params].val);
@@ -86,9 +77,11 @@ static int memory_query(void *handle, struct query_t *params, int nb_params)
         } else if (0 == strcmp(params[nb_params].key, "memcpy")) {
             if (params[nb_params].val != NULL) {
                 LOG("val = %s\n", params[nb_params].val);
-                bzero((char *)h->base, h->size);
+                memset((char *)h->base, '\0', h->size);
                 memcpy((char *)h->base, params[nb_params].val, strlen(params[nb_params].val));
             }
+        } else {
+            DEBUGLOG("%s is not a known filter.\n", params[nb_params].key);
         }
     }
     return 0;
@@ -101,9 +94,9 @@ static lwnbd_plugin_t plugin = {
     .ctor = memory_ctor,
     .pread = memory_pread,
     .pwrite = memory_pwrite,
-    .flush = memory_flush,
+    .flush = func_no_error,
     .get_size = memory_get_size,
-    .block_size = memory_block_size,
+    .block_size = char_block_size,
     .query = memory_query,
 };
 

@@ -1,4 +1,4 @@
-#include "sifrpc.h"
+#include <lwnbd/sifrpc.h>
 #include <lwnbd.h>
 #include <lwnbd-server.h>
 #include <thbase.h>

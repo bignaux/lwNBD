@@ -1,10 +1,8 @@
 #ifndef LWNBD_PLUGIN_H
 #define LWNBD_PLUGIN_H
 
-#include "config.h"
-#include <stdint.h>
-//#include <unistd.h>
-#include <sys/types.h>
+#include <lwnbd-common.h>
+//#include <sys/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,14 +17,6 @@ typedef struct lwnbd_export_t
     void *handle; /* Plugin handle. */
 } lwnbd_export_t;
 // int lwnbd_plugin_export(lwnbd_export_t *e);
-
-/* experimental */
-struct lwnbd_command
-{
-    char *name;
-    char *desc;
-    int (*cmd)(int argc, char **argv, void *result, int64_t *size);
-};
 
 /* A struct to hold the query string parameter values. */
 struct query_t
@@ -95,6 +85,23 @@ typedef struct lwnbd_plugin_t
         (plugin)._struct_size = sizeof(plugin); \
         return &(plugin);                       \
     }
+
+/*
+ * Default callback
+ *
+ */
+
+static inline int func_no_error(void *handle, uint32_t flags)
+{
+    return 0;
+}
+
+static inline int char_block_size(void *handle,
+                                  uint32_t *minimum, uint32_t *preferred, uint32_t *maximum)
+{
+    *minimum = *preferred = *maximum = 1;
+    return 0;
+}
 
 static inline int64_t stream_get_size(void *handle)
 {

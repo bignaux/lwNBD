@@ -1,8 +1,10 @@
+BIN = lwnbdsvr.irx
 
 #PLUGINS
 include servers/nbd/Makefile
 include servers/sifrpc/Makefile
 include plugins/atad/Makefile
+include plugins/command/Makefile
 include plugins/memory/Makefile
 include plugins/mcman/Makefile
 include plugins/pcmstream/Makefile
@@ -11,14 +13,9 @@ include plugins/pcmstream/Makefile
 #include plugins/file/Makefile
 
 CC = $(IOP_CC)
-
-BIN = lwnbdsvr.irx
-PORT_DIR = ports/playstation2
+PORT_DIR = ports/playstation2/iop
 OBJ += $(PORT_DIR)/lwnbd_irx.o $(PORT_DIR)/exports.o $(PORT_DIR)/imports.o $(PORT_DIR)/ioplib.o $(PORT_DIR)/tcp.o
-INCS += -I$(PORT_DIR)/include -include $(PORT_DIR)/ps2sdk-compat.h -DAPP_NAME=\"lwnbdsvr\"
-
-.SILENT: $(OBJ)
-all: $(BIN)
+INCS += -I$(PORT_DIR)/../common/include -I$(PORT_DIR)/include -include $(PORT_DIR)/ps2sdk-compat.h -DAPP_NAME=\"lwnbdsvr\"
 
 # only suitable for https://github.com/ps2dev/ps2sdk-ports/
 #install: all
@@ -31,6 +28,8 @@ all: $(BIN)
 
 include $(PS2SDK)/Defs.make
 include $(PORT_DIR)/iopglobal.mk
+
+all: $(BIN)
 
 DEST ?= $(PS2_WORKSPACE)/Open-PS2-Loader
 TARGET_IP ?= 192.168.1.45

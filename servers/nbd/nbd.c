@@ -1,7 +1,7 @@
-#include "nbd.h"
+#include <lwnbd/nbd.h>
 #include <string.h>
 #include <errno.h>
-#include <stdlib.h> // temporary
+//#include <stdlib.h> // temporary
 
 #define NAME                   nbd
 #define NBD_SERVER_MAX_DEVICES 1 /* TODO handles are bugged, fix it */

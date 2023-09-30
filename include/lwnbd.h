@@ -1,8 +1,7 @@
 #ifndef LWNBD_H
 #define LWNBD_H
 
-#include <stdint.h>
-#include "config.h"
+#include <lwnbd-common.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,28 +47,33 @@ int lwnbd_trim(lwnbd_context_t const *const me, uint32_t count, uint64_t offset,
 int lwnbd_zero(lwnbd_context_t const *const me, uint32_t count, uint64_t offset, uint32_t flags);
 int lwnbd_update_size(lwnbd_context_t *me);
 
-/* content plugins */
+/*
+ * content plugins
+ *
+ */
 
-typedef uint32_t lwnbd_plugin_h;
 typedef struct lwnbd_plugin_t *(*plugin_init)(void);
+typedef uint32_t lwnbd_plugin_h;
 int lwnbd_plugin_config(lwnbd_plugin_h const plugin, const char *key, const char *value);
 int lwnbd_plugin_new(lwnbd_plugin_h const plugin, const void *pconfig);
 int lwnbd_plugin_news(lwnbd_plugin_h const plugin, const void *pconfig[]);
 lwnbd_plugin_h lwnbd_plugin_init(plugin_init init);
 
-/* server plugins
+
+/*
+ * server plugins
  *
  */
 
-typedef uint32_t lwnbd_server_t;
 typedef struct lwnbd_server *(*server_init)(void);
+typedef uint32_t lwnbd_server_t;
 int lwnbd_server_config(lwnbd_server_t const handle, const char *key, const char *value);
-int lwnbd_server_new(lwnbd_server_t const handle, const void *pconfig);
-void lwnbd_server_start(lwnbd_server_t const handle);
-int lwnbd_server_stop(lwnbd_server_t const handle);
-void lwnbd_server_run(lwnbd_server_t const handle, void *client);
 int lwnbd_server_dump(lwnbd_server_t const handle);
+int lwnbd_server_new(lwnbd_server_t const handle, const void *pconfig);
+int lwnbd_server_stop(lwnbd_server_t const handle);
 lwnbd_server_t lwnbd_server_init(server_init init);
+void lwnbd_server_run(lwnbd_server_t const handle, void *client);
+void lwnbd_server_start(lwnbd_server_t const handle);
 
 #ifdef __cplusplus
 }

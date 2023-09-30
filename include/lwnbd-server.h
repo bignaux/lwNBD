@@ -1,7 +1,7 @@
 #ifndef LWNBD_SERVER_H
 #define LWNBD_SERVER_H
 
-#include <stdint.h>
+#include <lwnbd-common.h>
 #include <stdio.h>
 
 #ifdef __cplusplus

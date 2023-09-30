@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <lwnbd/nbd.h>
 #include <lwnbd.h>
 #include <signal.h>
 #include <stdio.h>
@@ -22,26 +23,24 @@
 #include <string.h>
 #include <uv.h>
 
-#include "../plugins/memory/memory.h"
-#include "../servers/nbd/nbd.h"
+typedef enum {
+    CLIENT_FREE,
+    CLIENT_INUSE,
+} worker_state_t;
 
-/* static glue, could be generate :
- * #define LIST_ENTRY(x) x,
- *
- * */
+struct nbd_worker
+{
+    uv_work_t req;
+    int client_id;
+    uv_stream_t *server;
+};
 
-extern lwnbd_plugin_t *command_plugin_init(void);
-extern lwnbd_plugin_t *memory_plugin_init(void);
-extern lwnbd_plugin_t *file_plugin_init(void);
-extern struct lwnbd_server *nbd_server_init(void);
+#define MAX_CLIENTS 3
+int gEnableWrite = 1;
+int gHDDStartMode;
 
-#define MAX_CLIENTS 10
-uv_work_t *client_reqs[MAX_CLIENTS];
-
-// plugin_init plugins_table[] = {
-//		file_plugin_init,
-//		NULL
-// };
+static worker_state_t client_states[MAX_CLIENTS];
+struct nbd_worker *client_reqs[MAX_CLIENTS]; /* need to be accessible to signal handler */
 
 void signal_handler(uv_signal_t *req, int signum)
 {
@@ -66,17 +65,17 @@ int server_shutdown(int argc, char **argv, void *result, int64_t *size)
     return 0;
 }
 
-int gEnableWrite = 1;
-int gHDDStartMode;
+void on_after_work(uv_work_t *req, int status)
+{
+    struct nbd_worker *client_reqs = (struct nbd_worker *)req;
+    client_states[client_reqs->client_id] = CLIENT_FREE;
+    free(req);
+}
 
 void on_close(uv_handle_t *handle)
 {
+    DEBUGLOG("on_close\n");
     free(handle);
-}
-
-void on_after_work(uv_work_t *req, int status)
-{
-    free(req);
 }
 
 /*
@@ -86,7 +85,8 @@ void on_after_work(uv_work_t *req, int status)
 void on_work(uv_work_t *req)
 {
     /* a bit of headache but avoid a baton */
-    uv_stream_t *server = (uv_stream_t *)req->data;
+    struct nbd_worker *client_reqs = (struct nbd_worker *)req;
+    uv_stream_t *server = (uv_stream_t *)client_reqs->server;
     lwnbd_server_t *s = (lwnbd_server_t *)server->data;
 
     uv_tcp_t *client = (uv_tcp_t *)malloc(sizeof(uv_tcp_t));
@@ -101,8 +101,10 @@ void on_work(uv_work_t *req)
 
     int sock;
     uv_fileno((const uv_handle_t *)client, &sock);
+    DEBUGLOG("/++++++++++++++++++++++++++++++++++++++++++++++++++\n");
     DEBUGLOG("Worker %d: Accepted fd %d\n", getpid(), sock);
     lwnbd_server_run(*s, &sock); // the abstracted blocking loop
+    DEBUGLOG("+++++++++++++++++++++++++++++++++++++++++++++++++++/\n");
     uv_close((uv_handle_t *)client, on_close);
 }
 
@@ -116,19 +118,19 @@ void on_new_connection(uv_stream_t *server, int status)
     }
 
     for (i = 0; i < MAX_CLIENTS; i++) {
-        if (client_reqs[i] == NULL) {
-            client_reqs[i] = (uv_work_t *)malloc(sizeof(uv_work_t));
-            break;
+        DEBUGLOG("client_reqs[%d] = %p\n", i, client_reqs[i]);
+        if (client_states[i] == CLIENT_FREE) {
+            client_reqs[i] = (struct nbd_worker *)malloc(sizeof(struct nbd_worker));
+            client_states[i] = CLIENT_INUSE;
+            client_reqs[i]->client_id = i;
+            client_reqs[i]->server = server;
+            uv_queue_work(uv_default_loop(), (uv_work_t *)client_reqs[i], on_work, on_after_work);
+            return;
         }
     }
 
-    if (client_reqs[i] == NULL) {
-        LOG("New connection error : no slot available\n");
-        return;
-    }
-
-    client_reqs[i]->data = server;
-    uv_queue_work(uv_default_loop(), client_reqs[i], on_work, on_after_work);
+    LOG("New connection error : no slot available\n");
+    return;
 }
 
 int main(int argc, const char **argv)
@@ -233,6 +235,8 @@ int main(int argc, const char **argv)
     uv_signal_t sig;
     uv_signal_init(loop, &sig);
     uv_signal_start(&sig, signal_handler, SIGINT);
+
+    memset(client_states, CLIENT_FREE, sizeof(client_states));
 
     return uv_run(loop, UV_RUN_DEFAULT);
 }

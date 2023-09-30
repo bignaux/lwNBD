@@ -1,7 +1,6 @@
-#include <string.h>
-#include "pcmstream.h"
-
 #include <audsrv.h>
+#include <lwnbd-plugin.h>
+#include <string.h>
 
 #define PLUGIN_NAME            pcmstream
 #define PCM_DRIVER_MAX_DEVICES 1

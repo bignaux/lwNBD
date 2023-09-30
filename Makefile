@@ -6,7 +6,7 @@
 CC ?= gcc
 # TODO: can't use -pedantic-errors yet due to LOG macros
 # 
-CFLAGS = -Iinclude -std=c99 -Wall -Wfatal-errors
+CFLAGS = -Iinclude -std=c99 -Wall
 DEBUG ?= 0
 
 APP_VERSION := $(shell git describe --always --tags)
@@ -14,9 +14,6 @@ CC_VERSION := "$(CC) $(shell $(CC) -dumpversion)"
 TARGET ?= unix
 RONN = ronn
 MANPAGE = lwnbd.3
-
-$(BIN): banner $(OBJ)
-	$(CC) $(CFLAGS) -o $(BIN) $(OBJ) $(LDFLAGS) $(LIBS)
 
 include .env
 include src/Makefile
@@ -46,8 +43,15 @@ ifeq ($(MAKE_SILENT),1)
 .SILENT: $(OBJ)
 endif
 
+ifeq ($(MAKE_FATAL),1)
+	CFLAGS += -Wfatal-errors
+endif
+
 $(MANPAGE): README.md
 	$(RONN) -r --pipe $< > $@
+
+$(BIN): banner $(OBJ)
+	$(CC) $(CFLAGS) -o $(BIN) $(OBJ) $(LDFLAGS) $(LIBS)
 
 banner:
 	@echo "       _  _  _ __   _ ______  ______"
@@ -58,7 +62,7 @@ banner:
 
 clean:
 	rm -f $(BIN) $(MANPAGE) $(OBJ) *~ core
-	find -iname "*.o" -or -iname "*.a" -exec rm {} \;
+	find -iname "*.o" -exec rm -f {} \;
 
 nbdcleanup:
 	sudo lsof -t /dev/nbd* | sudo xargs -r kill -9

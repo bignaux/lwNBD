@@ -60,28 +60,28 @@ static int atad_ctor(const void *pconfig, lwnbd_export_t *e)
 }
 
 /* nbdcopy nbd://192.168.1.45/hdd0/identify - | hdparm --Istdin  */
-int identify(int argc, char **argv, void *result, int64_t *size)
-{
-    return ata_device_sce_identify_drive(argc, result);
-}
-// int ata_device_idle(int device, int period);
-// int ata_device_smart_get_status(int device);
-// int ata_device_smart_save_attr(int device);
+// int identify(int argc, char **argv, void *result, int64_t *size)
+//{
+//     return ata_device_sce_identify_drive(argc, result);
+// }
+//  int ata_device_idle(int device, int period);
+//  int ata_device_smart_get_status(int device);
+//  int ata_device_smart_save_attr(int device);
 
-static int atad_ctrl(void *handle, char *path, struct lwnbd_command *cmd)
-{
-    struct handle *h = handle;
-
-    if (strcmp("identify", path)) {
-        cmd->cmd = identify;
-        cmd->argc = h->device;
-        cmd->size = 256;
-        return 0;
-    }
-
-    else
-        return -1;
-}
+// static int atad_ctrl(void *handle, char *path, struct lwnbd_command *cmd)
+//{
+//     struct handle *h = handle;
+//
+//     if (strcmp("identify", path)) {
+//         cmd->cmd = identify;
+//         cmd->argc = h->device;
+//         cmd->size = 256;
+//         return 0;
+//     }
+//
+//     else
+//         return -1;
+// }
 
 static int64_t atad_get_size(void *handle)
 {
@@ -109,7 +109,7 @@ static lwnbd_plugin_t plugin = {
     .flush = atad_flush,
     .get_size = atad_get_size,
     .block_size = atad_block_size,
-    .ctrl = atad_ctrl,
+    //    .ctrl = atad_ctrl,
 };
 
 NBDKIT_REGISTER_PLUGIN(plugin)

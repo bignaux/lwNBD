@@ -14,9 +14,6 @@
  */
 
 #include "ioplib.h"
-#include "irx_imports.h"
-#include <config.h>
-#include <lwnbd.h>
 
 /* tcp.c */
 extern void listener(struct nbd_server *s);

@@ -1,6 +1,8 @@
 /*
  * An interactive shell using command plugin
  *
+ *
+ *
  */
 
 #define _GNU_SOURCE
@@ -10,9 +12,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <lwnbd-plugin.h>
-
-extern struct lwnbd_plugin_t *command_plugin_init(void);
 
 char *exportname, *prompt, *base;
 
@@ -37,12 +36,16 @@ static int set_exportname(int argc, char **argv, void *result, int64_t *size)
 
 int main(int argc, char **argv)
 {
-    lwnbd_plugin_h cmdplg;
+    lwnbd_plugin_h cmdplg, memplg;
     lwnbd_context_t *ctx;
-    char *p, *buf;
+    char *p, *buf, memtest[512];
     int errno, r = 0;
-    ;
     uint64_t size = 0;
+
+    /*
+     * set base URI, default exportname to 'shell' and prompt
+     *
+     */
 
     if (-1 == asprintf(&exportname, "shell"))
         exit(EXIT_FAILURE);
@@ -53,6 +56,34 @@ int main(int argc, char **argv)
     if (-1 == set_prompt(base, exportname))
         exit(EXIT_FAILURE);
 
+    /*
+     * create a slice of memory to test memory query
+     *
+     */
+
+    memplg = lwnbd_plugin_init(memory_plugin_init);
+
+    struct memory_config memh = {
+        .base = (uint64_t)memtest,
+        .name = "test",
+        .size = 512,
+        .desc = "",
+    };
+    lwnbd_plugin_new(memplg, &memh);
+
+    /*
+     * let's use query mechanism to set it
+     */
+
+    if (-1 == asprintf(&buf, "test?memcpy=Example of shared memory.\n")) /* create the request */
+        exit(EXIT_FAILURE);
+
+    ctx = lwnbd_get_context(buf); /* GET */
+
+    /*
+     * create a command to change export, to be able to switch to it
+     */
+
     cmdplg = lwnbd_plugin_init(command_plugin_init);
 
     struct lwnbd_command mycmd = {
@@ -62,6 +93,10 @@ int main(int argc, char **argv)
     };
 
     lwnbd_plugin_new(cmdplg, &mycmd);
+
+    /*
+     * main 'interactive' shell loop
+     */
 
     while (r == 0) {
         int n;
@@ -84,6 +119,8 @@ int main(int argc, char **argv)
         }
 
         ctx = lwnbd_get_context(buf);
+        if (ctx == NULL)
+            continue;
 
         if (size < ctx->exportsize) {
             size = ctx->exportsize;
@@ -94,5 +131,9 @@ int main(int argc, char **argv)
         printf("%s", buf);
     }
 
+    free(buf);
+    free(exportname);
+    free(prompt);
+    free(base);
     exit(EXIT_SUCCESS);
 }

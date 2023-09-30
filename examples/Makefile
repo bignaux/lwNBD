@@ -2,7 +2,7 @@ BIN = local-reader \
 	local-shell \
 	lwnbd-server
 
-CFLAGS = -I../include $(CFLAGS-$@) -g
+CFLAGS = -I../include $(CFLAGS-$@) -DLWNBD_DEBUG
 LWNBD_LIB := ../lwnbd.a
 LDLIBS := $(LWNBD_LIB)
 LDFLAGS += $(LDFLAGS-$@)

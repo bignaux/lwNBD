@@ -1,4 +1,4 @@
-#include "nbd.h"
+#include <lwnbd/nbd.h>
 
 /*
  * nbdkit alloc this size ...

@@ -4,7 +4,7 @@
 
 #include <lwnbd.h>
 #include <lwnbd-plugin.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 
 // workaround
 extern int lwnbd_add_context(lwnbd_plugin_t *p, lwnbd_export_t *e);
@@ -17,7 +17,6 @@ typedef enum {
 
 static lwnbd_plugin_t *plugins[MAX_NUM_PLUGINS];
 static plugin_state_t plugins_status[MAX_NUM_PLUGINS];
-
 
 // int lwnbd_plugin_export(lwnbd_export_t *e)
 //{

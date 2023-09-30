@@ -2,6 +2,7 @@
 #define IOP_IRX_IMPORTS_H
 
 #include <irx.h>
+#include <lwnbd.h>
 
 #define PLUGIN_ATAD      1
 //#define PLUGIN_BDM    1
@@ -19,7 +20,7 @@ extern struct lwnbd_plugin_t *atad_plugin_init(void);
 
 #ifdef PLUGIN_BDM
 #include <bdm.h>
-extern struct lwnbd_plugin_t *bdm_plugin_init(void);
+// extern struct lwnbd_plugin_t *bdm_plugin_init(void);
 #endif
 
 #ifdef PLUGIN_MCMAN
@@ -29,11 +30,12 @@ extern struct lwnbd_plugin_t *mcman_plugin_init(void);
 
 #ifdef PLUGIN_MEMORY
 #include <ssbusc.h>
-extern struct lwnbd_plugin_t *memory_plugin_init(void);
+// extern struct lwnbd_plugin_t *memory_plugin_init(void);
 #endif
 
 #ifdef PLUGIN_NBD
 #include <ps2ip.h>
+#include <lwnbd/nbd.h>
 extern struct lwnbd_server *nbd_server_init(void);
 #endif
 
@@ -48,9 +50,9 @@ extern struct lwnbd_plugin_t *pcmstream_plugin_init(void);
 #endif
 
 #ifdef PLUGIN_SIFRPC
+#include <lwnbd/sifrpc.h>
 #include <sifcmd.h>
 #include <sifman.h>
-#include "../../servers/sifrpc/sifrpc.h"
 extern struct lwnbd_server *sifrpc_server_init(void);
 #endif
 
