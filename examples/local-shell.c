@@ -6,6 +6,7 @@
  */
 
 #define _GNU_SOURCE
+#include <errno.h>
 #include <libgen.h>
 #include <lwnbd.h>
 #include <stdlib.h>
@@ -38,7 +39,7 @@ int main(int argc, char **argv)
 {
     lwnbd_plugin_h cmdplg, memplg;
     lwnbd_context_t *ctx;
-    char *p, *buf, memtest[512];
+    char *p, *buf, *memtest;
     int errno, r = 0;
     uint64_t size = 0;
 
@@ -62,6 +63,7 @@ int main(int argc, char **argv)
      */
 
     memplg = lwnbd_plugin_init(memory_plugin_init);
+    memtest = calloc(1, 512);
 
     struct memory_config memh = {
         .base = (uint64_t)memtest,
@@ -72,13 +74,13 @@ int main(int argc, char **argv)
     lwnbd_plugin_new(memplg, &memh);
 
     /*
-     * let's use query mechanism to set it
+     * let's use query mechanism to set it, just because we can !
      */
 
     if (-1 == asprintf(&buf, "test?memcpy=Example of shared memory.\n")) /* create the request */
         exit(EXIT_FAILURE);
 
-    ctx = lwnbd_get_context(buf); /* GET */
+    lwnbd_get_context(buf); /* GET */
 
     /*
      * create a command to change export, to be able to switch to it
@@ -135,5 +137,6 @@ int main(int argc, char **argv)
     free(exportname);
     free(prompt);
     free(base);
+    free(memtest);
     exit(EXIT_SUCCESS);
 }

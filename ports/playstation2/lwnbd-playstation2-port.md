@@ -26,7 +26,7 @@ could add echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing/" >> /etc/apk
     rm -fr Open-PS2-Loader/modules/network/lwNBD/
     ln -rs lwNBD Open-PS2-Loader/modules/network/lwNBD
 
-    docker pull ghcr.io/ps2homebrew/ps2homebrew:main 
+    docker pull ghcr.io/ps2homebrew/ps2homebrew:main
     docker run -it -w /app -v "$(pwd)":/app ghcr.io/ps2homebrew/ps2homebrew:main
     
     export PS2_WORKSPACE=/app (should be in a docker script)

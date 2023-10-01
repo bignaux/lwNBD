@@ -59,9 +59,15 @@ int greeter(int argc, char **argv, void *result, int64_t *size)
     return 0;
 }
 
-int server_shutdown(int argc, char **argv, void *result, int64_t *size)
+/* man 7 signal */
+int signal_cb(int argc, char **argv, void *result, int64_t *size)
 {
-    uv_kill(uv_os_getpid(), SIGINT);
+    int signum = SIGINT;
+    if (argc > 1) {
+        signum = atoi(argv[1]);
+    }
+    *size = sprintf(result, "%s with signal %s\n", argv[0], strsignal(signum));
+    uv_kill(uv_os_getpid(), signum);
     return 0;
 }
 
@@ -138,25 +144,15 @@ int main(int argc, const char **argv)
     lwnbd_server_t nbdsrv;
     lwnbd_plugin_h fileplg, memplg, cmdplg;
 
-    //    int i = atexit(coucou);
-    //    if (i != 0) {
-    //        fprintf(stderr, "cannot set exit function\n");
-    //        exit(EXIT_FAILURE);
-    //    }
-
-    //    if (argc < 2) {
-    //        fprintf(stderr, "Usage: %s <files>\n", argv[0]);
-    //        exit(EXIT_FAILURE);
-    //    }
-
-    /*
+    /*******************************************************************************
      * Register and configure some content plugins ...
      * Plugins can be shared between different servers so they live autonomously.
      *
-     */
+     *******************************************************************************/
 
-    /* NBD has no standard to get remote information about the server ?
-     * let's use memory plugin to create an export 'motd' with some useful infos.
+    /*
+     * NBD has no standard to get remote information about the server ?
+     * Let's use memory plugin to create an export 'motd' with some useful infos.
      */
 
     memplg = lwnbd_plugin_init(memory_plugin_init);
@@ -172,18 +168,24 @@ int main(int argc, const char **argv)
 
 
     /*
+     * Register few useful callback to control the server over the network
      *
      */
+
     cmdplg = lwnbd_plugin_init(command_plugin_init);
     struct lwnbd_command mycmd[] = {
         {.name = "le", .desc = "list export", .cmd = greeter},
-        {.name = "shutdown", .desc = "turn off the application", .cmd = server_shutdown},
+        {.name = "shutdown", .desc = "turn off the application", .cmd = signal_cb},
         NULL,
     };
 
     lwnbd_plugin_new(cmdplg, &mycmd[0]);
     lwnbd_plugin_new(cmdplg, &mycmd[1]);
 
+
+    /*
+     * Export all files passed from command line
+     */
 
     fileplg = lwnbd_plugin_init(file_plugin_init);
     /* assuming no user input error */
@@ -193,7 +195,7 @@ int main(int argc, const char **argv)
     }
 
     /*
-     * create a NBD server, and eventually configure it.
+     * Create a NBD server, and eventually configure it.
      *
      */
 
@@ -217,8 +219,9 @@ int main(int argc, const char **argv)
 
     uv_loop_t *loop = uv_default_loop();
     struct sockaddr_in addr;
-
+    memset(client_states, CLIENT_FREE, sizeof(client_states));
     uv_tcp_t server;
+
     uv_tcp_init(loop, &server);
 
     uv_ip4_addr("0.0.0.0", mynbd.port, &addr);
@@ -235,8 +238,6 @@ int main(int argc, const char **argv)
     uv_signal_t sig;
     uv_signal_init(loop, &sig);
     uv_signal_start(&sig, signal_handler, SIGINT);
-
-    memset(client_states, CLIENT_FREE, sizeof(client_states));
 
     return uv_run(loop, UV_RUN_DEFAULT);
 }

@@ -3,7 +3,7 @@
 
 #define PLUGIN_NAME    command
 #define CMD_DRIVER_MAX 100
-
+#define CMD_BUFFER_SZ  512
 /*
  * Here we don't want an export by command,
  * but one export to be reachable by lwnbd_get_context()
@@ -14,7 +14,7 @@ static int commands_cnt = 0;
 
 struct result_h
 {
-    char result[512];
+    char result[CMD_BUFFER_SZ];
     int64_t size;
 };
 
@@ -77,16 +77,21 @@ static int command_query(void *handle, struct query_t *params, int nb_params)
         cnt++;
     }
 
-    memset(pr.result, '\0', 512);
+    /* nbd client doesn't like 0 size export :
+     * -> nbd.Error: nbd_pread: count cannot be 0: Invalid argument (EINVAL)
+     * workaround for cmd that doesn't have result...
+     */
+    pr.size = 1;
+    memset(pr.result, '\0', CMD_BUFFER_SZ);
 
+    /* 404 */
     if (pvhandle == NULL) {
         DEBUGLOG("%s: command not found\n", commands[cnt].name);
         pr.size = sprintf(pr.result, "%s: command not found\n", params[0].key);
         return 0;
     }
 
-    /* TODO: format argv from params */
-    pvhandle->cmd(1, &params[0].val, pr.result, &pr.size);
+    pvhandle->cmd(nb_params + 1, (char **)&params[0], pr.result, &pr.size);
 
     return 0;
 }
