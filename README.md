@@ -7,7 +7,7 @@ lwNBD(3) -- A Lightweight NBD server library
     #include <lwnbd-server.h>
     #include <lwnbd-plugin.h>
 
-## DESCRIPTION
+## ✨ DESCRIPTION
 
 * Official repository : <https://github.com/bignaux/lwNBD>
 * BSD-style socket API: lwIP 2.0.0 and Linux supported.
@@ -66,7 +66,7 @@ Known supported clients :
 * nbd-client
 * Ceph for Windows (wnbd-client.exe)
 
-## AUTHOR
+## 🪶 AUTHOR
 
 Bignaux Ronan &lt;ronan at aimao.org&gt;
 

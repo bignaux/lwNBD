@@ -25,7 +25,10 @@ static int set_prompt(char *base, char *endpoint)
 
 static int set_exportname(int argc, char **argv, void *result, int64_t *size)
 {
-    *size = asprintf(&exportname, "%s", argv[0]);
+    if (argc <= 1)
+        return -1;
+
+    *size = asprintf(&exportname, "%s", argv[1]);
     if (*size == -1) {
         *size = sprintf(result, "error setting export name\n");
     } else {
@@ -99,6 +102,8 @@ int main(int argc, char **argv)
     /*
      * main 'interactive' shell loop
      */
+
+    printf("Welcome! Type lc to list commands\n");
 
     while (r == 0) {
         int n;

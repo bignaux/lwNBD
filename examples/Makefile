@@ -1,5 +1,7 @@
-BIN = local-reader \
+BIN = \
+	local-reader \
 	local-shell \
+	local-command-wc \
 	lwnbd-server
 
 CFLAGS = -I../include $(CFLAGS-$@) -DLWNBD_DEBUG
@@ -13,6 +15,7 @@ all: $(BIN)
 
 local-reader: local-reader.o $(LWNBD_LIB)
 local-shell: local-shell.o $(LWNBD_LIB)
+local-command-wc: local-command-wc.o $(LWNBD_LIB)
 
 CFLAGS-lwnbd-server.o += $(shell pkg-config --cflags libuv) \
 	-DAPP_VERSION=\"$(APP_VERSION)\" \

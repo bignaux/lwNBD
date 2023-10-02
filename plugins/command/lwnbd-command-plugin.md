@@ -2,23 +2,32 @@
 
 ## Usage : A RPC handler
 
-TARGETS : all
+TARGETS : 🎯 all
 
-STATUS : Experimental
+STATUS : 💣 *very* experimental
 
 ```c
+typedef enum {
+    METHOD_GET,
+    METHOD_POST,
+} method_type;
+
 struct lwnbd_command
 {
     char *name;
     char *desc;
-    int (*cmd)(int argc, char **argv, void *result, int64_t *size);
+    method_type type;
+    int (*cmd)(int argc, char **argv, void *data, int64_t *size);
 };
 ```
 
+* method of type METHOD_GET, are executed on lwnbd_get_context(), and fill data of size size, that will be read later.
+    see example in [examples/local-shell.c](./examples/local-shell.c)
+* method of type METHOD_POST, are pwrite() callback function, needs to be reentrant. They received streamed data of size size.
+    see example in [examples/local-command-wc.c](./examples/local-command-wc.c)
+
 As traditionnal (int argc, char **argv) scheme, you need to manually do the Command-line argument parsing ...
 for now argv contains only the first query of the request, so the all the parameters should go in first value string (space allowed).
-
-see example in [examples/local-shell.c](./examples/local-shell.c)
 
 You can test the mecanism over NBD with [lwnbd-server server](./examples/lwnbd-server.c) and [remoteshell.py](./examples/remoteshell.py)
 

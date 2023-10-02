@@ -1,4 +1,4 @@
-# PCM stream plugin
+# 🔊 PCM stream plugin
 
 ## Usage : access PCM stream
 

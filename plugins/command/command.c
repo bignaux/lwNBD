@@ -12,25 +12,31 @@
 static struct lwnbd_command commands[CMD_DRIVER_MAX];
 static int commands_cnt = 0;
 
-struct result_h
+static char result[CMD_BUFFER_SZ];
+static int64_t exportsize;
+
+struct post_h
 {
-    char result[CMD_BUFFER_SZ];
-    int64_t size;
+    struct lwnbd_command *pvhandle;
+    struct query_t *params;
+    int nb_params;
 };
+static struct post_h pp;
 
-static struct result_h pr;
-
+/* GET */
 static inline int command_pread(void *handle, void *buf, uint32_t count,
                                 uint64_t offset, uint32_t flags)
 {
-    memcpy(buf, pr.result, count);
+    memcpy(buf, result, count);
     return 0;
 }
 
+/* POST */
 static inline int command_pwrite(void *handle, const void *buf, uint32_t count,
                                  uint64_t offset, uint32_t flags)
 {
-    return 0;
+    //	DEBUGLOG("command_pwrite \n");
+    return pp.pvhandle->cmd(pp.nb_params + 1, (char **)&pp.params[0], buf, (int64_t *)&count);
 }
 
 static int command_block_size(void *handle,
@@ -51,6 +57,33 @@ static int command_list(int argc, char **argv, void *result, int64_t *size)
         cnt++;
     }
     //    DEBUGLOG("%d : %s\n", *size, result);
+    return 0;
+}
+
+static int command_query_get(struct lwnbd_command *pvhandle, struct query_t *params, int nb_params)
+{
+    /* nbd client doesn't like 0 size export :
+     * -> nbd.Error: nbd_pread: count cannot be 0: Invalid argument (EINVAL)
+     * workaround for cmd that doesn't have result...
+     */
+    exportsize = 1;
+    memset(result, '\0', CMD_BUFFER_SZ);
+
+    /* TODO : disable write */
+    return pvhandle->cmd(nb_params, (char **)&params[0], result, &exportsize);
+}
+
+static int command_query_post(struct lwnbd_command *pvhandle, struct query_t *params, int nb_params)
+{
+
+    /* TODO : disable read */
+
+    /* we donno size of the incoming payload, we should find something here */
+    exportsize = 1000;
+
+    pp.pvhandle = pvhandle;
+    pp.params = params;
+    pp.nb_params = nb_params;
     return 0;
 }
 
@@ -77,28 +110,27 @@ static int command_query(void *handle, struct query_t *params, int nb_params)
         cnt++;
     }
 
-    /* nbd client doesn't like 0 size export :
-     * -> nbd.Error: nbd_pread: count cannot be 0: Invalid argument (EINVAL)
-     * workaround for cmd that doesn't have result...
-     */
-    pr.size = 1;
-    memset(pr.result, '\0', CMD_BUFFER_SZ);
+    /* dirty workaround */
+    if (params[0].val == NULL)
+        nb_params = 1;
+    else
+        nb_params = 2;
 
-    /* 404 */
-    if (pvhandle == NULL) {
-        DEBUGLOG("%s: command not found\n", commands[cnt].name);
-        pr.size = sprintf(pr.result, "%s: command not found\n", params[0].key);
-        return 0;
+
+    switch (pvhandle->type) {
+        case METHOD_GET:
+            return command_query_get(pvhandle, params, nb_params);
+        case METHOD_POST:
+            return command_query_post(pvhandle, params, nb_params);
+        default:
+            break;
     }
-
-    pvhandle->cmd(nb_params + 1, (char **)&params[0], pr.result, &pr.size);
-
-    return 0;
+    return -1;
 }
 
 static int64_t command_get_size(void *handle)
 {
-    return pr.size;
+    return exportsize;
 }
 
 static int command_add_command(const struct lwnbd_command *h)

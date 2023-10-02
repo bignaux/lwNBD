@@ -26,7 +26,7 @@ lwnbd_plugin_new(memplg, &iopram);
 see full example in [examples/local-shell.c](./examples/local-shell.c)
 
 a current limitation of some nbd client is their minimal read is 512 bytes (minimal blocksize) despite the protocol allow 1 byte blocksize.
-It's not an issue to dump an entire device, but for now, you need to put a minimal .size of 512 in your structure (and multiple of 512) or you'll get truncated data.
+It's not an issue to dump an entire device, but for now, you need to put a minimal .size of 512 in your structure (and multiple of 512) or you'll get truncated data. libnbd based software have not this limitation.
 
 ## PS2 note : 
 

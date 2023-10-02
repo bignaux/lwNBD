@@ -14,13 +14,21 @@
 
 /* experimental */
 //#ifdef PLUGIN_COMMAND
-extern struct lwnbd_plugin_t *command_plugin_init(void);
+
+typedef enum {
+    METHOD_GET,
+    METHOD_POST,
+} method_type;
+
 struct lwnbd_command
 {
     char *name;
     char *desc;
-    int (*cmd)(int argc, char **argv, void *result, int64_t *size);
+    method_type type;
+    int (*cmd)(int argc, char **argv, void *data, int64_t *size);
 };
+
+extern struct lwnbd_plugin_t *command_plugin_init(void);
 //#endif
 
 //#ifdef PLUGIN_MEMORY

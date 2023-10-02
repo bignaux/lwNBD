@@ -125,7 +125,8 @@ BDM is another tentative to make a common interface for PS2 block device, acting
 
 ## idea, c'mon pick one (or more!)
 
-Open-PS2-Loader/modules/network/httpclient to plugin content, see also nbdkit/plugins/curl
+Open-PS2-Loader/modules/network/httpclient to plugin content, see also nbdkit/plugins/curl and https://github.com/nodejs/llhttp
+https://gist.github.com/riskybacon/739cc459f498bb49dbac
 
 make oneliner like nbdcopy nbd://.../cmd/poweroff available like a bus , see @vates/nbd-client node stuff for bundle apps on phone ?
 mem/spu2 ... mc/1/filename.
@@ -133,7 +134,10 @@ close Remotely Launch games https://github.com/ps2homebrew/Open-PS2-Loader/issue
 
 custom build (like nbdtty ...)
 
-Loader to replace ps2link
+Loader to replace ps2link ( see ps2sdk/ee/elf-loader/src/elf.c , memory + custom loader query)
+usage of elf-loader :
+https://github.com/libretro/RetroArch/blob/master/frontend/drivers/platform_ps2.c#L361
+https://github.com/ps2dev/ps2sdk/blob/master/ee/elf-loader/include/elf-loader.h#L23-L51
 
 enable OPL in-game
 
