@@ -35,7 +35,7 @@ $(MANPAGE): README.md
 	$(RONN) -r --pipe $< > $@
 
 clean:
-	rm -f $(BIN) $(MANPAGE) $(OBJ) *~ core 
+	rm -f $(BIN) $(MANPAGE) $(OBJ) *~ core
 
 nbdcleanup:
 	sudo lsof -t /dev/nbd* | sudo xargs -r kill -9
