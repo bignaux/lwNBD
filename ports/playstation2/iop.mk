@@ -30,7 +30,7 @@ IOP_OBJS += $(OBJ)
 #	cp -f lwnbd.3 $(DESTDIR)$(PS2SDK)/ports/share/man/man3/
 
 include $(PS2SDK)/Defs.make
-include $(PS2SDK)/samples/Makefile.iopglobal
+include $(PORT_DIR)/iopglobal.mk
 
 DEST ?= ~/devel/Open-PS2-Loader
 TARGET_IP ?= 192.168.1.45
