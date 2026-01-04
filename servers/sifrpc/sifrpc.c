@@ -1,23 +1,8 @@
-#include <lwnbd/sifrpc.h>
-#include <lwnbd.h>
-#include <lwnbd-server.h>
+#include <lwnbd/lwnbd.h>
+#include <lwnbd/lwnbd-server.h>
 #include <thbase.h>
 
 #define NAME sifrpc
-
-struct sifrpc_server
-{
-    /* user config */
-    int sid;
-    SifRpcFunc_t sifrpc_handler;
-
-    /* private */
-    int RpcThreadID;
-    SifRpcDataQueue_t SifQueueData;
-    SifRpcServerData_t SifServerData;
-    unsigned char SifServerRxBuffer[64];
-    //    unsigned char SifServerTxBuffer[32];
-};
 
 /* for now, only one server per apps */
 static struct sifrpc_server sifrpc_servers;
@@ -90,14 +75,14 @@ static int sifrpc_stop(void *handle)
     return 0;
 }
 
-static void *sifrpc_new(void)
-{
-    return &sifrpc_servers;
-}
+// static void *sifrpc_new(void)
+//{
+//     return &sifrpc_servers;
+// }
 
 static struct lwnbd_server server = {
     .name = "sifrpc",
-    .new = sifrpc_new,
+    //    .new = sifrpc_new,
     .start = sifrpc_start,
     .stop = sifrpc_stop,
     .ctor = sifrpc_ctor,

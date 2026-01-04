@@ -6,3 +6,6 @@ nbd-protocol.h
 .env
 .cproject
 .project
+
+*include/config
+*include/generated

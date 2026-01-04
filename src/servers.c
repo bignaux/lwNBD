@@ -1,5 +1,5 @@
-#include <lwnbd-server.h>
-#include <lwnbd.h>
+#include <lwnbd/lwnbd-server.h>
+#include <lwnbd/lwnbd.h>
 //#include <stdlib.h>
 #include <stdio.h>
 // TODO: https://blog.mbedded.ninja/programming/general/control-methodology/a-function-pointer-based-state-machine/
@@ -13,6 +13,93 @@ struct server_instance
 
 static struct server_instance servers[MAX_NUM_SERVERS];
 static server_state_t servers_status[MAX_NUM_SERVERS];
+
+
+static int server_count = 0;
+static struct lwnbd_server *servers_bis[MAX_NUM_SERVERS]; // replace with server_instance ?
+
+#ifdef CONFIG_CHARGEN_SERVER
+//extern int chargen_cb();
+//struct lwnbd_server chargen = {
+//    .name = "chargen",
+//    //    .config = nbd_config,
+//    //    .ctor = nbd_ctor,
+//    .run = chargen_cb,
+//    //    .new = nbd_new,
+//};
+#endif
+
+#ifdef CONFIG_DAYTIME_SERVER
+//extern int daytime_cb();
+//struct lwnbd_server daytime = {
+//    .name = "daytime",
+//    //    .config = nbd_config,
+//    //    .ctor = nbd_ctor,
+//    .run = daytime_cb,
+//    //    .new = nbd_new,
+//};
+#endif
+
+#ifdef CONFIG_NBD_SERVER
+extern int nbd_synchronous_client_thread_cb(void *handle, const void *client) static struct lwnbd_server server = {
+    .name = "nbd",
+    .config = nbd_config,
+    .ctor = nbd_ctor,
+    .run = nbd_synchronous_client_thread_cb,
+    .new = nbd_new,
+
+    .sync_recv_cb = tcp_recv_block,
+    .sync_send_cb = send,
+};
+#endif
+
+int lwnbd_servers_init()
+{
+#ifdef CONFIG_CHARGEN_SERVER
+    serverbis_init(&chargen);
+    register_server(&chargen);
+    lwnbd_debug("chargen ready\n");
+#endif
+
+#ifdef CONFIG_DAYTIME_SERVER
+    serverbis_init(&daytime);
+    register_server(&daytime);
+    lwnbd_debug("daytime ready\n");
+#endif
+
+
+    return 0;
+}
+
+int register_server(struct lwnbd_server *srv)
+{
+    if (server_count >= MAX_NUM_SERVERS) {
+        lwnbd_debug("Error: too many servers\n");
+        return -1;
+    }
+
+    servers_bis[server_count++] = srv;
+    return 0;
+}
+
+struct lwnbd_server *serverbis_init(struct lwnbd_server *srv)
+{
+    srv->_struct_size = sizeof(*srv);
+    return srv;
+}
+struct lwnbd_server *get_server_by_name(const char *name)
+{
+
+    for (int i = 0; i < server_count; i++) {
+        if (strcmp(servers_bis[i]->name, name) == 0) {
+            //            servers_bis[i]->_struct_size = sizeof(*servers_bis[i]);
+            lwnbd_debug("server  found\n");
+            return servers_bis[i];
+        }
+    }
+    lwnbd_debug("server not found\n");
+    return NULL;
+}
 
 /* SRV_FREE -> SRV_STOPPED */
 // TODO: fix return !!
@@ -29,7 +116,7 @@ lwnbd_server_t lwnbd_server_init(server_init init)
     }
 
     if (i == MAX_NUM_SERVERS) {
-        DEBUGLOG("MAX_NUM_SERVERS limit\n");
+        lwnbd_debug("MAX_NUM_SERVERS limit\n");
         return -1;
     }
 
@@ -38,7 +125,7 @@ lwnbd_server_t lwnbd_server_init(server_init init)
      */
     s = init();
     if (!s) {
-        DEBUGLOG("server registration function failed\n");
+        lwnbd_debug("server registration function failed\n");
         return -1;
     }
 
@@ -51,7 +138,7 @@ lwnbd_server_t lwnbd_server_init(server_init init)
     //    }
 
     if (s->new == NULL) {
-        DEBUGLOG("server must have a .new callback\n");
+        lwnbd_debug("server must have a .new callback\n");
         return -1;
     }
 
@@ -60,7 +147,7 @@ lwnbd_server_t lwnbd_server_init(server_init init)
     si->s = s;
 
     servers_status[i] = SRV_STOPPED;
-    DEBUGLOG("server %s init id=%d\n", s->name, i);
+    lwnbd_debug("server %s init id=%lu\n", s->name, i);
     return i;
 }
 
@@ -72,9 +159,9 @@ int lwnbd_server_config(lwnbd_server_t const handle, const char *key, const char
     struct server_instance *si = &servers[handle];
     struct lwnbd_server *s = si->s;
 
-    DEBUGLOG("server %s: %s=%s\n", si->s->name, key, value);
+    lwnbd_debug("server %s: %s=%s\n", si->s->name, key, value);
     if (s->config == NULL) {
-        DEBUGLOG("this server does not support configuration\n");
+        lwnbd_debug("this server does not support configuration\n");
         return -1;
     }
 
@@ -124,7 +211,7 @@ int lwnbd_server_dump(lwnbd_server_t const handle)
     struct lwnbd_server *s = si->s;
 
     (void)s->name;
-    DEBUGLOG("%s ready...\n", s->name);
+    lwnbd_debug("%s ready...\n", s->name);
 
     //    for (uint32_t i = 0; i < MAX_NUM_PLUGINS; i++)
     //    {
@@ -153,18 +240,18 @@ void lwnbd_server_run(lwnbd_server_t const handle, void *client)
 }
 
 /* SRV_STOPPED -> SRV_STARTED */
-void lwnbd_server_start(lwnbd_server_t const handle)
-{
-    struct server_instance *si = &servers[handle];
-    struct lwnbd_server *s = si->s;
-    server_state_t st = servers_status[handle];
-
-    if (st != SRV_STOPPED)
-        return;
-
-    st = SRV_STARTED;
-    s->start(si->handle);
-}
+// void lwnbd_server_start(lwnbd_server_t const handle)
+//{
+//     struct server_instance *si = &servers[handle];
+//     struct lwnbd_server *s = si->s;
+//     server_state_t st = servers_status[handle];
+//
+//     if (st != SRV_STOPPED)
+//         return;
+//
+//     st = SRV_STARTED;
+//     s->start(si->handle);
+// }
 
 int lwnbd_server_stop(lwnbd_server_t const handle)
 {
@@ -184,3 +271,36 @@ int lwnbd_exit()
     // cleanup() unload() plugins.
     return 0;
 }
+
+
+/* =============================================================
+ *                EVENT LOOP (SELECT-BASED)
+ * ============================================================= */
+
+#include <time.h>
+
+void event_watch_readable(int fd, event_cb cb, void *userdata) {
+    efds[fd].want_read = 1;
+    efds[fd].on_read   = cb;
+    efds[fd].userdata  = userdata;
+    efds[fd].last_activity = time(NULL);
+}
+
+void event_watch_writable(int fd, event_cb cb, void *userdata) {
+    efds[fd].want_write = 1;
+    efds[fd].on_write   = cb;
+    efds[fd].userdata   = userdata;
+    efds[fd].last_activity = time(NULL);
+}
+
+void event_remove(int fd) {
+    efds[fd].want_read = 0;
+    efds[fd].want_write = 0;
+    efds[fd].on_read = NULL;
+    efds[fd].on_write = NULL;
+    efds[fd].userdata = NULL;
+    efds[fd].last_activity = 0;
+}
+
+
+

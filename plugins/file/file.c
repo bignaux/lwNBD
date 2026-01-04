@@ -1,5 +1,5 @@
 #include <libgen.h> // TODO: remove basename() usage
-#include <lwnbd-plugin.h>
+#include <lwnbd/lwnbd-plugin.h>
 #include <stdio.h>
 #include <sys/fcntl.h>
 #include <sys/stat.h>
@@ -101,7 +101,7 @@ static void file_open(void *handle, int readonly)
     //    return 0;
 }
 
-static int file_ctor(const void *pconfig, lwnbd_export_t *e)
+static int file_ctor(const void *pconfig, lwnbd_context_t *c)
 {
     struct handle *h;
     char *bname;
@@ -119,8 +119,8 @@ static int file_ctor(const void *pconfig, lwnbd_export_t *e)
     bname = strdup(filename);
     h->filename = basename(bname);
 
-    e->handle = h;
-    strcpy(e->name, h->filename);
+    c->handle = h;
+    strcpy(c->name, h->filename);
     return 0;
 }
 

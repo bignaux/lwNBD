@@ -1,0 +1,57 @@
+#
+# Automatically generated file; DO NOT EDIT.
+# lwNBD Configuration
+#
+
+#
+# Settings
+#
+
+#
+# Debugging Options
+#
+CONFIG_LOG=y
+CONFIG_LOG_DEFAULT_LEVEL=3
+CONFIG_DEBUG=y
+CONFIG_CROSS_COMPILER_PREFIX=""
+
+#
+# Target Options
+#
+# CONFIG_EE is not set
+# CONFIG_IOP is not set
+CONFIG_UNIX=y
+CONFIG_NET=y
+CONFIG_USB=y
+CONFIG_SERIAL=y
+
+#
+# Servers
+#
+# CONFIG_NBD_SERVER is not set
+CONFIG_SSDP_SERVER=y
+
+#
+# Core
+#
+CONFIG_URI=y
+
+#
+# Plugins
+#
+
+#
+# Support query
+#
+CONFIG_PLUGIN_COMMAND=y
+CONFIG_BUILTIN_COMMAND=y
+CONFIG_PLUGIN_FILE=y
+CONFIG_PLUGIN_MEMORY=y
+
+#
+# Examples
+#
+CONFIG_BUILD_EXAMPLES=y
+CONFIG_LOCAL_READER=y
+CONFIG_LOCAL_SHELL=y
+CONFIG_LOCAL_COMMAND_WC=y

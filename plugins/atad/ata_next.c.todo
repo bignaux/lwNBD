@@ -54,3 +54,7 @@ res = ata_device_identify(device, ata_param);
 res = ata_parameter_parser(ata_param, sparam);
 
     then use model for me->super.export_desc
+    
+/* low-level formating to write bad sector */
+
+    

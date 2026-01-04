@@ -1,0 +1,15 @@
+config NBD_SERVER
+        bool "Support NBD transport"
+        default y
+
+config MAX_RETRIES
+        int "Maximum retry"
+        range 0 100
+        default 5
+        depends on NBD_SERVER
+
+config NBD_BUFFER_LEN
+        int "Buffer size"
+        range 0 4096
+        default 4096
+        depends on NBD_SERVER

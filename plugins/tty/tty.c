@@ -1,6 +1,6 @@
 #include <errno.h>
 #include <iomanX.h>
-#include <lwnbd-plugin.h>
+#include <lwnbd/lwnbd-plugin.h>
 #include <string.h>
 #include <thevent.h>
 
@@ -152,7 +152,7 @@ static inline int nbdtty_pread(void *handle, void *buf, uint32_t count,
 /*
  * pconfig could be the .buffer + .size, a path ...
  */
-static int nbdtty_ctor(const void *pconfig, lwnbd_export_t *e)
+static int nbdtty_ctor(const void *pconfig, lwnbd_context_t *c)
 {
     // TODO : move to right place
     iop_event_t event;
@@ -163,7 +163,7 @@ static int nbdtty_ctor(const void *pconfig, lwnbd_export_t *e)
 
     ev = CreateEventFlag(&event);
     if (ev < 0) {
-        DEBUGLOG("error creating event flag for tty: %\n", ev);
+        lwnbd_debug("error creating event flag for tty: %\n", ev);
         return -1;
     }
 
@@ -179,7 +179,7 @@ static int nbdtty_ctor(const void *pconfig, lwnbd_export_t *e)
 
     printf("NBDTTY loaded! 0x%p\n", ringbuffer);
 
-    strcpy(e->name, "tty");
+    strcpy(c->name, "tty");
 
     return 0;
 }

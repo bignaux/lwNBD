@@ -4,7 +4,8 @@
 
 TARGETS : 🎯 all
 
-STATUS : 💣 *very* experimental
+STATUS : 💣 *very* experimental, in future, we won't rely on a plugin to manage broker.
+ 
 
 ```c
 typedef enum {

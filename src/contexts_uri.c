@@ -15,8 +15,8 @@
  *
  */
 
-#include <lwnbd.h>
-#include <lwnbd-plugin.h>
+#include <lwnbd/lwnbd.h>
+#include <lwnbd/lwnbd-plugin.h>
 #include "yuarel.h"
 #define MAX_QUERY 3
 
@@ -25,29 +25,29 @@ lwnbd_context_t *lwnbd_get_context(char *uri)
     lwnbd_context_t *c;
     lwnbd_plugin_t *p;
 
-    // we don't have yet defaultexport mecanism in core
-    if (!uri) {
-        return NULL;
-    }
-    DEBUGLOG("searched handler for %s.\n", uri);
+    //    if (!uri) {
+    //        return lwnbd_get_defaultexport();
+    //    }
+
+    lwnbd_debug("searched handler for %s.\n", uri);
 
     struct yuarel url;
     struct yuarel_param params[MAX_QUERY];
 
     if (-1 == yuarel_parse(&url, uri)) {
-        LOG("Could not parse url!\n");
+        lwnbd_info("Could not parse url!\n");
         return NULL;
     }
 
-    DEBUGLOG("Struct values:\n");
-    DEBUGLOG("\tpath:\t\t%s\n", url.path);
-    DEBUGLOG("\tquery:\t\t%s\n", url.query);
-    DEBUGLOG("\tfragment:\t%s\n", url.fragment);
+    lwnbd_debug("Struct values:\n");
+    lwnbd_debug("\tpath:\t\t%s\n", url.path);
+    lwnbd_debug("\tquery:\t\t%s\n", url.query);
+    lwnbd_debug("\tfragment:\t%s\n", url.fragment);
 
     int pa = yuarel_parse_query(url.query, '&', params, MAX_QUERY);
     int pa2 = pa;
     while (pa-- > 0) {
-        DEBUGLOG("\t%s: %s\n", params[pa].key, params[pa].val);
+        lwnbd_debug("\t%s: %s\n", params[pa].key, params[pa].val);
     }
 
     /* we should rely on some kind of get_plugin_by_namespace()
@@ -69,7 +69,7 @@ lwnbd_context_t *lwnbd_get_context(char *uri)
     if (p->query) {
         int ret = p->query(c->handle, (struct query_t *)params, pa2);
         if (ret) {
-            LOG("query failed\n");
+            lwnbd_info("query failed\n");
             return NULL;
         }
     }

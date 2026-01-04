@@ -1,5 +1,5 @@
 #include <bdm.h>
-#include <lwnbd-plugin.h>
+#include <lwnbd/lwnbd-plugin.h>
 
 #define PLUGIN_NAME     bdm
 #define MAX_CONNECTIONS 20 // would be in ps2sdk bdm.h

@@ -1,0 +1,37 @@
+menu "Examples"
+
+config BUILD_EXAMPLES
+        bool "Build examples" 
+        default y
+
+config LOCAL_READER
+        bool "local reader" 
+        default y
+        depends on BUILD_EXAMPLES && UNIX
+
+config LOCAL_SHELL
+        bool "local shell"
+        default y
+        depends on BUILD_EXAMPLES && UNIX && BUILTIN_COMMAND
+
+config LOCAL_COMMAND_WC
+        bool "local command wc"
+        default y
+        depends on BUILD_EXAMPLES && UNIX
+
+config SDL_TEXT
+        bool "sdl text"
+        default y
+        depends on BUILD_EXAMPLES && EE
+
+config LWNBD_SERVER
+        bool "lwnbd-server"
+        default y
+        depends on BUILD_EXAMPLES && URI && UNIX && NBD_SERVER
+
+config MINI_XINETD
+        bool "mini-xinetd"
+        default y
+        depends on BUILD_EXAMPLES && UNIX
+        
+endmenu

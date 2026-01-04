@@ -3,9 +3,11 @@
 // TODO : remove dynamic alloc
 // TODO : add slot to pconfig ?
 // TODO : format e->description according to Memory Card device types and port/slot
+// TODO : a command to sign a KELF ?
+// TODO : list mc that's not present ?
 
 #include <intrman.h>
-#include <lwnbd-plugin.h>
+#include <lwnbd/lwnbd-plugin.h>
 #include <mcman.h>
 #include <stdint.h>
 #include <sysmem.h>
@@ -193,7 +195,7 @@ static int mcman_flush(void *handle, uint32_t flags)
     return 0;
 }
 
-static int mcman_ctor(const void *pconfig, lwnbd_export_t *e)
+static int mcman_ctor(const void *pconfig, lwnbd_context_t *c)
 {
     uint8_t device = *(uint8_t *)pconfig;
 
@@ -213,14 +215,14 @@ static int mcman_ctor(const void *pconfig, lwnbd_export_t *e)
     if (result == sceMcResSucceed) {
 
         struct handle *h = &handles[device];
-        e->handle = h;
+        c->handle = h;
         h->device = device;
 
         // Make room for block data
         bbuffer = SysAlloc(pageLen * pagesPerBlock); // TODO: not here
 
         // Description of export
-        sprintf(e->name, "mc%d", device);
+        sprintf(c->name, "mc%d", device);
         h->blocksize = pageLen;
 
         // Size of export
@@ -248,6 +250,12 @@ static int mcman_block_size(void *handle,
     return 0;
 }
 
+//#ifdef CONFIG_URI
+////#include "mcman_q.c"
+//#else
+// static void mcman_query(void) {};
+//#endif
+
 static lwnbd_plugin_t plugin = {
     .name = "mcman",
     .longname = "PlayStation 2 MemoryCard via MCMAN",
@@ -259,6 +267,7 @@ static lwnbd_plugin_t plugin = {
     .flush = mcman_flush,
     .get_size = mcman_get_size,
     .block_size = mcman_block_size,
+    //    .query = mcman_query,
 };
 
 NBDKIT_REGISTER_PLUGIN(plugin)

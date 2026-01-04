@@ -1,7 +1,20 @@
 #ifndef IOPLIB_H
 #define IOPLIB_H
 
-#include "irx_imports.h"
+#include <errno.h>
+#include <intrman.h>
+#include <loadcore.h>
+#include <lwnbd/config.h>
+#include <lwnbd/nbd.h>
+#include <lwnbd/tcp.h>
+#include <lwnbd/lwnbd.h>
+#include <ssbusc.h>
+#include <stdio.h>
+#include <sysclib.h>
+#include <sysmem.h>
+#include <thbase.h>
+#include <thevent.h>
+#include <thsemap.h>
 
 int GetSizeFromDelay(int device);
 void print_memorymap();

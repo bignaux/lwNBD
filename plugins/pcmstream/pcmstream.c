@@ -1,5 +1,5 @@
 #include <audsrv.h>
-#include <lwnbd-plugin.h>
+#include <lwnbd/lwnbd-plugin.h>
 #include <string.h>
 
 #define PLUGIN_NAME            pcmstream
@@ -45,7 +45,7 @@ static inline int pcmstream_flush(void *handle, uint32_t flags)
     return 0;
 }
 
-static int pcmstream_ctor(const void *pconfig, lwnbd_export_t *e)
+static int pcmstream_ctor(const void *pconfig, lwnbd_context_t *c)
 {
     uint32_t i;
     struct pcmstream_config *h;
@@ -60,13 +60,13 @@ static int pcmstream_ctor(const void *pconfig, lwnbd_export_t *e)
     h = &handles[i];
     memcpy(h, pconfig, sizeof(struct pcmstream_config));
 
-    e->handle = h;
-    strcpy(e->name, h->name);
-    strcpy(e->description, h->desc);
+    c->handle = h;
+    strcpy(c->name, h->name);
+    strcpy(c->description, h->desc);
 
     if (audsrv_init() != 0) {
         //        LOG("Failed to initialize audsrv: %s\n", audsrv_get_error_string());
-        LOG("Failed to initialize audsrv\n");
+        lwnbd_info("Failed to initialize audsrv\n");
         return -1;
     }
 

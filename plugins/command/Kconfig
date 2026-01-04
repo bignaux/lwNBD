@@ -1,0 +1,14 @@
+config PLUGIN_COMMAND
+        bool "Support query" 
+        default n
+        depends on URI
+ 
+config BUILTIN_COMMAND
+        bool "Build builtins commands"
+        default y
+        depends on PLUGIN_COMMAND
+        
+#config BUILTIN_ECHO
+#        bool "echo builtin"
+#        default y
+#        depends on BUILTIN_COMMAND

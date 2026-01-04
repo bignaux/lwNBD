@@ -2,12 +2,12 @@
  * A demonstration of the methods currently available to access an export locally.
  */
 
-#include <lwnbd.h>
+#include <lwnbd/lwnbd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-int main(int argc, const char **argv)
+int main(int argc, char **argv)
 {
     lwnbd_plugin_h fileplg;
     lwnbd_context_t *ctx;

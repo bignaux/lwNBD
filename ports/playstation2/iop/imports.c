@@ -1,8 +1,11 @@
-#include "irx_imports.h"
+#include <irx.h>
+
+#include "ioplib.h"
 
 /* clang-format off */
 
-#ifdef PLUGIN_ATAD
+#ifdef CONFIG_PLUGIN_ATAD
+#include <atad.h>
 atad_IMPORTS_start
 I_ata_device_flush_cache
 I_ata_device_sce_identify_drive
@@ -11,7 +14,8 @@ I_ata_get_devinfo
 atad_IMPORTS_end
 #endif
 
-#ifdef PLUGIN_BDM
+#ifdef CONFIG_PLUGIN_BDM
+#include <bdm.h>
 bdm_IMPORTS_start
 I_bdm_connect_bd
 I_bdm_disconnect_bd
@@ -22,7 +26,8 @@ I_bdm_get_bd
 bdm_IMPORTS_end
 #endif
 
-#ifdef PLUGIN_TTY
+#ifdef CONFIG_PLUGIN_TTY
+#include <iomanX.h>
 iomanX_IMPORTS_start
 I_AddDrv
 I_close
@@ -45,7 +50,8 @@ I_RegisterLibraryEntries
 I_ReleaseLibraryEntries
 loadcore_IMPORTS_end
 
-#ifdef PLUGIN_NBD
+#ifdef CONFIG_NET
+#include <ps2ip.h>
 ps2ip_IMPORTS_start
 I_lwip_accept
 I_lwip_bind
@@ -80,14 +86,16 @@ I_SignalSema
 I_WaitSema
 thsemap_IMPORTS_end
 
-#ifdef PLUGIN_MEMORY
+#ifdef CONFIG_PLUGIN_MEMORY
+#include <ssbusc.h>
 ssbusc_IMPORTS_start
 I_GetBaseAddress
 I_GetDelay
 ssbusc_IMPORTS_end
 #endif
 
-#ifdef PLUGIN_PCMSTREAM
+#ifdef CONFIG_PLUGIN_PCMSTREAM
+#include <audsrv.h>
 audsrv_IMPORTS_start
 I_audsrv_init
 I_audsrv_play_audio
@@ -115,13 +123,11 @@ I_QueryMemSize
 sysmem_IMPORTS_end
 
 stdio_IMPORTS_start
-//#ifndef LWNBD_DEBUG
 I_printf
 //#endif
 stdio_IMPORTS_end
 
 sysclib_IMPORTS_start
-//#ifdef LWNBD_DEBUG
 //I_printf
 //#endif
 I_memcpy
@@ -136,7 +142,8 @@ I_strncpy
 I_toupper
 sysclib_IMPORTS_end
 
-#ifdef PLUGIN_MCMAN
+#ifdef CONFIG_PLUGIN_MCMAN
+#include <mcman.h>
 xmcman_IMPORTS_start
 I_McDataChecksum
 I_McDetectCard2

@@ -1,0 +1,37 @@
+comment 'Target Options'
+
+choice
+        prompt "Target Architecture"
+        default UNIX
+
+config EE
+    bool "Playstation 2 Emotion Engine"
+    select NET
+    select USB
+    select SERIAL
+
+config IOP
+    bool "Playstation 2 IOP"
+    select NET
+    select USB
+    select SERIAL
+
+config UNIX
+    bool "unix"
+    select NET
+    select USB
+    select SERIAL
+
+endchoice
+
+config NET
+    bool
+    default n
+
+config USB
+    bool
+    default n
+
+config SERIAL
+    bool
+    default n

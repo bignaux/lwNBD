@@ -1,11 +1,11 @@
-lwNBD(3) -- A Lightweight NBD server library
+lwNBD(3) -- A Lightweight software component framework
 =============================================
 
-## SYNOPSIS
+## 👇 SYNOPSIS
 
-    #include <lwnbd.h>
-    #include <lwnbd-server.h>
-    #include <lwnbd-plugin.h>
+    #include <lwnbd/lwnbd.h>
+    #include <lwnbd/lwnbd-server.h>
+    #include <lwnbd/lwnbd-plugin.h>
 
 ## ✨ DESCRIPTION
 
@@ -27,20 +27,11 @@ The lwNBD API is broken down into 3:
 
 * an API to manage server and content to be embbed in apps. The idea is to be able to manage servers as xinetd would.
 
-* a server API to create protocol and transport plugins. Currently, only support NBD protocol, but could extend to Zmodem, AoE ... You then benefit from the mechanisms put in place for NBD such as content and management plugins.
+* a server API to create protocol and transport plugins. Currently, only support [NBD protocol](./servers/nbd/lwnbd-nbd-server.md), but could extend to Zmodem, AoE ... You then benefit from the mechanisms put in place for NBD such as content and management plugins.
 
 * a plugin API to create content plugins. The plugin API has been entirely rewritten to be closer to the [nbdkit-plugin](https://libguestfs.org/nbdkit-plugin.3.html) one in order to benefit from the experience of their software architecture, and to facilitate the porting of code from one or the other library. An obstacle to this convergence is that nbdkit does not support the use of multiple plugins in a single instance.
 
-There are 2 targets supported :
-
-* GNU/Linux that use *file* plugin to
-  serve a list of files as command line parameters. For the time being, the main 
-  purpose of the support is to facilitate development. It uses libuv as event loop, and can serve multiple client.
-
-* Playstation 2 IOP via an IRX module for [Open-PS2-Loader](https://github.com/ps2homebrew/Open-PS2-Loader).
-  It can export [hdd drive (atad plugin)](./plugins/atad/lwnbd-atad-plugin.md), [MemoryCard (mcman plugin)](./plugins/mcman/lwnbd-mcman-plugin.md), rom0 and IOP ram (*memory* plugin). Read more about this on [my Playstation 2 port notes](./ports/playstation2/lwnbd-playstation2-port.md).
-
-## HISTORY
+## 📜 HISTORY
 
 On Playstation 2, there is no standardized central partition table like GPT for
 hard disk partitioning, nor is there a standard file system but PFS and
@@ -52,24 +43,10 @@ which were broken when the toolchain was updated. The same goes for the memory
 cards and other block devices on this console, which is why I decided to
 implement NBD on this target first.
 
-## STATUS
-
-Although this server is not yet complete in respect of the minimal requirements
-defined by the [NBD protocol](https://github.com/NetworkBlockDevice/nbd/blob/master/doc/proto.md#baseline),
-it is nevertheless usable with certain clients. In a [RERO spirit](https://en.wikipedia.org/wiki/Release_early,_release_often)
-i publish this "AS-IS".
-
-Known supported clients :
-
-* nbdcopy (provided by libnbd)
-* nbdfuse (provided by libnbd), works on windows with WSL2.
-* nbd-client
-* Ceph for Windows (wnbd-client.exe)
-
 ## 🪶 AUTHOR
 
-Bignaux Ronan &lt;ronan at aimao.org&gt;
+Bignaux Ronan &lt;rbignaux at free.fr&gt;
 
-## LICENSE
+## ©️ LICENSE
 
 BSD

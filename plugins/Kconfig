@@ -1,0 +1,36 @@
+menu "Plugins"
+
+config PLUGIN_ATAD
+        bool "Support Playstation 2 HDD"
+        default y
+        depends on IOP
+
+menu "Support query"
+source plugins/command/Kconfig
+endmenu
+
+config PLUGIN_FILE
+        bool "Support file"
+        default y
+        depends on (UNIX || EE)
+
+config PLUGIN_MCMAN
+        bool "Support Playstation 2 Memory Cards"
+        default y
+        depends on IOP
+
+config PLUGIN_MEMORY
+        bool "Support Memory"
+        default y
+
+config PLUGIN_PCMSTREAM
+        bool "Support PCM stream on Playstation 2"
+        default n
+        depends on IOP
+
+config PLUGIN_TTY
+        bool "Support Playstation 2 tty"
+        default n
+        depends on IOP
+
+endmenu

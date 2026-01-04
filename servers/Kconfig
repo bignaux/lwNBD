@@ -1,0 +1,27 @@
+menu "Servers"
+
+config CHARGEN_SERVER
+        bool "Support CHARGEN transport"
+        default y
+        depends on NET
+
+config DAYTIME_SERVER
+        bool "Support DAYTIME transport"
+        default y
+        depends on NET
+
+menu "NBD"
+source "servers/nbd/Kconfig"
+endmenu
+
+config SIF_SERVER
+        bool "Support SIF transport"
+        default y
+        depends on IOP
+        
+config SSDP_SERVER
+        bool "Support SSDP transport"
+        default y
+        depends on NET        
+
+endmenu

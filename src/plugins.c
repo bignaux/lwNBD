@@ -2,12 +2,8 @@
  * Should not be aware of nbd protocol or transport layer
  */
 
-#include <lwnbd.h>
-#include <lwnbd-plugin.h>
-//#include <stdlib.h>
-
-// workaround
-extern int lwnbd_add_context(lwnbd_plugin_t *p, lwnbd_export_t *e);
+#include <lwnbd/lwnbd.h>
+#include <lwnbd/lwnbd-plugin.h>
 
 typedef enum {
     PLUGIN_FREE,
@@ -18,33 +14,35 @@ typedef enum {
 static lwnbd_plugin_t *plugins[MAX_NUM_PLUGINS];
 static plugin_state_t plugins_status[MAX_NUM_PLUGINS];
 
-// int lwnbd_plugin_export(lwnbd_export_t *e)
-//{
-//	lwnbd_plugin_t *p = plugins[plugin];
-//	return lwnbd_add_context(p, e);
-// }
-
 int lwnbd_plugin_new(lwnbd_plugin_h const plugin, const void *pconfig)
 {
     lwnbd_plugin_t *p = plugins[plugin];
-    lwnbd_export_t e;
+    lwnbd_context_t *c;
 
     if (p->ctor == NULL) {
         return -1;
     }
 
-    e.description[0] = '\0';
-    if (p->ctor(pconfig, &e) != 0) {
-        return -1;
-    }
-
-    if (e.handle == NULL) /* case for command for example */
-    {
+    if (p->export_without_handle == 1) {
+        if (p->ctor(pconfig, NULL) != 0) {
+            return -1;
+        }
         return 0;
     }
 
+    c = lwnbd_new_context();
 
-    lwnbd_add_context(p, &e);
+    c->description[0] = '\0';
+    if (p->ctor(pconfig, c) != 0) {
+        return -1;
+    }
+
+    c->p = p;
+
+    if (!strlen(c->description))
+        strcpy(c->description, p->longname);
+
+    lwnbd_debug("Add context %s: %s 0x" PRI_UINT64 " %p\n", c->name, c->description, PRI_UINT64_C_Val(c->exportsize), c);
     return 0;
 }
 
@@ -71,13 +69,13 @@ int lwnbd_plugin_config(lwnbd_plugin_h const plugin, const char *key, const char
         lkey = key;
     } else if (p->magic_config_key) {
         lkey = p->magic_config_key;
-        DEBUGLOG("using magic_config_key %s\n", lkey);
+        lwnbd_debug("using magic_config_key %s\n", lkey);
     } else {
-        DEBUGLOG("you must provide a key\n");
+        lwnbd_debug("you must provide a key\n");
         return -1;
     }
 
-    DEBUGLOG("plugin %s: %s=%s\n", p->name, lkey, value);
+    lwnbd_debug("plugin %s: %s=%s\n", p->name, lkey, value);
     if (p->config(lkey, value) == -1)
         return -1;
 
@@ -131,20 +129,19 @@ lwnbd_plugin_h lwnbd_plugin_init(plugin_init init)
 
     plugins[i] = p;
     plugins_status[i] = PLUGIN_CREATED;
-    DEBUGLOG("plugin %s registered\n", p->name);
 
     if (p->export_without_handle == 1) {
 
-        lwnbd_export_t *e = malloc(sizeof(lwnbd_export_t));
-        if (e == NULL)
-            LOG("malloc!\n");
-        e->handle = NULL;
-        //		strcpy(e->description , p->description);
-        strcpy(e->name, "shell");
-        lwnbd_add_context(p, e);
-        free(e);
+        lwnbd_context_t *c = lwnbd_new_context();
+        if (c == NULL)
+            lwnbd_info("lwnbd_new_context!\n");
+        c->handle = NULL;
+        strcpy(c->description, p->longname);
+        strcpy(c->name, "api"); /* TODO: configurable endpoint */
+        c->p = p;
     }
 
+    lwnbd_debug("plugin %s registered\n", p->name);
     return i;
 }
 

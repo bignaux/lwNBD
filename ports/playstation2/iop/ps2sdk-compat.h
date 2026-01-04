@@ -8,6 +8,8 @@
 #define UINT64_MAX  0xffffffffffffffff
 #define UINT64_C(x) ((x) + (UINT64_MAX - UINT64_MAX))
 
+#define htobe64(x) htonll(x)
+#define be64toh(x) ntohll(x)
 
 typedef int ssize_t;
 

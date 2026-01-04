@@ -1,0 +1,66 @@
+# https://doc.coreboot.org/getting_started/kconfig.html?highlight=kconfig
+# https://github.com/jgunthorpe/busybox/blob/master/scripts/config/Kconfig-language.txt
+# Busybox use an interesting way for his "applet", they self-contained the Kconfig that is extracted
+# at build time by scripts/gen_build_files.sh, see busybox/docs/new-applet-HOWTO.txt
+
+mainmenu "lwNBD Configuration"
+
+menu "Settings"
+
+comment 'Debugging Options'
+
+config LOG
+    bool "Build with log"
+    default n
+    help
+    Say Y here to compile with
+
+config LOG_DEFAULT_LEVEL
+    int "Default log level"
+    range 0 4
+    default 3
+    depends on LOG
+    help
+      Sets log level for modules which don't specify it explicitly. When
+      set to 0 it means log will not be activated for those modules.
+      Levels are:
+      
+      - 0 OFF
+      - 1 ERROR,
+      - 2 WARNING
+      - 3 INFO
+      - 4 DEBUG
+    
+config DEBUG
+    bool "Build with debug information"
+    default n
+    depends on !IOP && !EE
+    help
+    Say Y here to compile with debug information.
+    This increases the size of the binary considerably, and
+    should only be used when doing development.
+
+    This adds -g option to gcc command line.
+
+    Most people should answer N.
+
+config CROSS_COMPILER_PREFIX
+    string "Cross compiler prefix"
+    default ""
+    help
+    If you want to build lwNBD with a cross compiler, then you
+    will need to set this to the cross-compiler prefix, for example,
+    "i386-uclibc-".
+
+    Note that CROSS_COMPILE environment variable or
+    "make CROSS_COMPILE=xxx ..." will override this selection.
+
+    Native builds leave this empty.
+
+endmenu
+
+source ports/Kconfig
+source servers/Kconfig
+source src/Kconfig
+source plugins/Kconfig
+source examples/Kconfig

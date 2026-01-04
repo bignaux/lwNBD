@@ -1,10 +1,11 @@
-#include <lwnbd/nbd.h>
-#include <string.h>
 #include <errno.h>
-//#include <stdlib.h> // temporary
-
-#define NAME                   nbd
-#define NBD_SERVER_MAX_DEVICES 1 /* TODO handles are bugged, fix it */
+#include <lwnbd/nbd.h>
+#include <lwnbd/tcp.h> // need tcp_recv_block() until we get async complete on nbd
+#include <lwnbd/lwnbd-plugin.h>
+#include <lwnbd/nbd-protocol.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
 
 typedef enum {
     HANDLE_FREE,
@@ -12,78 +13,146 @@ typedef enum {
     //	HANDLE_INUSE,
 } handle_state_t;
 
+#define NBD_SERVER_MAX_DEVICES 3
+
 /* specific plugin private data */
-static struct nbd_server handles[NBD_SERVER_MAX_DEVICES];
+static struct lwnbd_context_nbd_t handles[NBD_SERVER_MAX_DEVICES];
 static int handle_in_use[NBD_SERVER_MAX_DEVICES];
 
-/*
- * https://lwip.fandom.com/wiki/Receiving_data_with_LWIP
- * pread() eq for nbd server.
- */
-int32_t nbd_recv(int s, void *mem, size_t len, int flags)
+void nbdify_context(lwnbd_context_nbd_t *ctx)
 {
-    uint32_t left = len;
-    uint32_t totalRead = 0;
+    uint16_t eflags = NBD_FLAG_HAS_FLAGS;
+    uint32_t minimum, preferred, maximum;
+    struct lwnbd_plugin_t *p = ctx->p;
 
-    do {
-        ssize_t bytesRead = recv(s, (void *)((uint8_t *)mem + totalRead), left, flags);
-        DEBUGLOG("bytesRead = %zd/%u\n", bytesRead, left); // %u
-        if (bytesRead <= 0) {
-            //            perror("nbd_recv:");
-            return bytesRead;
-        }
-        left -= bytesRead;
-        totalRead += bytesRead;
 
-    } while (left);
-    return totalRead;
+    if (!p->pwrite)
+        eflags |= NBD_FLAG_READ_ONLY;
+
+    if (p->flush)
+        eflags |= NBD_FLAG_SEND_FLUSH;
+
+    ctx->eflags = eflags;
+
+    if (p->block_size) {
+        p->block_size(ctx->handle, &minimum, &preferred, &maximum);
+    } else
+        minimum = preferred = maximum = 512;
+
+    ctx->minimum_block_size = minimum;
+    ctx->preferred_block_size = preferred;
+    ctx->maximum_block_size = maximum;
+
+    //    ctx->sock = *(int *)data;
+    //    ctx->nbd_buffer = malloc(NBD_BUFFER_LEN); // __attribute__((aligned(16)));
 }
 
-static int client_init(struct nbd_server *s, struct nbd_client *c)
+// lwnbd_context_t *lwnbd_get_defaultexport()
+//{
+//     return defaultcontexts;
+// }
+//
+// lwnbd_context_t *lwnbd_set_defaultexport(const char *name)
+//{
+//     defaultcontexts = lwnbd_get_context_string(name);
+//     return defaultcontexts;
+// }
+
+// get initialized socket
+int nbd_server_create(struct nbd_server *server)
 {
-    if (c->sock < 0)
-        return -1;
+    struct sockaddr_in peer;
+    register int r;
+    int sock;
+
+    peer.sin_family = AF_INET;
+    peer.sin_port = htons(10809);
+    peer.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0) {
+        lwnbd_debug("socket failed\n");
+        goto error_trap;
+    }
+
+    //        if (setsockopt(server->tcp_socket, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
+    //        {
+    //        	DEBUGLOG("setsockopt(SO_REUSEADDR) failed\n");
+    //            goto error_trap;
+    //        }
+
+    r = bind(sock, (struct sockaddr *)&peer, sizeof(peer));
+    if (r < 0) {
+        lwnbd_debug("bind failed\n");
+        goto error_trap;
+    }
+
+    r = listen(sock, MAX_NUM_CLIENTS);
+    if (r < 0) {
+        lwnbd_debug("listen failed\n");
+        goto error_trap;
+    }
+
+    lwnbd_info("nbd server created.\n");
+    return 0;
+
+error_trap:
+    lwnbd_info("failed to init nbd server.\n");
+    close(sock);
+    return -1;
+}
+
+/* Transitional workaround
+ *
+ *
+ * actually, void *client is just the socket client
+ *
+ * */
+
+static int nbd_synchronous_client_thread_cb(void *handle, const void *client)
+{
+    register int r = 0;
+    lwnbd_context_nbd_t *ctx = handle;
+
+    struct nbd_client temp_client;
+    struct nbd_client *c = &temp_client;
+
+    c->sock = *(int *)client;
+
+    //    c.nbd_buffer = malloc(NBD_BUFFER_LEN); // __attribute__((aligned(16)));
 
     if (!s->preinit) {
+        c->ctx = lwnbd_new_context(); /* create ctx for handshake */
+        if (!c->ctx)
+            return -1;
         c->state = HANDSHAKE;
     } else {
-        c->ctx = lwnbd_get_context(s->defaultexport);
+        c->ctx = lwnbd_get_defaultexport();
         if (c->ctx != NULL) {
             c->state = TRANSMISSION;
-            DEBUGLOG("export context %s.\n", c->ctx->name);
+            lwnbd_debug("export context %s.\n", c->ctx->name);
         } else {
-            LOG("You need to provide a default export to use preinit.\n");
+            lwnbd_info("You need to provide a default export to use preinit.\n");
             return -1;
         }
     }
-    return 0;
-}
 
-/* Transitional workaround */
-static int nbd_synchronous_client_thread_cb(void *handle, void *data)
-{
-    struct nbd_server *s = handle;
-    struct nbd_client c;
-
-    c.sock = *(int *)data;
-    c.nbd_buffer = malloc(NBD_BUFFER_LEN); // __attribute__((aligned(16)));
-
-    register err_t r = client_init(s, &c);
-    if (r)
-        return -1;
+    //    nbdify_context(ctx);
+    lwnbd_debug("coucou = %p.\n", handle);
 
     while (r == 0) {
-        switch (c.state) {
+        lwnbd_debug("coucou = %d.\n", ctx->state);
+        switch (c->state) {
             case HANDSHAKE:
-                r = protocol_handshake(s, &c);
+                r = protocol_handshake(ctx, c);
                 if (r == -1) {
-                    LOG("an error occured during negotiation phase.\n");
+                    lwnbd_info("an error occured during negotiation phase.\n");
                 }
                 break;
             case TRANSMISSION:
-                r = transmission_phase(&c);
+                r = transmission_phase(ctx, c);
                 if (r == -1)
-                    LOG("an error occured during transmission phase.\n");
+                    lwnbd_info("an error occured during transmission phase.\n");
                 break;
             case ABORT:
                 r = -1;
@@ -92,7 +161,6 @@ static int nbd_synchronous_client_thread_cb(void *handle, void *data)
                 break;
         }
     }
-    free(c.nbd_buffer);
     return r;
 }
 
@@ -111,22 +179,10 @@ uint32_t nbd_server_get_gflags(struct nbd_server *h)
     return h->gflags;
 }
 
-char *nbd_server_get_defaultexport(struct nbd_server *h)
-{
-    return h->defaultexport;
-}
-
-uint16_t nbd_server_get_port(struct nbd_server *h)
-{
-    return h->port;
-}
-
 static int nbd_config(void *handle, const char *key, const char *value)
 {
     struct nbd_server *s = handle;
-    if (strcmp(key, "default-export") == 0) {
-        strncpy(s->defaultexport, value, 31);
-    } else if (strcmp(key, "readonly") == 0) {
+    if (strcmp(key, "readonly") == 0) {
         s->readonly = 1;
     } else if (strcmp(key, "preinit") == 0) {
         s->preinit = 1;
@@ -134,8 +190,6 @@ static int nbd_config(void *handle, const char *key, const char *value)
         printf("config key %s unknown.\n", key);
         return -1;
     }
-    //	else if (strcmp(key, "port") == 0)
-    //		s.port = value;
 
     //	else if (strcmp(key, "retry") == 0) {
     //		if (nbdkit_parse_unsigned("retry", value, &retry) == -1)
@@ -144,14 +198,21 @@ static int nbd_config(void *handle, const char *key, const char *value)
     return 0;
 }
 
-static int nbd_ctor(void *handle, const void *pconfig)
+static int nbd_ctor(void *handle, const void *settings)
 {
-    struct nbd_server *h = handle;
-    memcpy(h, pconfig, sizeof(struct nbd_server));
+    struct lwnbd_context_nbd_t *h = handle;
+    static const struct nbdsettings default_nbd_server = {
+        .port = NBDDEFAULTPORT,
+        .max_retry = CONFIG_MAX_RETRIES,
+        .gflags = (NBD_FLAG_FIXED_NEWSTYLE | NBD_FLAG_NO_ZEROES),
+        .preinit = 0,
+        .readonly = 0,
+    };
+
+    //    memcpy(h, &default_nbd_server, sizeof(struct nbdsettings));
     return 0;
 }
 
-/* to have some default setting ? */
 static void *nbd_new(void)
 {
     uint32_t i;
@@ -165,13 +226,3 @@ static void *nbd_new(void)
 
     return &handles[i];
 }
-
-static struct lwnbd_server server = {
-    .name = "nbd",
-    .new = nbd_new,
-    .config = nbd_config,
-    .ctor = nbd_ctor,
-    .run = nbd_synchronous_client_thread_cb,
-};
-
-NBDKIT_REGISTER_SERVER(server)

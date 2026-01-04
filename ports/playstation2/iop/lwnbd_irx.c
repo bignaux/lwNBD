@@ -15,11 +15,6 @@
 
 #include "ioplib.h"
 
-/* tcp.c */
-extern void listener(struct nbd_server *s);
-extern int nbd_close(int socket);
-extern int nbd_server_create(struct nbd_server *server);
-
 IRX_ID(APP_NAME, 1, 1);
 extern struct irx_export_table _exp_lwnbd;
 
@@ -44,6 +39,7 @@ struct lwnbd_config
 // new bug : issue when config already done, write permission can't be enable back.
 static int config(struct lwnbd_config *config)
 {
+
     /*
      * create a NBD server, and eventually configure it.
      *
@@ -51,8 +47,8 @@ static int config(struct lwnbd_config *config)
     nbdsrv = lwnbd_server_init(nbd_server_init);
 
     struct nbd_server mynbd = {
-        .port = 10809,
-        .max_retry = MAX_RETRIES,
+        //        .port = 10809,
+        .max_retry = CONFIG_MAX_RETRIES,
         .gflags = (NBD_FLAG_FIXED_NEWSTYLE | NBD_FLAG_NO_ZEROES),
         .preinit = 0,
         //		.readonly = config->readonly ? ,
@@ -70,21 +66,21 @@ static int config(struct lwnbd_config *config)
         //    print_memorymap();
         //    print_memorymap();
 
-#ifdef PLUGIN_ATAD
+#ifdef CONFIG_PLUGIN_ATAD
     lwnbd_plugin_h atadplg = lwnbd_plugin_init(atad_plugin_init);
     for (int i = 0; i < 2; i++) {
         lwnbd_plugin_new(atadplg, &i);
     }
 #endif
 
-#ifdef PLUGIN_MCMAN
+#ifdef CONFIG_PLUGIN_MCMAN
     lwnbd_plugin_h mcmanplg = lwnbd_plugin_init(mcman_plugin_init);
     for (int i = 0; i < 2; i++) {
         lwnbd_plugin_new(mcmanplg, &i);
     }
 #endif
 
-#ifdef PLUGIN_MEMORY
+#ifdef CONFIG_PLUGIN_MEMORY
     lwnbd_plugin_h memplg = lwnbd_plugin_init(memory_plugin_init);
     struct memory_config bios = {
         .base = 0x1FC00000,
@@ -110,12 +106,12 @@ static int config(struct lwnbd_config *config)
     //    lwnbd_plugin_new(ttyplg, NULL);
     //#endif
 
-#ifdef PLUGIN_BDM
+#ifdef CONFIG_PLUGIN_BDM
     lwnbd_plugin_h bdmplg = lwnbd_plugin_init(bdm_plugin_init);
     lwnbd_plugin_new(bdmplg, NULL);
 #endif
 
-#ifdef PLUGIN_PCMSTREAM
+#ifdef CONFIG_PLUGIN_PCMSTREAM
     lwnbd_plugin_h pcmplg = lwnbd_plugin_init(pcmstream_plugin_init);
     struct pcmstream_config pcmc = {
         .name = "speakers",
@@ -142,7 +138,7 @@ static int *lwnbd_server_cmd_start(struct lwnbd_config *conf, int length, int *r
         configured = 1;
     }
 
-    DEBUGLOG("LWNBD_SERVER_CMD_START\n");
+    lwnbd_debug("LWNBD_SERVER_CMD_START\n");
 
     nbd_thread.attr = TH_C;
     nbd_thread.option = 0;
@@ -152,10 +148,10 @@ static int *lwnbd_server_cmd_start(struct lwnbd_config *conf, int length, int *r
 
     nbdThreadID = CreateThread(&nbd_thread);
     if (nbdThreadID > 0) {
-        LOG("LWNBD_SERVER_CMD_START StartThread.\n");
+        lwnbd_info("LWNBD_SERVER_CMD_START StartThread.\n");
         *ret = StartThread(nbdThreadID, (struct lwnbd_server_t *)nbdsrv);
     } else {
-        LOG("LWNBD_SERVER_CMD_START FAILED CreateThread.\n");
+        lwnbd_info("LWNBD_SERVER_CMD_START FAILED CreateThread.\n");
         *ret = nbdThreadID;
     }
     return ret;
@@ -163,7 +159,7 @@ static int *lwnbd_server_cmd_start(struct lwnbd_config *conf, int length, int *r
 
 /* sifrpc server custom app handler
  *
- * ideally <lwnbd.h> completed so we can remove config() hack
+ * ideally <lwnbd/lwnbd.h> completed so we can remove config() hack
  *
  * typedef void * (*SifRpcFunc_t)(int fno, void *buffer, int length);
  * */
@@ -174,7 +170,7 @@ static int *lwnbd_rpc_handler(int fno, void *buffer, int length)
         case LWNBD_SERVER_CMD_START:
             return lwnbd_server_cmd_start(buffer, length, &ret);
         case LWNBD_SERVER_CMD_STOP:
-            LOG("LWNBD_SERVER_CMD_STOP.\n");
+            lwnbd_info("LWNBD_SERVER_CMD_STOP.\n");
             // TODO
             TerminateThread(nbdThreadID);
             DeleteThread(nbdThreadID);
@@ -199,7 +195,7 @@ int _start(int argc, char **argv)
 
     sifrpcsrv = lwnbd_server_init(sifrpc_server_init);
     if (sifrpcsrv < 0) {
-        LOG("failed init sifrpc server.\n");
+        lwnbd_info("failed init sifrpc server.\n");
         return MODULE_NO_RESIDENT_END;
     }
 
@@ -209,7 +205,8 @@ int _start(int argc, char **argv)
         return MODULE_NO_RESIDENT_END;
     }
 
-    lwnbd_server_start(sifrpcsrv);
+    //    FIXME
+    //    lwnbd_server_start(sifrpcsrv);
 
     return MODULE_RESIDENT_END;
 }

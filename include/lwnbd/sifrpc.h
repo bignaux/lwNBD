@@ -14,10 +14,5 @@
 /*
  * typedef void * (*SifRpcFunc_t)(int fno, void *buffer, int length);
  */
-struct sifrpc_handler
-{
-    int sid;
-    SifRpcFunc_t sifrpc_handler;
-};
 
 #endif /* SERVERS_SIFRPC_SIFRPC_H_ */

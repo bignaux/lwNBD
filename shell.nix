@@ -9,10 +9,15 @@ stdenv.mkDerivation rec{
   buildInputs =
     [
       python3Packages.docopt
+      python3Packages.libnbd
       autoreconfHook
       ronn
       libuv
+      kconfig-frontends
       #wolfssl
+      SDL2_ttf
+      SDL2
+      bin2c
     ] ++ checkInputs;
 
   checkInputs = [
@@ -21,6 +26,7 @@ stdenv.mkDerivation rec{
     libsForQt5.kdevelop
 	libnbd
     clang-tools
+    python3Packages.distutils
     checkmake
     #curl
     #gcov
@@ -34,5 +40,6 @@ stdenv.mkDerivation rec{
     hdparm
     shellcheck
    # libguestfs-with-appliance
+    valgrind
   ];
 }

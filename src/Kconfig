@@ -1,0 +1,5 @@
+menu "Core"
+    config URI
+        bool "Support URI"
+        default y
+endmenu

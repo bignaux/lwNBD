@@ -1,11 +1,5 @@
 #include <atad.h>
-#include <lwnbd-plugin.h>
-
-/*
- * TODO
- * - enable/disable booting from MBR ( see https://github.com/parrado/SoftDev2/blob/main/installer/install.c#L52 )
- * - nbdcopy MBR.XIN nbd://192.168.1.45/hdd0/mbr
- */
+#include <lwnbd/lwnbd-plugin.h>
 
 struct handle
 {
@@ -41,7 +35,7 @@ static inline int atad_flush(void *handle, uint32_t flags)
     return ata_device_flush_cache(h->device);
 }
 
-static int atad_ctor(const void *pconfig, lwnbd_export_t *e)
+static int atad_ctor(const void *pconfig, lwnbd_context_t *c)
 {
     int device = *(int *)pconfig;
     ata_devinfo_t *dev_info = ata_get_devinfo(device);
@@ -50,38 +44,14 @@ static int atad_ctor(const void *pconfig, lwnbd_export_t *e)
         struct handle *h = &handles[device];
         h->device = device;
         h->size = (int64_t)dev_info->total_sectors * 512;
-        sprintf(e->name, "hdd%d", device);
-        e->handle = h;
+        sprintf(c->name, "hdd%d", device);
+        c->handle = h;
 
         return 0;
 
     } else
         return 1;
 }
-
-/* nbdcopy nbd://192.168.1.45/hdd0/identify - | hdparm --Istdin  */
-// int identify(int argc, char **argv, void *result, int64_t *size)
-//{
-//     return ata_device_sce_identify_drive(argc, result);
-// }
-//  int ata_device_idle(int device, int period);
-//  int ata_device_smart_get_status(int device);
-//  int ata_device_smart_save_attr(int device);
-
-// static int atad_ctrl(void *handle, char *path, struct lwnbd_command *cmd)
-//{
-//     struct handle *h = handle;
-//
-//     if (strcmp("identify", path)) {
-//         cmd->cmd = identify;
-//         cmd->argc = h->device;
-//         cmd->size = 256;
-//         return 0;
-//     }
-//
-//     else
-//         return -1;
-// }
 
 static int64_t atad_get_size(void *handle)
 {

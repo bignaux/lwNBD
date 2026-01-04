@@ -1,22 +1,13 @@
 #ifndef LWNBD_PLUGIN_H
 #define LWNBD_PLUGIN_H
 
-#include <lwnbd-common.h>
+#include <lwnbd/lwnbd-common.h>
+#include <lwnbd/lwnbd.h> //workaround
 //#include <sys/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef struct lwnbd_export_t
-{
-    char name[32];
-    char description[64]; /* optional */
-
-    /* lwnbd specific */
-    void *handle; /* Plugin handle. */
-} lwnbd_export_t;
-// int lwnbd_plugin_export(lwnbd_export_t *e);
 
 /* A struct to hold the query string parameter values. */
 struct query_t
@@ -67,7 +58,7 @@ typedef struct lwnbd_plugin_t
 
     /* lwnbd specific after nbdkit compat */
 
-    int (*ctor)(const void *pconfig, lwnbd_export_t *e);           /* create new export from custom config */
+    int (*ctor)(const void *pconfig, lwnbd_context_t *c);          /* create new context from custom config */
     int (*ctrl)(void *handle, char *cmd, struct lwnbd_command *c); /* experimental */
     int (*query)(void *handle, struct query_t *params,
                  int nb_params); /* experimental */

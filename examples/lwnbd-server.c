@@ -15,12 +15,14 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <lwnbd/lwnbd.h>
 #include <lwnbd/nbd.h>
-#include <lwnbd.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <systemd/sd-journal.h>
+#include <unistd.h>
 #include <uv.h>
 
 typedef enum {
@@ -42,6 +44,21 @@ int gHDDStartMode;
 static worker_state_t client_states[MAX_CLIENTS];
 struct nbd_worker *client_reqs[MAX_CLIENTS]; /* need to be accessible to signal handler */
 
+// void journaldlog(const char *file, const char *tag, int level, int line,
+//		const char *func, const char *message) {
+//
+// printf("[%-5s][%s] %s", level_name, tag, message);
+//	int sd_journal_print(int level,);
+//
+// }
+
+static void
+usage(void)
+{
+    fprintf(stderr, "usage: %s [-v verboselevel] [-i iface] [-p port] [-f file]\n", argv0);
+    exit(1);
+}
+
 void signal_handler(uv_signal_t *req, int signum)
 {
     printf("Signal received!\n");
@@ -51,12 +68,6 @@ void signal_handler(uv_signal_t *req, int signum)
     }
     uv_signal_stop(req);
     uv_stop(uv_default_loop());
-}
-
-int greeter(int argc, char **argv, void *result, int64_t *size)
-{
-    *size = lwnbd_dump_contexts(result);
-    return 0;
 }
 
 /* man 7 signal */
@@ -80,7 +91,7 @@ void on_after_work(uv_work_t *req, int status)
 
 void on_close(uv_handle_t *handle)
 {
-    DEBUGLOG("on_close\n");
+    lwnbd_debug("on_close\n");
     free(handle);
 }
 
@@ -107,10 +118,10 @@ void on_work(uv_work_t *req)
 
     int sock;
     uv_fileno((const uv_handle_t *)client, &sock);
-    DEBUGLOG("/++++++++++++++++++++++++++++++++++++++++++++++++++\n");
-    DEBUGLOG("Worker %d: Accepted fd %d\n", getpid(), sock);
+    lwnbd_debug("/++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+    lwnbd_debug("Worker %d: Accepted fd %d\n", getpid(), sock);
     lwnbd_server_run(*s, &sock); // the abstracted blocking loop
-    DEBUGLOG("+++++++++++++++++++++++++++++++++++++++++++++++++++/\n");
+    lwnbd_debug("+++++++++++++++++++++++++++++++++++++++++++++++++++/\n");
     uv_close((uv_handle_t *)client, on_close);
 }
 
@@ -119,12 +130,12 @@ void on_new_connection(uv_stream_t *server, int status)
     int i;
 
     if (status < 0) {
-        LOG("New connection error %s\n", uv_strerror(status));
+        lwnbd_info("New connection error %s\n", uv_strerror(status));
         return;
     }
 
     for (i = 0; i < MAX_CLIENTS; i++) {
-        DEBUGLOG("client_reqs[%d] = %p\n", i, client_reqs[i]);
+        lwnbd_debug("client_reqs[%d] = %p\n", i, client_reqs[i]);
         if (client_states[i] == CLIENT_FREE) {
             client_reqs[i] = (struct nbd_worker *)malloc(sizeof(struct nbd_worker));
             client_states[i] = CLIENT_INUSE;
@@ -135,7 +146,7 @@ void on_new_connection(uv_stream_t *server, int status)
         }
     }
 
-    LOG("New connection error : no slot available\n");
+    lwnbd_info("New connection error : no slot available\n");
     return;
 }
 
@@ -143,6 +154,38 @@ int main(int argc, const char **argv)
 {
     lwnbd_server_t nbdsrv;
     lwnbd_plugin_h fileplg, memplg, cmdplg;
+    struct sockaddr_in addr;
+    int port = NBDDEFAULTPORT;
+    int level = LWNBD_LOG_DEBUG;
+
+    /*
+     *
+     */
+
+    while ((opt = getopt(argc, argv, "v:i:p:f:")) != -1) {
+        switch (opt) {
+            case 'v':
+                level = strtol(optarg, NULL, 10);
+                lwnbd_set_log_level(level);
+                break;
+            case 'i':
+                //			iface = optarg;
+                break;
+            case 'p':
+                port = strtol(optarg, NULL, 10);
+                break;
+            case 'f':
+                if (fileplg == NULL)
+                    fileplg = lwnbd_plugin_init(file_plugin_init);
+                lwnbd_plugin_new(fileplg, optarg);
+                break;
+            case '?':
+                usage();
+                break;
+        }
+    }
+
+    //    lwnbd_set_log_callback(journaldlog);
 
     /*******************************************************************************
      * Register and configure some content plugins ...
@@ -166,6 +209,7 @@ int main(int argc, const char **argv)
     };
     lwnbd_plugin_new(memplg, &memh);
 
+    lwnbd_set_defaultexport("motd");
 
     /*
      * Register few useful callback to control the server over the network
@@ -174,57 +218,36 @@ int main(int argc, const char **argv)
 
     cmdplg = lwnbd_plugin_init(command_plugin_init);
     struct lwnbd_command mycmd[] = {
-        {.name = "le", .desc = "list export", .cmd = greeter},
         {.name = "shutdown", .desc = "turn off the application", .cmd = signal_cb},
-        NULL,
+        {NULL},
     };
 
     lwnbd_plugin_new(cmdplg, &mycmd[0]);
-    lwnbd_plugin_new(cmdplg, &mycmd[1]);
-
 
     /*
-     * Export all files passed from command line
-     */
-
-    fileplg = lwnbd_plugin_init(file_plugin_init);
-    /* assuming no user input error */
-    /* todo : lwnbd_plugin_news() */
-    for (int i = 1; i < argc; i++) {
-        lwnbd_plugin_new(fileplg, argv[i]);
-    }
-
-    /*
-     * Create a NBD server, and eventually configure it.
+     * Create a NBD transport, and eventually configure it.
      *
      */
 
-    struct nbd_server mynbd = {
-        .port = 10809,
-        .max_retry = MAX_RETRIES,
-        .gflags = (NBD_FLAG_FIXED_NEWSTYLE | NBD_FLAG_NO_ZEROES),
-        .preinit = 0,
-        .readonly = !gEnableWrite,
-    };
     nbdsrv = lwnbd_server_init(nbd_server_init);
+    struct nbdsettings mynbd;
+
+    /* Initialize user callbacks and settings */
     lwnbd_server_new(nbdsrv, &mynbd);
+    //    mynbd.readonly = !gEnableWrite;
 
-    lwnbd_server_config(nbdsrv, "default-export", "motd");
-
-    lwnbd_server_dump(nbdsrv);
 
     /*
      * Main loop with libuv
      */
 
     uv_loop_t *loop = uv_default_loop();
-    struct sockaddr_in addr;
     memset(client_states, CLIENT_FREE, sizeof(client_states));
     uv_tcp_t server;
 
     uv_tcp_init(loop, &server);
 
-    uv_ip4_addr("0.0.0.0", mynbd.port, &addr);
+    uv_ip4_addr("0.0.0.0", port, &addr);
 
     server.data = &nbdsrv;
 

@@ -1,4 +1,4 @@
-#include <lwnbd-plugin.h>
+#include <lwnbd/lwnbd-plugin.h>
 
 #define PLUGIN_NAME            memory
 #define MEM_DRIVER_MAX_DEVICES 10
@@ -31,7 +31,7 @@ static inline int memory_pwrite(void *handle, const void *buf, uint32_t count,
     return 0;
 }
 
-static int memory_ctor(const void *pconfig, lwnbd_export_t *e)
+static int memory_ctor(const void *pconfig, lwnbd_context_t *c)
 {
     uint32_t i;
     struct memory_config *h;
@@ -46,9 +46,9 @@ static int memory_ctor(const void *pconfig, lwnbd_export_t *e)
     h = &handles[i];
     memcpy(h, pconfig, sizeof(struct memory_config));
 
-    e->handle = h;
-    strcpy(e->name, h->name);
-    strcpy(e->description, h->desc);
+    c->handle = h;
+    strcpy(c->name, h->name);
+    strcpy(c->description, h->desc);
 
     return 0;
 }
@@ -71,17 +71,17 @@ static int memory_query(void *handle, struct query_t *params, int nb_params)
             memset((char *)h->base, '\0', h->size);
         } else if (0 == strcmp(params[nb_params].key, "memset")) {
             if (params[nb_params].val != NULL) {
-                LOG("val = %s\n", params[nb_params].val);
+                lwnbd_debug("val = %s\n", params[nb_params].val);
                 memset((char *)h->base, params[nb_params].val[0], h->size);
             }
         } else if (0 == strcmp(params[nb_params].key, "memcpy")) {
             if (params[nb_params].val != NULL) {
-                LOG("val = %s\n", params[nb_params].val);
+                lwnbd_debug("val = %s\n", params[nb_params].val);
                 memset((char *)h->base, '\0', h->size);
                 memcpy((char *)h->base, params[nb_params].val, strlen(params[nb_params].val));
             }
         } else {
-            DEBUGLOG("%s is not a known filter.\n", params[nb_params].key);
+            lwnbd_debug("%s is not a known filter.\n", params[nb_params].key);
         }
     }
     return 0;

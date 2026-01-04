@@ -1,14 +1,17 @@
 /*
  * An interactive shell using command plugin
  *
- *
+ * [local-shell:/api]$ echo=$test
+ * Example of shared memory.
+ * [local-shell:/api]$ echo=pouet
+ * pouet
  *
  */
 
 #define _GNU_SOURCE
 #include <errno.h>
 #include <libgen.h>
-#include <lwnbd.h>
+#include <lwnbd/lwnbd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -18,18 +21,18 @@ char *exportname, *prompt, *base;
 
 static int set_prompt(char *base, char *endpoint)
 {
-    if (-1 == asprintf(&prompt, "[%s:/%s]$ ", base, endpoint))
+    if (0 > asprintf(&prompt, "[%s:/%s]$ ", base, endpoint))
         return -1;
     return 0;
 }
 
-static int set_exportname(int argc, char **argv, void *result, int64_t *size)
+static int set_exportname(int argc, char **argv, const void *result, int64_t *size)
 {
     if (argc <= 1)
         return -1;
 
     *size = asprintf(&exportname, "%s", argv[1]);
-    if (*size == -1) {
+    if (*size < 0) {
         *size = sprintf(result, "error setting export name\n");
     } else {
         *size = sprintf(result, "export name to %s\n", exportname);
@@ -44,20 +47,20 @@ int main(int argc, char **argv)
     lwnbd_context_t *ctx;
     char *p, *buf, *memtest;
     int errno, r = 0;
-    uint64_t size = 0;
+    uint64_t bufsize = 0;
 
     /*
-     * set base URI, default exportname to 'shell' and prompt
+     * set base URI, default exportname to 'api' and prompt
      *
      */
 
-    if (-1 == asprintf(&exportname, "shell"))
+    if (0 > asprintf(&exportname, "api"))
         exit(EXIT_FAILURE);
 
-    if (-1 == asprintf(&base, "%s", basename(argv[0])))
+    if (0 > asprintf(&base, "%s", basename(argv[0])))
         exit(EXIT_FAILURE);
 
-    if (-1 == set_prompt(base, exportname))
+    if (0 > set_prompt(base, exportname))
         exit(EXIT_FAILURE);
 
     /*
@@ -80,7 +83,7 @@ int main(int argc, char **argv)
      * let's use query mechanism to set it, just because we can !
      */
 
-    if (-1 == asprintf(&buf, "test?memcpy=Example of shared memory.\n")) /* create the request */
+    if (0 > asprintf(&buf, "test?memcpy=Example of shared memory.")) /* create the request */
         exit(EXIT_FAILURE);
 
     lwnbd_get_context(buf); /* GET */
@@ -93,7 +96,7 @@ int main(int argc, char **argv)
 
     struct lwnbd_command mycmd = {
         .name = "ce",
-        .desc = "change exportname",
+        .desc = "Change exportname/endpoint",
         .cmd = set_exportname,
     };
 
@@ -105,16 +108,18 @@ int main(int argc, char **argv)
 
     printf("Welcome! Type lc to list commands\n");
 
-    while (r == 0) {
+    while (1) {
         int n;
 
         errno = 0;
         printf("%s", prompt);
         n = scanf("%ms", &p);
         if (n == 1) {
-            if (0 == strcmp("exit", p))
+            if (0 == strcmp("exit", p)) {
+                free(p);
                 break;
-            r = asprintf(&buf, "%s?%s", exportname, p);
+            }
+            bufsize = asprintf(&buf, "%s?%s", exportname, p);
             printf("Request: %s\n", buf);
             free(p);
         } else if (errno != 0) {
@@ -126,18 +131,33 @@ int main(int argc, char **argv)
         }
 
         ctx = lwnbd_get_context(buf);
-        if (ctx == NULL)
+        if (ctx == NULL) {
+            fprintf(stderr, "lwnbd_get_context\n");
             continue;
-
-        if (size < ctx->exportsize) {
-            size = ctx->exportsize;
-            buf = realloc(buf, size);
         }
-        printf("Response: %ld\n", ctx->exportsize);
+
+        if (bufsize < ctx->exportsize + 1) {
+            bufsize = ctx->exportsize + 1;
+            buf = (char *)realloc(buf, bufsize);
+            if (buf == NULL) {
+                fprintf(stderr, "realloc\n");
+                goto exit;
+            }
+        }
+
         r = lwnbd_pread(ctx, buf, ctx->exportsize, 0, 0);
-        printf("%s", buf);
+        if (r) {
+            fprintf(stderr, "lwnbd_pread\n");
+            break;
+        }
+
+        r = strnlen(buf, ctx->exportsize);
+        buf[r] = '\0';
+        printf("Response: %ld bytes, print %d bytes.\n", ctx->exportsize, r);
+        printf("%s\n", buf);
     }
 
+exit:
     free(buf);
     free(exportname);
     free(prompt);

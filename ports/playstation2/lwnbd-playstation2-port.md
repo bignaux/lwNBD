@@ -35,8 +35,8 @@ could add echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing/" >> /etc/apk
     #git config --global --add safe.directory /app
     git config --system --add safe.directory "*"
     
-    rm -f ./modules/network/lwNBD/lwnbdsvr.irx 
-    make -C modules/network/lwNBD/ TARGET=iop clean && make LWNBD_DEBUG=1
+    rm -f ./modules/network/lwNBD/lwnbdsvr.irx
+    make -C modules/network/lwNBD/ TARGET=iop clean && make
      
 ### commit on OPL
    
@@ -51,8 +51,8 @@ could add echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing/" >> /etc/apk
   udptty.irx send stdout to udp broadcast.
   
   Open log
-  
-     nc -ukl 18194
+
+    nc -ukl 18194
     with promiscous : tshark -o data.show_as_text:TRUE -f "dst port 18194" -Tfields -e data.text
     #issue is filtering on dst only make cmd send to same port
     
@@ -132,9 +132,9 @@ make oneliner like nbdcopy nbd://.../cmd/poweroff available like a bus , see @va
 mem/spu2 ... mc/1/filename.
 close Remotely Launch games https://github.com/ps2homebrew/Open-PS2-Loader/issues/418
 
-custom build (like nbdtty ...)
+custom build (like nbdtty ...) using Kconfig -> nbdtty.cfg ...
 
-Loader to replace ps2link ( see ps2sdk/ee/elf-loader/src/elf.c , memory + custom loader query)
+Loader to replace ps2link ( see ps2sdk/ee/elf-loader/src/elf.c , memory + custom loader POST query)
 usage of elf-loader :
 https://github.com/libretro/RetroArch/blob/master/frontend/drivers/platform_ps2.c#L361
 https://github.com/ps2dev/ps2sdk/blob/master/ee/elf-loader/include/elf-loader.h#L23-L51

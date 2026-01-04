@@ -1,50 +1,70 @@
-BIN = lwnbdsvr.irx
+CONFIG_CROSS_COMPILER_PREFIX := mipsel-none-elf-
 
-#PLUGINS
-include servers/nbd/Makefile
-include servers/sifrpc/Makefile
-include plugins/atad/Makefile
-include plugins/command/Makefile
-include plugins/memory/Makefile
-include plugins/mcman/Makefile
-include plugins/pcmstream/Makefile
-#include plugins/tty/Makefile
-#include plugins/bdm/Makefile
-#include plugins/file/Makefile
+# stripped version of ps2sdk
+# less custom stuff, no useless intermediate files imports.lst and exports.tab
+# no IOP_ prefixed rules, use standard var, easier to embed in a port.
 
-CC = $(IOP_CC)
-PORT_DIR = ports/playstation2/iop
-OBJ += $(PORT_DIR)/lwnbd_irx.o $(PORT_DIR)/exports.o $(PORT_DIR)/imports.o $(PORT_DIR)/ioplib.o $(PORT_DIR)/tcp.o
-INCS += -I$(PORT_DIR)/../common/include -I$(PORT_DIR)/include -include $(PORT_DIR)/ps2sdk-compat.h -DAPP_NAME=\"lwnbdsvr\"
+CC_VERSION := $(shell $(CC) -dumpversion)
 
-# only suitable for https://github.com/ps2dev/ps2sdk-ports/
-#install: all
-#	mkdir -p $(DESTDIR)$(PS2SDK)/ports/include
-#	mkdir -p $(DESTDIR)$(PS2SDK)/ports/lib
-#	mkdir -p $(DESTDIR)$(PS2SDK)/ports/share/man/man3
-#	cp -f $(IOP_BIN) $(DESTDIR)$(PS2SDK)/ports/lib
-#	cp -f include/lwnbd.h $(DESTDIR)$(PS2SDK)/ports/include
-#	cp -f lwnbd.3 $(DESTDIR)$(PS2SDK)/ports/share/man/man3/
+ifeq ($(CC_VERSION),3.2.2)
+ASFLAGS_TARGET = -march=r3000
+endif
 
-include $(PS2SDK)/Defs.make
-include $(PORT_DIR)/iopglobal.mk
+ifeq ($(CC_VERSION),3.2.3)
+ASFLAGS_TARGET = -march=r3000
+endif
 
-all: $(BIN)
+# include dir
+INCS := $(INCS) -I$(PS2SDK)/iop/include -I$(PS2SDK)/common/include
 
-DEST ?= $(PS2_WORKSPACE)/Open-PS2-Loader
-TARGET_IP ?= 192.168.1.45
-DEV ?= /dev/nbd2
+# Optimization compiler flags
+OPTFLAGS ?= -Os
 
-softdev2:
-	sudo nbd-client -N hdd0 $(TARGET_IP) $(DEV)
-	#pfsfuse --partition="+OPL" $(DEV) opl/
-	pfsfuse --partition="__sysconf" $(DEV) opl/
-	rm -f opl/softdev2/OPNPS2LD.ELF
-	cp $(DEST)/opl.elf opl/softdev2/OPNPS2LD.ELF
-	diff $(DEST)/opl.elf opl/softdev2/OPNPS2LD.ELF
-	#sync --file-system opl
-	umount opl
-	sleep 5
-	sudo nbd-client -d $(DEV)
+# C compiler flags
+# -fno-builtin is required to prevent the GCC built-in functions from being included,
+#   for finer-grained control over what goes into each IRX.
+CFLAGS := -D_IOP -fno-builtin -G0 $(OPTFLAGS) $(INCS) $(CFLAGS)
+# linker flags
+LDFLAGS := -nostdlib -s $(LDFLAGS)
+
+# Additional C compiler flags for GCC >=v5.3.0
+# -msoft-float is to "remind" GCC/Binutils that the soft-float ABI is to be used. This is due to a bug, which
+#   results in the ABI not being passed correctly to binutils and iop-as defaults to the hard-float ABI instead.
+# -mno-explicit-relocs is required to work around the fact that GCC is now known to
+#   output multiple LO relocs after one HI reloc (which the IOP kernel cannot deal with).
+# -fno-toplevel-reorder (for IOP import and export tables only) disables toplevel reordering by GCC v4.2 and later.
+#   Without it, the import and export tables can be broken apart by GCC's optimizations.
+ifneq ($(CC_VERSION),3.2.2)
+ifneq ($(CC_VERSION),3.2.3)
+CFLAGS += -msoft-float -mno-explicit-relocs
+IETABLE_CFLAGS := -fno-toplevel-reorder
+endif
+endif
+
+# If gpopt is requested, use it if the GCC version is compatible
+ifneq (x$(PREFER_GPOPT),x)
+ifeq ($(CC_VERSION),3.2.2)
+CFLAGS += -DUSE_GP_REGISTER=1 -mgpopt -G$(PREFER_GPOPT)
+endif
+ifeq ($(CC_VERSION),3.2.3)
+CFLAGS += -DUSE_GP_REGISTER=1 -mgpopt -G$(PREFER_GPOPT)
+endif
+endif
+
+# Assembler flags
+ASFLAGS := $(ASFLAGS_TARGET) -EL -G0 $(ASFLAGS)
+
+ifneq ($(CC_VERSION),3.2.2)
+ifneq ($(CC_VERSION),3.2.3)
+# Due to usage of 64 bit integers, support code for __ashldi3 and __lshrdi3 is needed
+LIBS += -lgcc
+endif
+endif
+
+%imports.o: %imports.c
+	$(CC) $(CFLAGS) $(IETABLE_CFLAGS) -c $< -o $@
+
+%exports.o: %exports.c
+	$(CC) $(CFLAGS) $(IETABLE_CFLAGS) -c $< -o $@
 
 .PHONY: all clean test
