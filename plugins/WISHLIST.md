@@ -10,11 +10,3 @@ need:
  * a minimal VFS (ie using FUSE minimal API) to wrap exotic or virtual fs
  * tar support
  * filters support
-
-
-
-## SSDP notify
-
-* allow automation of pushing loader, test suite, mounting stuff ...
-
-https://github.com/zlargon/lssdp
