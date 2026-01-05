@@ -38,7 +38,7 @@ typedef struct lwnbd_plugin_t
     /*
      * NOTE: unistd.h pread/pwrite return value read/written. Here, we follow compatibility with nbdkit
      * returning 0 on success
-     * ( not sure it's a gread idea, that could confound contributors )
+     * ( not sure it's a great idea, that could confound contributors )
      */
     int (*pread)(void *handle, void *buf, uint32_t count, uint64_t offset,
                  uint32_t flags);

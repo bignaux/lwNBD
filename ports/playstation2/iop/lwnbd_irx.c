@@ -18,7 +18,7 @@
 IRX_ID(APP_NAME, 1, 1);
 extern struct irx_export_table _exp_lwnbd;
 
-static lwnbd_server_t sifrpcsrv, nbdsrv;
+static lwnbd_server_t sifrpcsrv, httpsrv;
 static int nbdThreadID;
 
 enum LWNBD_SERVER_CMD {
@@ -44,7 +44,7 @@ static int config(struct lwnbd_config *config)
      * create a NBD server, and eventually configure it.
      *
      */
-    nbdsrv = lwnbd_server_init(nbd_server_init);
+    httpsrv = lwnbd_server_init(nbd_server_init);
 
     struct nbd_server mynbd = {
         //        .port = 10809,
@@ -54,14 +54,14 @@ static int config(struct lwnbd_config *config)
         //		.readonly = config->readonly ? ,
     };
     nbd_server_create(&mynbd);        // get initialized server socket
-    lwnbd_server_new(nbdsrv, &mynbd); // now mynbd is copied, don't use it.
-    lwnbd_server_config(nbdsrv, "default-export", config->defaultexport);
+    lwnbd_server_new(httpsrv, &mynbd); // now mynbd is copied, don't use it.
+    lwnbd_server_config(httpsrv, "default-export", config->defaultexport);
 
     if (config->readonly)
-        lwnbd_server_config(nbdsrv, "readonly", NULL);
+        lwnbd_server_config(httpsrv, "readonly", NULL);
 
 
-        //    lwnbd_server_config(nbdsrv, "preinit", NULL);
+        //    lwnbd_server_config(httpsrv, "preinit", NULL);
         // print twice doesn't give same result ...
         //    print_memorymap();
         //    print_memorymap();
@@ -149,7 +149,7 @@ static int *lwnbd_server_cmd_start(struct lwnbd_config *conf, int length, int *r
     nbdThreadID = CreateThread(&nbd_thread);
     if (nbdThreadID > 0) {
         lwnbd_info("LWNBD_SERVER_CMD_START StartThread.\n");
-        *ret = StartThread(nbdThreadID, (struct lwnbd_server_t *)nbdsrv);
+        *ret = StartThread(nbdThreadID, (struct lwnbd_server_t *)httpsrv);
     } else {
         lwnbd_info("LWNBD_SERVER_CMD_START FAILED CreateThread.\n");
         *ret = nbdThreadID;
@@ -175,7 +175,7 @@ static int *lwnbd_rpc_handler(int fno, void *buffer, int length)
             TerminateThread(nbdThreadID);
             DeleteThread(nbdThreadID);
             //            nbd_close(int socket)
-            //            lwnbd_server_stop(nbdsrv);
+            //            lwnbd_server_stop(httpsrv);
 
             break;
         default:

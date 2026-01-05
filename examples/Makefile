@@ -48,6 +48,16 @@ LDFLAGS-lwnbd-server += $(shell pkg-config --libs libuv)
 lwnbd-server: examples/lwnbd-server.o $(LIB)
 endif
 
+ifeq ($(CONFIG_DAYTIMED),y)
+EXAMPLES += daytimed
+CFLAGS-examples/daytimed.o += $(shell pkg-config --cflags libuv) \
+	-DAPP_VERSION=\"$(APP_VERSION)\" \
+	-DCC_VERSION=\"$(CC_VERSION)\" \
+	-DAPP_NAME=\"daytimed\"
+LDFLAGS-lwnbd-server += $(shell pkg-config --libs libuv)
+daytimed: examples/daytimed.o $(LIB)
+endif
+
 ifeq ($(CONFIG_MINI_XINETD),y)
 EXAMPLES += mini-xinetd
 CFLAGS-examples/lwnbd-server.o += \

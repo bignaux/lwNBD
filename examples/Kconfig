@@ -28,6 +28,11 @@ config LWNBD_SERVER
         bool "lwnbd-server"
         default y
         depends on BUILD_EXAMPLES && URI && UNIX && NBD_SERVER
+        
+config DAYTIMED
+        bool "daytimed"
+        default y
+        depends on BUILD_EXAMPLES && URI && UNIX && DAYTIME_SERVER
 
 config MINI_XINETD
         bool "mini-xinetd"

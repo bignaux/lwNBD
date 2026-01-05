@@ -152,7 +152,7 @@ void on_new_connection(uv_stream_t *server, int status)
 
 int main(int argc, const char **argv)
 {
-    lwnbd_server_t nbdsrv;
+    lwnbd_server_t httpsrv;
     lwnbd_plugin_h fileplg, memplg, cmdplg;
     struct sockaddr_in addr;
     int port = NBDDEFAULTPORT;
@@ -229,11 +229,11 @@ int main(int argc, const char **argv)
      *
      */
 
-    nbdsrv = lwnbd_server_init(nbd_server_init);
+    httpsrv = lwnbd_server_init(nbd_server_init);
     struct nbdsettings mynbd;
 
     /* Initialize user callbacks and settings */
-    lwnbd_server_new(nbdsrv, &mynbd);
+    lwnbd_server_new(httpsrv, &mynbd);
     //    mynbd.readonly = !gEnableWrite;
 
 
@@ -249,7 +249,7 @@ int main(int argc, const char **argv)
 
     uv_ip4_addr("0.0.0.0", port, &addr);
 
-    server.data = &nbdsrv;
+    server.data = &httpsrv;
 
     uv_tcp_bind(&server, (const struct sockaddr *)&addr, 0);
     int r = uv_listen((uv_stream_t *)&server, 128, on_new_connection);

@@ -82,7 +82,8 @@ struct lwnbd_server
     int (*stop)(void *handle);
     int (*config)(void *handle, const char *key, const char *value);
     int (*ctor)(void *handle, const void *pconfig); /* config with custom structure */
-    int (*run)(void *handle, const void *client);
+    int (*run)(void *handle, const void *client);   /* deprecated */
+    void (*handler)(int client_fd, lwnbd_context_t *ctx);
 
     ssize_t (*sync_recv_cb)(int s, void *mem, size_t len, int flags);
     ssize_t (*sync_send_cb)(int sockfd, const void *buf, size_t len, int flags);
