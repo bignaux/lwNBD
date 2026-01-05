@@ -14,6 +14,10 @@ menu "NBD"
 source "servers/nbd/Kconfig"
 endmenu
 
+menu "HTTP"
+source "servers/http/Kconfig"
+endmenu
+
 config SIF_SERVER
         bool "Support SIF transport"
         default y

@@ -6,6 +6,8 @@
 #ifndef INCLUDE_LWNBD_TCP_H_
 #define INCLUDE_LWNBD_TCP_H_
 
+#include <stddef.h>
+
 // void listener(struct nbd_server *s);
 
 int tcp_close(int socket);

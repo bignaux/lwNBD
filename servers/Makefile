@@ -4,6 +4,10 @@ ifeq ($(CONFIG_NBD_SERVER),y)
 include servers/nbd/Makefile
 endif
 
+ifeq ($(CONFIG_HTTP_SERVER),y)
+include servers/http/Makefile
+endif
+
 ifeq ($(CONFIG_SIF_SERVER),y)
 include servers/sifrpc/Makefile
 endif
